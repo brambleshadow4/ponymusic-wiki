@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS tracks (
+	id SERIAL PRIMARY KEY,
+	title VARCHAR(255) NOT NULL,
+	release_date DATE NOT NULL,
+	locked BOOLEAN NOT NULL,
+	pony_status INT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS artists (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(255) NOT NULL UNIQUE,
+	locked BOOLEAN NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS x_tracks_artists (
+	track_id INTEGER NOT NULL,
+	artist_id INTEGER NOT NULL,
+	is_featured BOOLEAN NOT NULL
+);
+
+
