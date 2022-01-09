@@ -1,7 +1,6 @@
 <script>
 	import TrackEditor from "./TrackEditor.svelte";
-	import ArtistEditor from "./ArtistEditor.svelte";
-	import ArtistList from "./ArtistList.svelte";
+	
 	$: path = window.location.pathname;
 
 </script>
@@ -32,8 +31,6 @@
 		text-decoration: none;
 	}
 
-
-
 	.main-container
 	{
 		position: fixed;
@@ -41,7 +38,6 @@
 		bottom: 0;
 		left: 300px;
 		right: 0;
-
 	}
 
 	.main
@@ -66,14 +62,16 @@
 		{#if path.startsWith("/track/")}
 			<TrackEditor />
 		{:else if path.startsWith("/artist/")}
-			<ArtistEditor />
+			
+
+
 		{:else if path.startsWith("/tracks")}
 			<h1>Tracks</h1>
 			<a href="/track/new">+ Add a track</a>
 		{:else if path.startsWith("/artists")}
 			<h1>Artists + Musicians</h1>
 			<a href="/artist/new">+ Add an Artist</a>
-			<ArtistList />
+			
 		{:else}
 			<h1>Pony Music Wiki</h1>
 			<p>Welcome to the pony music wiki. I'm trying to make it a thing</p>
