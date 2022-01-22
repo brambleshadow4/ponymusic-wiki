@@ -23,7 +23,10 @@ for (query of tableQueries)
 	db.query(query, (err, res) =>
 	{
 		if(err) {
-			throw new Error(err);
+			console.log(query);
+			console.error(err);
+			process.exit(1);
+			//throw new Error(err);
 		}
 	});
 }
@@ -45,16 +48,32 @@ app.post("/api/autocomplete/artist", bodyParser.text({ type: 'text/plain' }), as
 	res.json(strippedRows);
 })
 
-app.post("/api/view/artists", bodyParser.json(), async(req,res) => {
+app.get("/api/view/tracks", async(req,res) => {
 
-	let {rows} = await db.query("SELECT * FROM artists ORDER BY name LIMIT 100", []);
+	console.log(req.query);
+
+	let tagFilter = '(tag "artist" "vylet pony")';
+	let order = "(desc release_date)"
+
+
+
+	let {rows} = await db.query(`
+		SELECT id, title, release_date,
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='artist') as artist, 
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='hyperlink') as hyperlink
+		FROM tracks 
+		ORDER BY release_date DESC
+		`, []);
+
 	res.json(rows);
-
 });
 
-app.get("/api/artist/*", async(req,res) =>{
+app.get("/api/track/*", async(req,res) =>{
 
-	let {rows} = await db.query("SELECT * FROM artists WHERE id=$1", [req.params[0]]);
+	let id = req.params[0];
+
+	let {rows} = await db.query("SELECT * FROM artists WHERE id=$1", [id]);
+	let {tagsRaw} = await db.query("SELECT * FROM track_tags WHERE id=$1", [id]);
 
 	let response = rows[0] || {status: 400};
 
@@ -65,7 +84,7 @@ app.get("/api/artist/*", async(req,res) =>{
 	res.json(response);
 });
 
-app.post("/api/artist/*", bodyParser.text({type: "text/json"}), async (req,res) =>
+app.post("/api/track", bodyParser.text({type: "text/json"}), async (req,res) =>
 {
 	// TODO auth.
 
@@ -79,15 +98,34 @@ app.post("/api/artist/*", bodyParser.text({type: "text/json"}), async (req,res) 
 		return;
 	}
 
-	let name = (data.name || "").trim();
+	console.log(data);
 
-	if(name.length == 0){
+	let title = (data.title || "").trim();
+	let release_date = data.release_date.trim();
+
+
+	if(isNaN(new Date(release_date).getTime())){
+		res.json({status:400});
+		console.log("here");
 		return;
 	}
 
-	if(data.id == "new")
+
+	if(title.length == 0){
+
+		console.log("hasdf");
+		return;
+	}
+
+	let id = data.id;
+
+	console.log("made it here");
+
+	if(id == "new")
 	{
-		let x = await db.query("INSERT INTO artists (name, locked) VALUES ($1, false) RETURNING id", [name]);
+		let x = await db.query("INSERT INTO tracks (title, release_date, locked) VALUES ($1, $2, false) RETURNING id", [title, release_date]);
+
+		console.log(x);
 
 		if(x.err)
 		{
@@ -95,7 +133,7 @@ app.post("/api/artist/*", bodyParser.text({type: "text/json"}), async (req,res) 
 		}
 		else
 		{
-			res.json({status:200, newId: x.rows[0].id})
+			id = x.rows[0].id;
 		}
 	}
 	else 
@@ -106,11 +144,27 @@ app.post("/api/artist/*", bodyParser.text({type: "text/json"}), async (req,res) 
 			res.json({status: 400});
 		}
 
-		await db.query("UPDATE artists SET name=$1 WHERE id=$2", [name, id]);
-
-		res.json({status:200});
+		await db.query("UPDATE tracks SET title=$1, release_date=$2 WHERE id=$3", [title, release_date, id]);		
 	}
-})
+
+	console.log(await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]));
+
+	for(tag of data.tags)
+	{
+		if (!tag.property || !tag.value){
+			continue;
+		}
+
+		if(!isNaN(tag.number)){
+			await db.query("INSERT INTO track_tags (track_id, property, value, number) VALUES ($1, $2, $3, $4)", [id, tag.property, tag.value, tag.number]);
+		}
+		else {
+			await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, $2, $3)", [id, tag.property, tag.value,]);
+		}
+	}
+
+	res.json({status: 200, id});
+});
 
 
 app.get('*', (req, res) => {

@@ -4,18 +4,27 @@
 	import Tag from "./Tag.svelte";
 
 
+
+
 	let tags = [];
 	let enteringTag = false;
 	let tagProperty = "";
 	let tagValue = "";
 	let ref;
 
+	let trackID = "new";
+
 	let nameInput;
 	let dateInput;
 
 	function addTagEntryField(tagType)
 	{
+
 		return function(){
+
+			if(ref) {
+				ref.value = "";
+			}
 
 			tagProperty = tagType;
 			tagValue = "";
@@ -33,6 +42,7 @@
 	function addTag(tag)
 	{
 		if(!tag.value){ return; }
+
 
 		if(tag.property == "pl")
 		{
@@ -98,18 +108,22 @@
 		}
 	}
 
-	function saveData()
+	async function saveData()
 	{
 		var data = {
-			name: nameInput.value.trim(),
-			date: dateInput.value.trim(),
+			id: trackID,
+			title: nameInput.value.trim(),
+			release_date: dateInput.value.trim(),
 			tags
 		}
 
-		if(name.len)
-		console.log(nameInput.value);
-		console.log(dateInput.value);
-		console.log(tags);
+		var response = await (await fetch("/api/track", {
+			method: "POST",
+			headers: {"Content-Type": "text/json"},
+			body: JSON.stringify(data)
+		})).json();
+
+		console.log(response);
 	}
 </script>
 
@@ -149,7 +163,7 @@
 <div>
 	
 	<div class='field'>
-		<span class="label" >Name:</span>
+		<span class="label" >Title:</span>
 		<input id='name' type="text" maxlength="255" bind:this={nameInput}/>
 	</div>
 	<div class='field'>
@@ -185,10 +199,9 @@
 				<button on:click={addTagEntryField("artist")}>+ Artist</button>
 				<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button></div>
 			<div>
-				<button on:click={()=>{addTag({property:"pl",value:"4"})}}>Obviously Pony</button>
-				<button on:click={()=>{addTag({property:"pl",value:"3"})}}>Pony</button>
-				<button on:click={()=>{addTag({property:"pl",value:"2"})}}>Pony Inspired</button>
-				<button on:click={()=>{addTag({property:"pl",value:"1"})}}>Not Pony</button>
+				<button on:click={()=>{addTag({property:"pl",value:"2"})}}>Obvious Refs</button>
+				<button on:click={()=>{addTag({property:"pl",value:"1"})}}>Sublte Refs</button>
+				<button on:click={()=>{addTag({property:"pl",value:"0"})}}>No refs</button>
 			</div>
 			<div>
 				<button on:click={addTagEntryField("genre")}>+ Genre</button>

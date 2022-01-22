@@ -17,10 +17,9 @@
 		if(property == "pl")
 		{
 			switch(value){
-				case "4": text = "Obviously Pony"; break;
-				case "3": text = "Pony"; break;
-				case "2": text = "Pony Inpsired"; break;
-				case "1": text = "Not Pony"; break;
+				case "2": text = "Obvious Refs"; break;
+				case "1": text = "Subtle Refs"; break;
+				case "0": text = "No Refs"; break;
 			}
 
 			return text;

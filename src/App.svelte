@@ -1,5 +1,6 @@
 <script>
 	import TrackEditor from "./TrackEditor.svelte";
+	import TrackList from "./TrackList.svelte";
 	
 	$: path = window.location.pathname;
 
@@ -61,13 +62,11 @@
 	<div class='main'>
 		{#if path.startsWith("/track/")}
 			<TrackEditor />
-		{:else if path.startsWith("/artist/")}
-			
-
 
 		{:else if path.startsWith("/tracks")}
-			<h1>Tracks</h1>
-			<a href="/track/new">+ Add a track</a>
+			
+			<TrackList />
+
 		{:else if path.startsWith("/artists")}
 			<h1>Artists + Musicians</h1>
 			<a href="/artist/new">+ Add an Artist</a>
