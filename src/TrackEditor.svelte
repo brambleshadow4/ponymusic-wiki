@@ -2,24 +2,69 @@
 	
 	import TagEntryInput from "./TagEntryInput.svelte";
 	import Tag from "./Tag.svelte";
+	import { createEventDispatcher } from 'svelte';
 
+	const dispatch = createEventDispatcher();
 
+	let track = {title:"", release_date:"", tags:[]};
 
-
-	let tags = [];
 	let enteringTag = false;
 	let tagProperty = "";
 	let tagValue = "";
 	let ref;
 
-	let trackID = "new";
+	export let id = "new";
+
+
+	let editMode = false;
+
+	if(id=="new"){
+		editMode = true;
+	}
 
 	let nameInput;
 	let dateInput;
 
+	let mediaEmbed = [];
+	let audioEmbed = "";
+
+	async function load()
+	{
+		if(id != "new"){
+			console.log("loading stuff")
+			track = await (await fetch("/api/track/" + id)).json();
+			
+			let embedTag1 = track.tags.filter(x => x.property == "ogcache_embed")[0];
+			let embedTag2 = track.tags.filter(x => x.property == "ogcache_width")[0];
+			let embedTag3 = track.tags.filter(x => x.property == "ogcache_height")[0];
+
+			if(embedTag1 && embedTag2 && embedTag3){
+				mediaEmbed = [embedTag1.value, embedTag2.value, embedTag3.value];
+			}
+			else{
+				mediaEmbed = [];
+			}
+
+			embedTag1 = track.tags.filter(x => x.property == "ogcache_audio")[0];
+			if(embedTag1){
+				audioEmbed = embedTag1.value;
+				
+			}
+			else{
+				audioEmbed = "";
+			}
+		}
+	}
+
+	function edit(){
+		editMode = true;
+	}
+
+	load();
+
+
 	function addTagEntryField(tagType)
 	{
-
 		return function(){
 
 			if(ref) {
@@ -43,24 +88,21 @@
 	{
 		if(!tag.value){ return; }
 
-
 		if(tag.property == "pl")
 		{
-			for(let i=0; i<tags.length; i++)
+			for(let i=0; i<track.tags.length; i++)
 			{
-				if(tags[i].property == "pl")
+				if(track.tags[i].property == "pl")
 				{
-					tags.splice(i, 1)
+					track.tags.splice(i, 1)
 					i--;
 				}
 			}
 		}
 
-		tags.push(tag);
-		tags.sort(tagComp)
-		tags = tags;
-
-		console.log(tags);
+		track.tags.push(tag);
+		track.tags.sort(tagComp)
+		track.tags = track.tags;
 	};
 
 	function tagComp(tag1, tag2){
@@ -92,29 +134,28 @@
 	{
 		return function()
 		{
-			for(let i=0; i<tags.length; i++)
+			for(let i=0; i<track.tags.length; i++)
 			{
-				console.log(tags[i]);
-				console.log(tag);
+				console.log(track.tags[i]);
 
-				if(tags[i].property == tag.property && tags[i].value == tag.value)
+				if(track.tags[i].property == tag.property && track.tags[i].value == tag.value)
 				{
-					tags.splice(i, 1)
+					track.tags.splice(i, 1)
 					break;
 				}
 			}
 
-			tags = tags;
+			track.tags = track.tags;
 		}
 	}
 
 	async function saveData()
 	{
 		var data = {
-			id: trackID,
+			id,
 			title: nameInput.value.trim(),
 			release_date: dateInput.value.trim(),
-			tags
+			tags: track.tags
 		}
 
 		var response = await (await fetch("/api/track", {
@@ -124,6 +165,8 @@
 		})).json();
 
 		console.log(response);
+
+		dispatch("close","");
 	}
 </script>
 
@@ -153,63 +196,88 @@
 		margin-top: 20px;
 	}
 
-	
+	h1 button{
+		font-size: 12pt;
+		line-height: 12pt;
+	}
 
 	input {margin: 0px}
+
 </style>
 
-<h1>Add Track</h1>
 
+{#if id=="new"}
+	<h1>Add Track</h1>
+{:else}
+	<h1>
+		{track.title} {#if !editMode}<button class='edit-button' on:click={edit}>Edit</button>{/if}
+	</h1>
+{/if}
+
+{#if editMode}
+	<div>
+		
+		<div class='field'>
+			<span class="label" >Title:</span>
+			<input id='name' type="text" maxlength="255" bind:this={nameInput} value={track.title}/>
+		</div>
+		<div class='field'>
+			<span class="label">Released:</span>
+			<input id='release-date' type="date" bind:this={dateInput} value={track.release_date.substring(0,10)}/>
+		</div>
+	</div>
+{:else}
+	{#if mediaEmbed[0]}
+		<iframe src={mediaEmbed[0]} width={mediaEmbed[1]} height={mediaEmbed[2]} 
+			frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
+
+		></iframe>
+	{:else if audioEmbed}
+		<audio controls>
+			<source src={audioEmbed} />
+		</audio> 
+	{/if}
+{/if}
+
+<div>Tags:</div>
 <div>
-	
-	<div class='field'>
-		<span class="label" >Title:</span>
-		<input id='name' type="text" maxlength="255" bind:this={nameInput}/>
-	</div>
-	<div class='field'>
-		<span class="label">Released:</span>
-		<input id='release-date' type="date" bind:this={dateInput}/>
-	</div>
-	<div class='field'>
-		<span class="label">Tags:</span>
-		<div class='field-value'>
-			
-			{#each tags as tag}
-				<Tag property={tag.property} value={tag.value} on:remove={removeTag(tag)}/>
-			{/each}
+		
+	{#each track.tags as tag}
+		<Tag canRemove={editMode} property={tag.property} value={tag.value} on:remove={removeTag(tag)}/>
+	{/each}
 
-			{#if enteringTag}
-				<TagEntryInput 
-					property={tagProperty}
-					value={tagValue}
-					bind:ref
-					on:valueSet={onEntry}
-				/>
+	{#if enteringTag}
+		<TagEntryInput 
+			property={tagProperty}
+			value={tagValue}
+			bind:ref
+			on:valueSet={onEntry}
+		/>
 
-			{/if}
+	{/if}
 
-			<div id="tag-warnings"></div>
-		</div>
-	</div>
-	<div class='field post-tags'>
-		<span class="label"></span>
-		<div class='field-value'>
-			<div>
-				<button on:click={addTagEntryField("hyperlink")}>+ Hyperlink</button>
-				<button on:click={addTagEntryField("artist")}>+ Artist</button>
-				<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button></div>
-			<div>
-				<button on:click={()=>{addTag({property:"pl",value:"2"})}}>Obvious Refs</button>
-				<button on:click={()=>{addTag({property:"pl",value:"1"})}}>Sublte Refs</button>
-				<button on:click={()=>{addTag({property:"pl",value:"0"})}}>No refs</button>
-			</div>
-			<div>
-				<button on:click={addTagEntryField("genre")}>+ Genre</button>
-				<button>+ Album</button>
-				<button>+ Remix</button>
-			</div>
-		</div>
-	</div>
+	<div id="tag-warnings"></div>
 </div>
 
+{#if editMode}
+	<div class='field post-tags'>
+
+		<div>
+			<button on:click={addTagEntryField("hyperlink")}>+ Hyperlink</button>
+			<button on:click={addTagEntryField("artist")}>+ Artist</button>
+			<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button></div>
+		<div>
+			<button on:click={()=>{addTag({property:"pl",value:"2"})}}>Obvious Refs</button>
+			<button on:click={()=>{addTag({property:"pl",value:"1"})}}>Sublte Refs</button>
+			<button on:click={()=>{addTag({property:"pl",value:"0"})}}>No refs</button>
+		</div>
+		<div>
+			<button on:click={addTagEntryField("genre")}>+ Genre</button>
+			<button>+ Album</button>
+			<button>+ Remix</button>
+		</div>
+	</div>
+
 <div><button on:click={saveData}>Update</button></div>
+
+{/if}

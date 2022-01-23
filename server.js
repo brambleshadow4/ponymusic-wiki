@@ -4,14 +4,17 @@ const path = require('path');
 const express = require('express');
 const fs = require('fs');
 const bodyParser = require('body-parser');
-
 const {Pool, Client} = require('pg');
+
+const {addOgCacheTag, getOgPropertiesFromURL} = require('./server/helpers.js');
 
 const app = express();
 const port = process.env.PORT || 80;
 app.use(cors());
 
-console.log("this is running");
+
+getOgPropertiesFromURL("http://www.brambleshadow4.net/music/dustcar-37/", {logProperties:true});
+
 
 db = new Pool();
 
@@ -50,7 +53,7 @@ app.post("/api/autocomplete/artist", bodyParser.text({ type: 'text/plain' }), as
 
 app.get("/api/view/tracks", async(req,res) => {
 
-	console.log(req.query);
+	//console.log(req.query);
 
 	let tagFilter = '(tag "artist" "vylet pony")';
 	let order = "(desc release_date)"
@@ -71,11 +74,21 @@ app.get("/api/view/tracks", async(req,res) => {
 app.get("/api/track/*", async(req,res) =>{
 
 	let id = req.params[0];
+	let trackRows = (await db.query("SELECT * FROM tracks WHERE id=$1", [id])).rows;
+	let tagRows = (await db.query("SELECT * FROM track_tags WHERE track_id=$1", [id])).rows;
 
-	let {rows} = await db.query("SELECT * FROM artists WHERE id=$1", [id]);
-	let {tagsRaw} = await db.query("SELECT * FROM track_tags WHERE id=$1", [id]);
+	let response = trackRows[0] || {status: 400};
+	response.tags = [];
 
-	let response = rows[0] || {status: 400};
+	for(tag of tagRows)
+	{
+		if(!isNaN(tag.number)){
+			response.tags.push({property: tag.property, value: tag.value, number: tag.number});
+		}
+		else{
+			response.tags.push({property: tag.property, value: tag.value});
+		}
+	}
 
 	if(!response.status){
 		response.status = 200;
@@ -98,7 +111,7 @@ app.post("/api/track", bodyParser.text({type: "text/json"}), async (req,res) =>
 		return;
 	}
 
-	console.log(data);
+	//console.log(data);
 
 	let title = (data.title || "").trim();
 	let release_date = data.release_date.trim();
@@ -106,26 +119,22 @@ app.post("/api/track", bodyParser.text({type: "text/json"}), async (req,res) =>
 
 	if(isNaN(new Date(release_date).getTime())){
 		res.json({status:400});
-		console.log("here");
 		return;
 	}
 
 
 	if(title.length == 0){
-
-		console.log("hasdf");
 		return;
 	}
 
 	let id = data.id;
 
-	console.log("made it here");
+
+	// validate tags 
 
 	if(id == "new")
 	{
 		let x = await db.query("INSERT INTO tracks (title, release_date, locked) VALUES ($1, $2, false) RETURNING id", [title, release_date]);
-
-		console.log(x);
 
 		if(x.err)
 		{
@@ -147,7 +156,9 @@ app.post("/api/track", bodyParser.text({type: "text/json"}), async (req,res) =>
 		await db.query("UPDATE tracks SET title=$1, release_date=$2 WHERE id=$3", [title, release_date, id]);		
 	}
 
-	console.log(await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]));
+	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
+
+	data = await addOgCacheTag(data);
 
 	for(tag of data.tags)
 	{
@@ -174,3 +185,5 @@ app.get('*', (req, res) => {
 app.listen(port, () => {
 	console.log(`Server is up at port ${port}`);
 });
+
+

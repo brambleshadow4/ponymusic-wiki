@@ -3,6 +3,8 @@
 	export let property = "";
 	export let value = "";
 
+	export let canRemove = false;
+
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
@@ -53,7 +55,7 @@
 	$:text = lookupTagText(property, value);
 	$:tagClass = "tag " + lookupTagStyle(property, value);
 
-
+	console.log(property)
 
 
 </script>
@@ -93,8 +95,9 @@
 	}
 </style>
 
-{#if property == "hyperlink"}
-	<a href={value}>{value.length > 30 ? value.substring(0,27) + "..." : value}</a> <span class='remove-button' on:click={remove}>❌</span>
+{#if property.startsWith("ogcache_")}
+{:else if property == "hyperlink"}
+	<a href={value}>{value.length > 30 ? value.substring(0,27) + "..." : value}</a> {#if canRemove}<span class='remove-button' on:click={remove}>❌</span>{/if}
 {:else}
-	<span class={tagClass}>{text} <span class='remove-button' on:click={remove}>❌</span></span>
+	<span class={tagClass}>{text} {#if canRemove}<span class='remove-button' on:click={remove}>❌</span>{/if}</span>
 {/if}
