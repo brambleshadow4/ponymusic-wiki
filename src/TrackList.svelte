@@ -61,7 +61,7 @@
 		}
 		else
 		{
-			document.body.style.cursor = "pointer";
+			document.body.style.cursor = "default";
 		}	
 
 		if(inResizeMode >= 0)
@@ -101,18 +101,26 @@
 		else{
 			inResizeMode = -1;
 		}
+
+		console.log("mouse down")
 	}
 
 	function onMouseUp(id, e)
 	{
-		if(inResizeMode == -1)
-		{
-			openTrack(id)
-		}
+		
+		console.log("mouseup")
+	}
+
+	function onTrackClick(id){
+		openTrack(id)
+
+	}
+
+	window.addEventListener("mouseup", function(){
 
 		inResizeMode = -1;
-		
-	}
+		document.body.style.cursor = "default";
+	})
 
 	// on:click={()=>{openTrack(song.id)}}
 
@@ -125,33 +133,44 @@
 <div class='table-container'>
 	<table>
 		<tr>
-			<th class="col0">Artist <img class='filter' src="./filter.svg" width="15"></th>
-			<th class="col1">Track <img class='filter' src="./filter.svg" width="15"></th>
-			<th class="col2">Released <img class='filter' src="./filter.svg" width="15"></th>
+			<th class="col0" 
+				on:mousemove={onMouseMove}
+				on:mousedown={onMouseDown}
+				on:onmouseup={onMouseUp}
+			>
+				Artist <img class='filter' src="./filter.svg" width="15">
+			</th>
+			<th class="col1"
+				on:mousemove={onMouseMove}
+
+				on:mousedown={onMouseDown}
+				on:onmouseup={onMouseUp}
+			>
+				Track <img class='filter' src="./filter.svg" width="15">
+			</th>
+			<th class="col2"
+				on:mousemove={onMouseMove}
+		
+				on:mousedown={onMouseDown}
+				on:onmouseup={onMouseUp}
+			>
+				Released <img class='filter' src="./filter.svg" width="15">
+			</th>
 		</tr>
 		{#each data as song}
-			<tr class={song.id == selectedId ? "selected" : ""}>
+			<tr class={song.id == selectedId ? "selected row" : "row"}>
 				<td class="col0" 
-					on:mousemove={onMouseMove}
-					on:mouseleave={onMouseLeave}
-					on:mousedown={onMouseDown}
-					on:mouseup={(e) => {onMouseUp(song.id,e)}}
+					on:click={(e) => {onTrackClick(song.id)}}
 				>
 					{song.artist.replace(/\x1E/,", ")}
 				</td>
 				<td class="col1" 
-					on:mousemove={onMouseMove}
-					on:mouseleave={onMouseLeave}
-					on:mousedown={onMouseDown}
-					on:mouseup={(e) => {onMouseUp(song.id,e)}}
+					on:click={(e) => {onTrackClick(song.id)}}
 				>
 					{song.title} 
 				</td>
 				<td class="col2" 
-					on:mousemove={onMouseMove}
-					on:mouseleave={onMouseLeave}
-					on:mousedown={onMouseDown}
-					on:mouseup={(e) => {onMouseUp(song.id,e)}}
+					on:click={(e) => {onTrackClick(song.id)}}
 				>
 					{song.release_date.substring(0,10)}
 				</td>
@@ -231,6 +250,7 @@
 	.filter{
 		position: relative;
 		bottom: -2px;
+		cursor: pointer;
 	}
 
 	.table-container
@@ -238,6 +258,8 @@
 		width: 100%;
 		overflow-x: auto;
 	}
+
+	.row{cursor: pointer}
 
 </style>
 

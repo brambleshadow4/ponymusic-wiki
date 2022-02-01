@@ -1,7 +1,6 @@
 <script>
 	import TrackEditor from "./TrackEditor.svelte";
 	import TrackList from "./TrackList.svelte";
-	import TrackView from "./TrackView.svelte";
 	
 	$: path = window.location.pathname;
 
@@ -102,10 +101,6 @@
 		{:else}
 			<h1>Pony Music Wiki</h1>
 			<p>Welcome to the pony music wiki. I'm trying to make it a thing</p>
-
-			<audio controls>
-				<source src="http://www.brambleshadow4.net/music/dustcar-29/why can't you just let me be stupid.flac" type="audio/flac" />
-			</audio>
 		{/if}
 	</div>
 	
