@@ -33,6 +33,10 @@
 		if(id != "new"){
 			console.log("loading stuff")
 			track = await (await fetch("/api/track/" + id)).json();
+
+			/*if(track.embed){
+				mediaEmbed 
+			}
 			
 			let embedTag1 = track.tags.filter(x => x.property == "ogcache_embed")[0];
 			let embedTag2 = track.tags.filter(x => x.property == "ogcache_width")[0];
@@ -52,7 +56,7 @@
 			}
 			else{
 				audioEmbed = "";
-			}
+			}*/
 		}
 	}
 
@@ -227,14 +231,14 @@
 		</div>
 	</div>
 {:else}
-	{#if mediaEmbed[0]}
-		<iframe src={mediaEmbed[0]} width={mediaEmbed[1]} height={mediaEmbed[2]} 
+	{#if track.ogcache && track.ogcache.embed}
+		<iframe src={track.ogcache.embed} width={track.ogcache.width} height={track.ogcache.height} 
 			frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
 
 		></iframe>
-	{:else if audioEmbed}
+	{:else if track.ogcache && track.ogcache.audio}
 		<audio controls>
-			<source src={audioEmbed} />
+			<source src={track.ogcache.audio} />
 		</audio> 
 	{/if}
 {/if}

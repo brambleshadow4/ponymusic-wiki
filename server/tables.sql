@@ -2,7 +2,8 @@ CREATE TABLE IF NOT EXISTS tracks (
 	id SERIAL PRIMARY KEY,
 	title VARCHAR(255) NOT NULL,
 	release_date DATE NOT NULL,
-	locked BOOLEAN NOT NULL
+	locked BOOLEAN NOT NULL,
+	ogcache JSONB
 );
 
 CREATE TABLE IF NOT EXISTS track_tags(

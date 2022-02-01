@@ -1,14 +1,12 @@
 const fetch = require('node-fetch');
 const fs = require('fs');
 
-async function addOgCacheTag(track)
+async function getOgCache(track)
 {
-	track.tags = track.tags.filter(x => !x.property.startsWith("ogcache_"));
-
 	let hyperlinks = track.tags.filter(x => x.property == "hyperlink").map(x => x.value);
 
 	if(!hyperlinks.length){
-		return track;
+		return null;
 	}
 	
 	// youTube is a special case because we can lookup the embed from the URL.
@@ -19,10 +17,7 @@ async function addOgCacheTag(track)
 		let pattern = /https:\/\/www\.youtube\.com\/watch\?v=(.*)/;
 		let match = pattern.exec(youTubeLinks[0])
 
-		track.tags.push({property: "ogcache_embed", value: "https://www.youtube.com/embed/" + match[1]});
-		track.tags.push({property: "ogcache_width", value: 560});
-		track.tags.push({property: "ogcache_height", value: 315});
-		return track;
+		return {embed:"https://www.youtube.com/embed/" + match[1], width: 560, height: 315};
 	}
 
 	// generic lookup
@@ -45,34 +40,26 @@ async function addOgCacheTag(track)
 	if(bandcampLinks.length)
 	{
 		console.log("og bandcamp");
-		track.tags.push({property: "ogcache_embed", value: properties["og:video"]});
-		track.tags.push({property: "ogcache_width", value: 560});
-		track.tags.push({property: "ogcache_height", value: 130});
+
+		return {embed:properties["og:video"], width: 560, height: 130};
 	}
 	else if (soundcloudLinks.length)
 	{
 		console.log("og soundcloud");
-		track.tags.push({property: "ogcache_embed", value: properties["twitter:player"]});
-		track.tags.push({property: "ogcache_width", value: 500});
-		track.tags.push({property: "ogcache_height", value: 500});
+		return {embed:properties["twitter:player"], width: 500, height: 500};
 	}
 	else if(properties["twitter:player"])
 	{
 		console.log("generic player");
-		track.tags.push({property: "ogcache_embed", value: properties["twitter:player"]});
-		track.tags.push({property: "ogcache_width", value: 500});
-		track.tags.push({property: "ogcache_height", value: 500});
+		return {embed:properties["twitter:player"], width: 500, height: 500};
 	}
 	else if (properties["og:audio"])	
 	{
 		console.log("og audio");
-		track.tags.push({property: "ogcache_audio", value: properties["og:audio"]});
+		return {audio: properties["og:audio"]};
 	}
 
-	console.log(track.tags);
-
-	return track;
-		
+	return null;		
 }
 
 
@@ -113,6 +100,6 @@ async function getOgPropertiesFromURL(url, options)
 
 
 module.exports = {
-	addOgCacheTag,
+	getOgCache,
 	getOgPropertiesFromURL
 }

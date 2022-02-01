@@ -6,7 +6,7 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const {Pool, Client} = require('pg');
 
-const {addOgCacheTag, getOgPropertiesFromURL} = require('./server/helpers.js');
+const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
 
 const app = express();
 const port = process.env.PORT || 80;
@@ -130,11 +130,13 @@ app.post("/api/track", bodyParser.text({type: "text/json"}), async (req,res) =>
 	let id = data.id;
 
 
+	let ogcache = await getOgCache(data);
+
 	// validate tags 
 
 	if(id == "new")
 	{
-		let x = await db.query("INSERT INTO tracks (title, release_date, locked) VALUES ($1, $2, false) RETURNING id", [title, release_date]);
+		let x = await db.query("INSERT INTO tracks (title, release_date, locked, ogcache) VALUES ($1, $2, false, $3) RETURNING id", [title, release_date, ogcache]);
 
 		if(x.err)
 		{
@@ -153,12 +155,10 @@ app.post("/api/track", bodyParser.text({type: "text/json"}), async (req,res) =>
 			res.json({status: 400});
 		}
 
-		await db.query("UPDATE tracks SET title=$1, release_date=$2 WHERE id=$3", [title, release_date, id]);		
+		await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3 WHERE id=$4", [title, release_date, ogcache, id]);		
 	}
 
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
-
-	data = await addOgCacheTag(data);
 
 	for(tag of data.tags)
 	{
