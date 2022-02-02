@@ -10,7 +10,6 @@
 	let prevMouseX = 0;
 
 
-
 	async function load()
 	{
 		data = await (await fetch("/api/view/tracks")).json();

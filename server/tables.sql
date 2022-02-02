@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS tracks (
 	ogcache JSONB
 );
 
+-- ALTER TABLE tracks ADD COLUMN ogcache JSONB
+
 CREATE TABLE IF NOT EXISTS track_tags(
 	track_id INTEGER NOT NULL,
 	property VARCHAR(255) NOT NULL,

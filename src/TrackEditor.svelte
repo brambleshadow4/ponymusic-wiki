@@ -11,6 +11,7 @@
 	let enteringTag = false;
 	let tagProperty = "";
 	let tagValue = "";
+	let tagNumber = undefined;
 	let ref;
 
 	export let id = "new";
@@ -34,29 +35,8 @@
 			console.log("loading stuff")
 			track = await (await fetch("/api/track/" + id)).json();
 
-			/*if(track.embed){
-				mediaEmbed 
-			}
-			
-			let embedTag1 = track.tags.filter(x => x.property == "ogcache_embed")[0];
-			let embedTag2 = track.tags.filter(x => x.property == "ogcache_width")[0];
-			let embedTag3 = track.tags.filter(x => x.property == "ogcache_height")[0];
-
-			if(embedTag1 && embedTag2 && embedTag3){
-				mediaEmbed = [embedTag1.value, embedTag2.value, embedTag3.value];
-			}
-			else{
-				mediaEmbed = [];
-			}
-
-			embedTag1 = track.tags.filter(x => x.property == "ogcache_audio")[0];
-			if(embedTag1){
-				audioEmbed = embedTag1.value;
-				
-			}
-			else{
-				audioEmbed = "";
-			}*/
+			track.tags.sort(tagComp);
+			track.tags = track.tags;
 		}
 	}
 
@@ -77,6 +57,7 @@
 
 			tagProperty = tagType;
 			tagValue = "";
+			tagNumber = tagType == "album" ? 0 : undefined;
 			enteringTag = true;
 			setTimeout(()=>{ref.focus()}, 10);
 		}
@@ -105,22 +86,24 @@
 		}
 
 		track.tags.push(tag);
-		track.tags.sort(tagComp)
+		track.tags.sort(tagComp);
 		track.tags = track.tags;
 	};
 
 	function tagComp(tag1, tag2){
+
 		if(tag1.property == tag2.property){
 			if (tag1.value > tag2.value) return 1;
 			if (tag2.value > tag1.value) return -1;
+
 			return 0;  
 		}
 
 		let k = propertyOrder(tag1.property) - propertyOrder(tag2.property);
 		if(k != 0) return k;
 
-		if (tag1.propety > tag2.property) return 1;
-		if (tag2.propery > tag1.value) return -1;
+		if (tag1.property > tag2.property) return 1;
+		if (tag2.property > tag1.property) return -1;
 		return 0;
 	}
 
@@ -247,13 +230,14 @@
 <div>
 		
 	{#each track.tags as tag}
-		<Tag canRemove={editMode} property={tag.property} value={tag.value} on:remove={removeTag(tag)}/>
+		<Tag canRemove={editMode} tag={tag} on:remove={removeTag(tag)}/>
 	{/each}
 
 	{#if enteringTag}
 		<TagEntryInput 
 			property={tagProperty}
 			value={tagValue}
+			number={tagNumber}
 			bind:ref
 			on:valueSet={onEntry}
 		/>
@@ -277,7 +261,7 @@
 		</div>
 		<div>
 			<button on:click={addTagEntryField("genre")}>+ Genre</button>
-			<button>+ Album</button>
+			<button on:click={addTagEntryField("album")}>+ Album</button>
 			<button>+ Remix</button>
 		</div>
 	</div>

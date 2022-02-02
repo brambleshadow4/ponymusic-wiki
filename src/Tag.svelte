@@ -1,7 +1,6 @@
 
 <script>
-	export let property = "";
-	export let value = "";
+	export let tag = "";
 
 	export let canRemove = false;
 
@@ -10,15 +9,15 @@
 
 	function remove()
 	{
-		dispatch("remove", {property, value});
+		dispatch("remove", tag);
 	}
 
 	function lookupTagText(property, value)
 	{
 		let text = "";
-		if(property == "pl")
+		if(tag.property == "pl")
 		{
-			switch(value){
+			switch(tag.value){
 				case "2": text = "Obvious Refs"; break;
 				case "1": text = "Subtle Refs"; break;
 				case "0": text = "No Refs"; break;
@@ -27,36 +26,35 @@
 			return text;
 		}
 
-		if(property){
-			text = property + ":" + value;
+		if(tag.property){
+			text = tag.property + ":" + tag.value;
 		}
 		else{
-			text = value
+			text = tag.value
 		}
 
 		return text;
 	}	
 
-	function lookupTagStyle(property, value)
+	function lookupTagStyle(tag)
 	{
-		switch(property){
+		switch(tag.property){
 			case "pl":
 				return "blue";
 			case "artist":
 			case "featured artist":
 				return "indigo";
 			case "genre":
-				return "tan"
+				return "tan";
+			case "album":
+				return "pink";
 
 		}
 		return "";
 	}
 
-	$:text = lookupTagText(property, value);
-	$:tagClass = "tag " + lookupTagStyle(property, value);
-
-	console.log(property)
-
+	$:text = lookupTagText(tag);
+	$:tagClass = "tag " + lookupTagStyle(tag);
 
 </script>
 
@@ -64,10 +62,13 @@
 	.tag {
 		border: solid 1px gray;
 		background-color: #F0F0F0;
-		line-height: 35px;
+		/*line-height: 35px;*/
 
 		margin: 5px;
 		padding: 5px;
+
+		white-space:nowrap;
+		display: inline-block;
 	}
 
 	a{line-height: 35px;}
@@ -93,11 +94,17 @@
 		background-color: rgb(230, 201, 181);
 		border-color: rgb(205, 148, 108);
 	}
+
+	.pink{
+		color: #9852a3;
+		background-color: #dec5e2;
+		border-color: #cda7d3;
+
+	}
 </style>
 
-{#if property.startsWith("ogcache_")}
-{:else if property == "hyperlink"}
-	<a href={value}>{value.length > 30 ? value.substring(0,27) + "..." : value}</a> {#if canRemove}<span class='remove-button' on:click={remove}>❌</span>{/if}
+{#if tag.property == "hyperlink"}
+	<a href={tag.value}>{tag.value.length > 30 ? tag.value.substring(0,27) + "..." : tag.value}</a> {#if canRemove}<span class='remove-button' on:click={remove}>❌</span>{/if}
 {:else}
-	<span class={tagClass}>{text} {#if canRemove}<span class='remove-button' on:click={remove}>❌</span>{/if}</span>
+	<span class={tagClass}>{text}{#if tag.number}({tag.number}){/if}{#if canRemove}<span class='remove-button' on:click={remove}>❌</span>{/if}</span>
 {/if}

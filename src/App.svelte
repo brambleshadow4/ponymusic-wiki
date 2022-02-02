@@ -72,7 +72,9 @@
 		bottom: 0px;
 
 		background-color: white;
-		min-width: 800px;
+		
+		max-width: calc(100% - .5in);
+		width: 800px;
 
 		padding-left: .5in;
 	}

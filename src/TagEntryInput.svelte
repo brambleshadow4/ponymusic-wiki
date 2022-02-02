@@ -5,6 +5,7 @@
 
 	export let property = "";
 	export let value = "";
+	export let number = undefined;
 	export let ref = null;
 
 
@@ -36,11 +37,39 @@
 		}*/
 	}
 
+	async function onNumberInput(e)
+	{
+		let directValue = e.target.value;
+		while(isNaN(Number(directValue)) && directValue.length)
+		{
+			directValue = directValue.substring(0,directValue.length-1);
+		}
+
+		e.target.value = directValue;
+
+		let numValue = Number(directValue);
+
+		if(!isNaN(numValue))
+		{
+			number = numValue
+		}
+	}
+
 	async function onkeyup(e)
 	{
 		if(e.key == "Enter")
 		{
-			dispatch("valueSet", {property, value});
+			let tag = {property, value};
+
+			if(!isNaN(number)){
+				tag.number = number;
+
+				if(number <= 0){
+					return;
+				}
+			}
+
+			dispatch("valueSet", tag);
 			property = "";
 			value = "";
 		}
@@ -105,6 +134,16 @@
 		border-bottom-right-radius: 2px;
 	}
 
+	input.mid{
+		border-top-right-radius: 0px;
+		border-bottom-right-radius: 0px;
+		border-right:  none;
+	}
+
+	input.number{
+		width: .5in;
+	}
+
 	input:focus
 	{
 		box-shadow: none;
@@ -123,11 +162,19 @@
 	
 	<input 
 		id="tag-entry-input"
+		class={isNaN(number) ? "" : "mid"}
 		type="text" maxlength="255"
 		bind:this={ref}
 		on:input={oninput} value={value} on:focus={oninput}
 		on:keyup={onkeyup}
 	/>
+
+	{#if !isNaN(number)}
+		<input class='number' placeholder="no" value={number || ""}
+			on:input={onNumberInput}
+			on:keyup={onkeyup}
+		/>
+	{/if}
 
 	{#if options.length}
 		<div class='auto-complete'>
