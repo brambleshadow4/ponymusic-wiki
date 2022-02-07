@@ -115,10 +115,5 @@
 		<div class='sidebar'>
 			<TrackEditor id={loadedTrackID} on:close={openTrack}/>
 		</div>
-	{/if}
-
-	
+	{/if}	
 </div>
-
-
-

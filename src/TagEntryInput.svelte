@@ -1,4 +1,40 @@
 
+<div class="container">
+	{#if property}
+		<span class='property-box'>{property}</span>
+	{/if}
+	
+	<input 
+		id="tag-entry-input"
+		class={isNaN(number) ? "" : "mid"}
+		type="text" maxlength="255"
+		bind:this={ref}
+		on:input={oninput} value={value} on:focus={oninput}
+		on:keyup={onkeyup}
+		on:blur={canOpenOptionList}
+		on:focus={canOpenOptionList}
+	/>
+
+	{#if !isNaN(number)}
+		<input bind:this={numberInput} class='number' placeholder="no" value={number || ""}
+			on:input={onNumberInput}
+			on:keyup={onkeyup}
+		/>
+	{/if}
+
+	{#if options.length && cool}
+		<div class='auto-complete'>
+		{#each options as item}
+			<div on:click={select(item)} on:mousedown={() => { inOptionList = true; }} class='option'>{item.text}</div>
+		{/each}
+		</div>
+	{/if}
+
+	
+</div>
+
+
+
 <script>
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -7,6 +43,11 @@
 	export let value = "";
 	export let number = undefined;
 	export let ref = null;
+	let numberInput = null;
+
+
+	let cool = false; // can open option list
+	let inOptionList = false;
 
 
 	//let LOOKUP_URL = location.protocol + "//" + location.host + ""
@@ -14,27 +55,28 @@
 
 	async function oninput(e)
 	{
+		canOpenOptionList();
+
 		value = e.target.value; 
 
-		/*let data = await fetch("/api/tagLookup", {
+		if(value == "" || property == "hyperlink"){
+			options = [];
+			return;
+		}
+
+		let data = await fetch("/api/tagAutofill", {
 			method: "POST",
 			headers: {"Content-Type": "text/json"},
 			body: JSON.stringify({
 				property,
-				value: textValue,
+				value,
 			})	
 		});
 
 		let matches = await data.json();
 
-		if(textValue != "")
-		{
-			options = matches
-		}
-		else
-		{
-			options = [];
-		}*/
+		options = matches;
+
 	}
 
 	async function onNumberInput(e)
@@ -75,8 +117,28 @@
 		}
 	}
 
-	function select(item)
+	function select(tag)
 	{
+		inOptionList = false; 
+
+		if(tag.property == "album")
+		{
+			ref.value = tag.text;
+			numberInput.focus();
+		}
+		else
+		{
+			dispatch("valueSet", tag);
+		}
+
+		canOpenOptionList();
+	}
+
+	function canOpenOptionList()
+	{
+		cool = document.activeElement == ref || inOptionList;
+
+		console.log(cool);
 	}
 
 </script>
@@ -152,37 +214,7 @@
 	.container {
 		font-size: 0pt;
 	}
+
+	.option {font-size: initial;}
 	
 </style>
-
-<div class="container">
-	{#if property}
-		<span class='property-box'>{property}</span>
-	{/if}
-	
-	<input 
-		id="tag-entry-input"
-		class={isNaN(number) ? "" : "mid"}
-		type="text" maxlength="255"
-		bind:this={ref}
-		on:input={oninput} value={value} on:focus={oninput}
-		on:keyup={onkeyup}
-	/>
-
-	{#if !isNaN(number)}
-		<input class='number' placeholder="no" value={number || ""}
-			on:input={onNumberInput}
-			on:keyup={onkeyup}
-		/>
-	{/if}
-
-	{#if options.length}
-		<div class='auto-complete'>
-		{#each options as item}
-			<div on:click={select(item)}>{item[1]}</div>
-		{/each}
-		</div>
-	{/if}
-
-	
-</div>

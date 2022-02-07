@@ -149,7 +149,27 @@
 			</th>
 			<th class="col2"
 				on:mousemove={onMouseMove}
-		
+				on:mousedown={onMouseDown}
+				on:onmouseup={onMouseUp}
+			>
+				Album <img class='filter' src="./filter.svg" width="15">
+			</th>
+			<th class="col3"
+				on:mousemove={onMouseMove}
+				on:mousedown={onMouseDown}
+				on:onmouseup={onMouseUp}
+			>
+				Refs <img class='filter' src="./filter.svg" width="15">
+			</th>
+			<th class="col4"
+				on:mousemove={onMouseMove}
+				on:mousedown={onMouseDown}
+				on:onmouseup={onMouseUp}
+			>
+				Genre <img class='filter' src="./filter.svg" width="15">
+			</th>
+			<th class="col5"
+				on:mousemove={onMouseMove}
 				on:mousedown={onMouseDown}
 				on:onmouseup={onMouseUp}
 			>
@@ -157,20 +177,23 @@
 			</th>
 		</tr>
 		{#each data as song}
-			<tr class={song.id == selectedId ? "selected row" : "row"}>
-				<td class="col0" 
-					on:click={(e) => {onTrackClick(song.id)}}
-				>
-					{song.artist.replace(/\x1E/,", ")}
+			<tr class={song.id == selectedId ? "selected row" : "row"} on:click={(e) => {onTrackClick(song.id)}}>
+				<td class="col0">
+					{song.artist.replace(/\x1E/g,", ")}
 				</td>
-				<td class="col1" 
-					on:click={(e) => {onTrackClick(song.id)}}
-				>
+				<td class="col1">
 					{song.title} 
 				</td>
-				<td class="col2" 
-					on:click={(e) => {onTrackClick(song.id)}}
-				>
+				<td class="col2">
+					{song.album.replace(/\x1E/g,", ")}
+				</td>
+				<td class="col3">
+					{song.pl}
+				</td>
+				<td class="col4">
+					{song.genre.replace(/\x1E/g,", ")}
+				</td>
+				<td class="col5">
 					{song.release_date.substring(0,10)}
 				</td>
 			</tr>
@@ -183,6 +206,9 @@
 		--col0-width: 200px;
 		--col1-width: 200px;
 		--col2-width: 100px;
+		--col3-width: 100px;
+		--col4-width: 100px;
+		--col5-width: 100px;
 	}
 
 	table{
@@ -245,6 +271,9 @@
 	.col0{ width: var(--col0-width); }
 	.col1{ width: var(--col1-width); }
 	.col2{ width: var(--col2-width); }
+	.col3{ width: var(--col3-width); }
+	.col4{ width: var(--col4-width); }
+	.col5{ width: var(--col5-width); }
 
 	.filter{
 		position: relative;

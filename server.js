@@ -13,7 +13,7 @@ const port = process.env.PORT || 80;
 app.use(cors());
 
 
-getOgPropertiesFromURL("http://www.brambleshadow4.net/music/dustcar-37/", {logProperties:true});
+// getOgPropertiesFromURL("http://www.brambleshadow4.net/music/dustcar-37/", {logProperties:true});
 
 
 db = new Pool();
@@ -37,33 +37,44 @@ for (query of tableQueries)
 app.use(express.static('public'));
 
 
-app.post("/api/autocomplete/artist", bodyParser.text({ type: 'text/plain' }), async (req,res) =>
+app.post("/api/tagAutofill", bodyParser.text({ type: 'text/json' }), async (req,res) =>
 {
-	console.log(req.body);
+	req.body = JSON.parse(req.body);
 
-	let name = req.body.replace(/%/,"\\%").toLowerCase();
-	name = "%" + name + "%";
-	let {rows} = await db.query("SELECT * FROM artists WHERE LOWER(name) LIKE $1 LIMIT 20", [name]);
+	let property = req.body.property;
 
-	console.log(rows);
+	if(property == "" || !req.body.value){
+		res.json([]);
+		return;
+	}
 
-	let strippedRows = rows.map(x => [x.id, x.name]);
+	let pattern = req.body.value.replace(/%/,"\\%").toLowerCase();
+	pattern = "%" + pattern + "%";
+
+	if(property == "artist" || property == "featured artist") {
+		var {rows} = await db.query("SELECT DISTINCT value FROM track_tags WHERE (property = 'artist' OR property = 'featured artist') and value LIKE $1", [pattern]);
+	}
+	else {
+		var {rows} = await db.query("SELECT DISTINCT value FROM track_tags WHERE property = $1 and value LIKE $2", [property, pattern]);
+	}
+
+	let strippedRows = rows.map(x => {return {text: x.value, value: x.value, property}});
+
 	res.json(strippedRows);
 })
 
 app.get("/api/view/tracks", async(req,res) => {
 
-	//console.log(req.query);
-
 	let tagFilter = '(tag "artist" "vylet pony")';
 	let order = "(desc release_date)"
-
-
 
 	let {rows} = await db.query(`
 		SELECT id, title, release_date,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='artist') as artist, 
-			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='hyperlink') as hyperlink
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='hyperlink') as hyperlink,
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='genre') as genre,
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='album') as album,
+			(SELECT COALESCE(value, '') from track_tags WHERE track_id=id and property='pl') as pl
 		FROM tracks 
 		ORDER BY release_date DESC
 		`, []);
