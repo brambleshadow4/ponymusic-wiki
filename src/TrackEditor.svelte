@@ -142,7 +142,8 @@
 			id,
 			title: nameInput.value.trim(),
 			release_date: dateInput.value.trim(),
-			tags: track.tags
+			tags: track.tags,
+			session: sessionStorage.session
 		}
 
 		var response = await (await fetch("/api/track", {

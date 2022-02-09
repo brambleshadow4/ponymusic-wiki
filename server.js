@@ -6,6 +6,7 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const {Pool, Client} = require('pg');
 
+const {PERM, auth, reqHasPerm} = require("./server/auth.js");
 const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
 
 const app = express();
@@ -17,6 +18,9 @@ app.use(cors());
 
 
 db = new Pool();
+
+
+
 
 let tableQueries = fs.readFileSync("./server/tables.sql", {encoding:'utf8'})
 	.split(";");
@@ -37,10 +41,8 @@ for (query of tableQueries)
 app.use(express.static('public'));
 
 
-app.post("/api/tagAutofill", bodyParser.text({ type: 'text/json' }), async (req,res) =>
+app.post("/api/tagAutofill", processJSON, async (req,res) =>
 {
-	req.body = JSON.parse(req.body);
-
 	let property = req.body.property;
 
 	if(property == "" || !req.body.value){
@@ -108,21 +110,10 @@ app.get("/api/track/*", async(req,res) =>{
 	res.json(response);
 });
 
-app.post("/api/track", bodyParser.text({type: "text/json"}), async (req,res) =>
+app.post("/api/track", processJSON,
+	auth(PERM.UPDATE_TRACK), async (req,res) =>
 {
-	// TODO auth.
-
-	var data;
-
-	try {
-		data = JSON.parse(req.body)
-	}
-	catch(e){
-		res.json({status:400});
-		return;
-	}
-
-	//console.log(data);
+	var data = req.body;
 
 	let title = (data.title || "").trim();
 	let release_date = data.release_date.trim();
@@ -139,8 +130,6 @@ app.post("/api/track", bodyParser.text({type: "text/json"}), async (req,res) =>
 	}
 
 	let id = data.id;
-
-
 	let ogcache = await getOgCache(data);
 
 	// validate tags 
@@ -187,6 +176,25 @@ app.post("/api/track", bodyParser.text({type: "text/json"}), async (req,res) =>
 
 	res.json({status: 200, id});
 });
+
+
+function processJSON(req, res, next){
+
+	let doTheThing = bodyParser.text({type: "text/json"});
+
+	doTheThing(req, res, function(){
+
+		try{
+			req.body = JSON.parse(req.body);
+		}
+		catch(e){
+			res.json({status: 400});
+			return;
+		}
+
+		next();
+	});
+}
 
 
 app.get('*', (req, res) => {

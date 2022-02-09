@@ -3,12 +3,27 @@
 	import TrackList from "./TrackList.svelte";
 	
 	$: path = window.location.pathname;
+	$: avatar = "./avatar.svg";
 
 	let loadedTrackID = "";
 
 	function openTrack(event){
 
 		loadedTrackID = event.detail;
+	}
+
+
+	function debugLogin(e)
+	{
+		if(e.shiftKey)
+		{
+			e.preventDefault();
+			sessionStorage.role = 1;
+			sessionStorage.session = 1;
+			localStorage.session = 1;
+			location.reload();
+			return false;
+		}
 	}
 
 </script>
@@ -22,7 +37,7 @@
 		left: 0;
 		width: 300px;
 
-		background-color: black;
+		background-color: #101010;
 	}
 
 	nav a
@@ -79,16 +94,45 @@
 		padding-left: .5in;
 	}
 
+	.login{
+		position: fixed;
+		top: 20px;
+		right: 20px;
 
+		background-color:  #101010;
+		border-radius: 25px;
+		display: inline-block;
+
+		height:  50px;
+	}
+
+	.login img{
+		width: 50px;
+		height: 50px;
+		border-radius: 25px;
+	}
+
+	.login span
+	{
+		line-height: 50px;
+		color: white;
+		display: inline-block;
+		vertical-align: top;
+		padding: 0px 20px;
+	}
 </style>
 
 
 <nav>
 	<a href="/">Home</a>
-	<a href="/tracks">Tracks</a>
+	<a href="/tracks">T<span on:click={debugLogin}>r</span>acks</a>
 	<a href="/artists">Artists</a>
 	<a>Albums</a>
 </nav>
+
+<div class='login'>
+	{#if !sessionStorage.role}<span>Sign in</span>{/if}<img src={avatar} alt="avatar"/>
+</div>
 
 <div class='main-container'>
 
