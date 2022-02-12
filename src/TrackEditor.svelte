@@ -1,8 +1,10 @@
 <script>
 	
 	import TagEntryInput from "./TagEntryInput.svelte";
+	import TrackHistory from "./TrackHistory.svelte";
 	import Tag from "./Tag.svelte";
 	import { createEventDispatcher } from 'svelte';
+	import {tagComp} from "./tagHelpers.js";
 
 	const dispatch = createEventDispatcher();
 
@@ -14,14 +16,11 @@
 	let tagNumber = undefined;
 	let ref;
 
+
 	export let id = "new";
+	export let mode = 0;
 
-
-	let editMode = false;
-
-	if(id=="new"){
-		editMode = true;
-	}
+	let tabProps = [[0, "Track"],[1, "Edit"],[2,"History"]];
 
 	let nameInput;
 	let dateInput;
@@ -31,21 +30,39 @@
 
 	async function load()
 	{
-		if(id != "new"){
+		tabProps = [[0, "Track"],[1, "Edit"],[2,"History"]];
+
+		if(id != "new")
+		{
 			console.log("loading stuff")
 			track = await (await fetch("/api/track/" + id)).json();
 
 			track.tags.sort(tagComp);
 			track.tags = track.tags;
-		}
-	}
 
-	function edit(){
-		editMode = true;
+			mode = 0;
+			enteringTag = false;
+		}
+		else
+		{
+			mode = 1;
+			tabProps = [];
+		}
 	}
 
 	load();
 
+	function formatDate(dte)
+	{
+		let months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+		console.log(dte);
+		let year = dte.substring(0,4)
+		let month = months[Number(dte.substring(5,7)-1)];
+		let day = Number(dte.substring(8,10))
+
+		return `${month} ${day}, ${year}`;
+	}
 
 	function addTagEntryField(tagType)
 	{
@@ -90,33 +107,6 @@
 		track.tags = track.tags;
 	};
 
-	function tagComp(tag1, tag2){
-
-		if(tag1.property == tag2.property){
-			if (tag1.value > tag2.value) return 1;
-			if (tag2.value > tag1.value) return -1;
-
-			return 0;  
-		}
-
-		let k = propertyOrder(tag1.property) - propertyOrder(tag2.property);
-		if(k != 0) return k;
-
-		if (tag1.property > tag2.property) return 1;
-		if (tag2.property > tag1.property) return -1;
-		return 0;
-	}
-
-	function propertyOrder(prop){
-		switch(prop){
-			case "hyperlink": return 0;
-			case "artist": return 1;
-			case "featured artist": return 2;
-			case "pl": return 3;
-			default: return 4;
-		}
-	}
-
 	function removeTag(tag)
 	{
 		return function()
@@ -152,9 +142,12 @@
 			body: JSON.stringify(data)
 		})).json();
 
-		console.log(response);
 
-		dispatch("close","");
+		if(id == "new"){
+			id = response.id;
+		}
+
+		load();
 	}
 </script>
 
@@ -189,84 +182,161 @@
 		line-height: 12pt;
 	}
 
+	h1{
+		margin-top: 0px;
+		padding-top: 12pt
+	}
+
+	.h1-0{
+		margin-bottom: 0;
+	}
+
+	h2 {margin-top: 0; font-size: 12pt}
+
 	input {margin: 0px}
+
+	.main {
+		background-color: white;
+		padding-left: .5in;
+
+		height: calc(100vh - 33px);
+
+		overflow-y: auto;
+
+		position: relative;
+	}
+
+	.tabs
+	{
+		padding-left: 20px;
+		padding-top: 5px;
+		font-size: 16pt;
+	}
+
+	.tab-text{
+		cursor: pointer;
+	}
+
+	.tabs > span{
+		position: relative;
+		margin: 0px 15px;
+	}
+
+	.tabs .selected.tab{
+		border-bottom: 32px solid white;
+		z-index: -1;
+	}
+
+	.tabs .tab{
+		border-bottom: 32px solid #E0E0E0;
+		border-left: 16px solid transparent;
+		border-right: 16px solid transparent;
+		height: 0;
+
+		box-sizing: border-box;
+
+		position: absolute;
+		left: -20px;
+		right: -20px;
+		top: 0;
+
+		z-index: -2;
+	}
 
 </style>
 
 
-{#if id=="new"}
-	<h1>Add Track</h1>
-{:else}
-	<h1>
-		{track.title} {#if !editMode}<button class='edit-button' on:click={edit}>Edit</button>{/if}
-	</h1>
-{/if}
 
-{#if editMode}
-	<div>
-		
-		<div class='field'>
-			<span class="label" >Title:</span>
-			<input id='name' type="text" maxlength="255" bind:this={nameInput} value={track.title}/>
-		</div>
-		<div class='field'>
-			<span class="label">Released:</span>
-			<input id='release-date' type="date" bind:this={dateInput} value={track.release_date.substring(0,10)}/>
-		</div>
-	</div>
-{:else}
-	{#if track.ogcache && track.ogcache.embed}
-		<iframe src={track.ogcache.embed} width={track.ogcache.width} height={track.ogcache.height} 
-			frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
-
-		></iframe>
-	{:else if track.ogcache && track.ogcache.audio}
-		<audio controls>
-			<source src={track.ogcache.audio} />
-		</audio> 
-	{/if}
-{/if}
-
-<div>Tags:</div>
-<div>
-		
-	{#each track.tags as tag}
-		<Tag canRemove={editMode} tag={tag} on:remove={removeTag(tag)}/>
+<div class='tabs'>
+	{#each tabProps as tab}
+		<span><span class={'tab-text '} on:click={() => {mode = tab[0]}}>{tab[1]}</span><span class={'tab' + (mode == tab[0] ? " selected" : "")} ></span></span>
 	{/each}
-
-	{#if enteringTag}
-		<TagEntryInput 
-			property={tagProperty}
-			value={tagValue}
-			number={tagNumber}
-			bind:ref
-			on:valueSet={onEntry}
-		/>
-
-	{/if}
-
-	<div id="tag-warnings"></div>
 </div>
 
-{#if editMode}
-	<div class='field post-tags'>
 
+
+<div class='main'>
+	
+	{#if id=="new"}
+		<h1>Add Track</h1>
+	{:else}
+		<h1 class={"h1-" + mode}>{track.title}</h1>
+		{#if mode==0}<h2>{formatDate(track.release_date)}</h2>{/if}
+	{/if}
+
+	{#if mode==1}
 		<div>
-			<button on:click={addTagEntryField("hyperlink")}>+ Hyperlink</button>
-			<button on:click={addTagEntryField("artist")}>+ Artist</button>
-			<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button></div>
-		<div>
-			<button on:click={()=>{addTag({property:"pl",value:"2"})}}>Obvious Refs</button>
-			<button on:click={()=>{addTag({property:"pl",value:"1"})}}>Sublte Refs</button>
-			<button on:click={()=>{addTag({property:"pl",value:"0"})}}>No refs</button>
+			
+			<div class='field'>
+				<span class="label" >Title:</span>
+				<input id='name' type="text" maxlength="255" bind:this={nameInput} value={track.title}/>
+			</div>
+			<div class='field'>
+				<span class="label">Released:</span>
+				<input id='release-date' type="date" bind:this={dateInput} value={track.release_date.substring(0,10)}/>
+			</div>
 		</div>
-		<div>
-			<button on:click={addTagEntryField("genre")}>+ Genre</button>
-			<button on:click={addTagEntryField("album")}>+ Album</button>
-			<button>+ Remix</button>
-		</div>
+	{:else if mode ==2}
+		<TrackHistory id={id} on:reloadtrack={load}/>
+		
+	{:else}
+		{#if track.ogcache && track.ogcache.embed}
+			<iframe src={track.ogcache.embed} width={track.ogcache.width} height={track.ogcache.height} 
+				frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
+
+			></iframe>
+		{:else if track.ogcache && track.ogcache.audio}
+			<audio controls>
+				<source src={track.ogcache.audio} />
+			</audio> 
+		{/if}
+	{/if}
+
+
+	{#if mode== 0 || mode == 1}
+	<div>Tags:</div>
+	<div>
+			
+		{#each track.tags as tag}
+			<Tag canRemove={mode==1} tag={tag} on:remove={removeTag(tag)}/>
+		{/each}
+
+		{#if enteringTag}
+			<TagEntryInput 
+				property={tagProperty}
+				value={tagValue}
+				number={tagNumber}
+				bind:ref
+				on:valueSet={onEntry}
+			/>
+
+		{/if}
+
+		<div id="tag-warnings"></div>
 	</div>
+	{/if}
 
-<div><button on:click={saveData}>Update</button></div>
+	{#if mode==1}
+		<div class='field post-tags'>
 
-{/if}
+			<div>
+				<button on:click={addTagEntryField("hyperlink")}>+ Hyperlink</button>
+				<button on:click={addTagEntryField("artist")}>+ Artist</button>
+				<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button></div>
+			<div>
+				<button on:click={()=>{addTag({property:"pl",value:"2"})}}>Obvious Refs</button>
+				<button on:click={()=>{addTag({property:"pl",value:"1"})}}>Sublte Refs</button>
+				<button on:click={()=>{addTag({property:"pl",value:"0"})}}>No refs</button>
+			</div>
+			<div>
+				<button on:click={addTagEntryField("genre")}>+ Genre</button>
+				<button on:click={addTagEntryField("album")}>+ Album</button>
+				<button>+ Remix</button>
+			</div>
+		</div>
+
+	<div><button on:click={saveData}>Update</button></div>
+
+	{/if}
+
+</div>

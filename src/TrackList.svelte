@@ -125,81 +125,95 @@
 
 </script>
 
+<!--div class='tabs'>
+	<span>Everything</span>
+	<span>My Feed</span>
+	<span>For Later</span>
+	<span>Viewed</span>
+	<span>Not Interested</span>
+</div-->
 
-<h1>Tracks</h1>
-<a href="#" on:click={()=>{openTrack("new")}}>+ Add a track</a>
+<div class='frame'>
+	<h1>Pony Music Wiki</h1>
+	<div>All the pony music! (unless it's made by a Nazi/sexual predator)</div>
+			
+	<a href="#" on:click={()=>{openTrack("new")}}>+ Add a track</a>
 
-<div class='table-container'>
-	<table>
-		<tr>
-			<th class="col0" 
-				on:mousemove={onMouseMove}
-				on:mousedown={onMouseDown}
-				on:onmouseup={onMouseUp}
-			>
-				Artist <img class='filter' src="./filter.svg" width="15">
-			</th>
-			<th class="col1"
-				on:mousemove={onMouseMove}
+	<div class='table-container'>
+		<table>
+			<tr>
+				<th class="col0" 
+					on:mousemove={onMouseMove}
+					on:mousedown={onMouseDown}
+					on:onmouseup={onMouseUp}
+				>
+					Artist <img class='filter' src="./filter.svg" width="15">
+				</th>
+				<th class="col1"
+					on:mousemove={onMouseMove}
 
-				on:mousedown={onMouseDown}
-				on:onmouseup={onMouseUp}
-			>
-				Track <img class='filter' src="./filter.svg" width="15">
-			</th>
-			<th class="col2"
-				on:mousemove={onMouseMove}
-				on:mousedown={onMouseDown}
-				on:onmouseup={onMouseUp}
-			>
-				Album <img class='filter' src="./filter.svg" width="15">
-			</th>
-			<th class="col3"
-				on:mousemove={onMouseMove}
-				on:mousedown={onMouseDown}
-				on:onmouseup={onMouseUp}
-			>
-				Refs <img class='filter' src="./filter.svg" width="15">
-			</th>
-			<th class="col4"
-				on:mousemove={onMouseMove}
-				on:mousedown={onMouseDown}
-				on:onmouseup={onMouseUp}
-			>
-				Genre <img class='filter' src="./filter.svg" width="15">
-			</th>
-			<th class="col5"
-				on:mousemove={onMouseMove}
-				on:mousedown={onMouseDown}
-				on:onmouseup={onMouseUp}
-			>
-				Released <img class='filter' src="./filter.svg" width="15">
-			</th>
-		</tr>
-		{#each data as song}
-			<tr class={song.id == selectedId ? "selected row" : "row"} on:click={(e) => {onTrackClick(song.id)}}>
-				<td class="col0">
-					{song.artist.replace(/\x1E/g,", ")}
-				</td>
-				<td class="col1">
-					{song.title} 
-				</td>
-				<td class="col2">
-					{song.album.replace(/\x1E/g,", ")}
-				</td>
-				<td class="col3">
-					{song.pl}
-				</td>
-				<td class="col4">
-					{song.genre.replace(/\x1E/g,", ")}
-				</td>
-				<td class="col5">
-					{song.release_date.substring(0,10)}
-				</td>
+					on:mousedown={onMouseDown}
+					on:onmouseup={onMouseUp}
+				>
+					Track <img class='filter' src="./filter.svg" width="15">
+				</th>
+				<th class="col2"
+					on:mousemove={onMouseMove}
+					on:mousedown={onMouseDown}
+					on:onmouseup={onMouseUp}
+				>
+					Album <img class='filter' src="./filter.svg" width="15">
+				</th>
+				<th class="col3"
+					on:mousemove={onMouseMove}
+					on:mousedown={onMouseDown}
+					on:onmouseup={onMouseUp}
+				>
+					Refs <img class='filter' src="./filter.svg" width="15">
+				</th>
+				<th class="col4"
+					on:mousemove={onMouseMove}
+					on:mousedown={onMouseDown}
+					on:onmouseup={onMouseUp}
+				>
+					Genre <img class='filter' src="./filter.svg" width="15">
+				</th>
+				<th class="col5"
+					on:mousemove={onMouseMove}
+					on:mousedown={onMouseDown}
+					on:onmouseup={onMouseUp}
+				>
+					Released <img class='filter' src="./filter.svg" width="15">
+				</th>
 			</tr>
-		{/each}
-	</table>
+			{#each data as song}
+				<tr class={song.id == selectedId ? "selected row" : "row"} on:click={(e) => {onTrackClick(song.id)}}>
+					<td class="col0">
+						{song.artist.replace(/\x1E/g,", ")}
+					</td>
+					<td class="col1">
+						{song.title} 
+					</td>
+					<td class="col2">
+						{song.album.replace(/\x1E/g,", ")}
+					</td>
+					<td class="col3">
+						{song.pl}
+					</td>
+					<td class="col4">
+						{song.genre.replace(/\x1E/g,", ")}
+					</td>
+					<td class="col5">
+						{song.release_date.substring(0,10)}
+					</td>
+				</tr>
+			{/each}
+		</table>
+	</div>
+
+	<div>Page 1/1</div>
 </div>
+
 <style>
 
 	:root {
@@ -239,8 +253,8 @@
 		
 	}
 
-	td{
-		
+	h1{
+		margin: 0px;	
 	}
 
 	tr{
@@ -260,6 +274,14 @@
 		background-color: #b3d9ff;
 	}
 	
+
+	.frame{
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		padding-left: .5in;
+	}
+
 	tr.selected {
 		background-color: #66b3ff;
 	}
@@ -288,6 +310,14 @@
 	}
 
 	.row{cursor: pointer}
+
+
+
+	.tabs span
+	{
+		display: inline-block;
+		padding: 2px 10px;
+	}
 
 </style>
 

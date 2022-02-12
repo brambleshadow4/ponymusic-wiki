@@ -4,7 +4,6 @@ const {Pool} = require('pg');
 const ROLE = {
 	ADMIN: "1",
 	DEFAULT: "2",
-
 }
 
 const PERM = {
@@ -26,20 +25,6 @@ db = new Pool();
 let sessions = {}; // string => {id: ###} map
 
 
-if (process.env.SESSIONS)
-{
-	let envSessions = process.env.SESSIONS.split(",");
-
-	for(let pair of envSessions)
-	{
-		console.log(pair);
-		let [sessionID, userID, role] = pair.split("/");
-
-		sessions[sessionID] = {user: userID, role, expireTime: new Date("3000-01-01")};
-	}
-}
-
-
 function reqHasPerm(req, permission)
 {
 	let ses = req.body && req.body.session;
@@ -47,24 +32,41 @@ function reqHasPerm(req, permission)
 	return lookup[role][permission];
 }
 
-async function checkSession(req)
+async function buildSession(req)
 {
 	let ses = req.body && req.body.session;
-	let now = Date();
-	if(!sessions[ses] || sess)
+	let now = new Date().getTime();
+
+	if(!sessions[ses] || sessions[ses].expire_time.getTime() >= now)
+	{
+		delete sessions[ses];
+
+		let {rows} = await db.query(`
+			SELECT * FROM sessions LEFT JOIN users ON user_id=id WHERE sessions.session = $1
+		`, [ses]);
+
+
+		if(rows[0] && rows[0].expire_time.getTime() >= now)
+		{
+			sessions[ses] = rows[0];
+		}
+	}
+}
+
+async function getSession(req)
+{
+	await buildSession(req);
+	return sessions[req.body.session];
 }
 
 function auth(permission)
 {
-	return function(req, res, next){
+	return async function(req, res, next)
+	{
+		await buildSession(req);
 
-		console.log(req.body);
-		console.log(req.body.session)
-
-		if(reqHasPerm(req, permission)){
-
-			req.body.userID = 
-
+		if(reqHasPerm(req, permission))
+		{
 			next();
 			return;
 		}
@@ -74,5 +76,5 @@ function auth(permission)
 }
 
 module.exports = {
-	PERM, auth, reqHasPerm
+	PERM, auth, reqHasPerm, getSession
 }

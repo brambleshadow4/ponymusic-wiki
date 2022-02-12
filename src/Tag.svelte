@@ -36,6 +36,7 @@
 		return text;
 	}	
 
+
 	function lookupTagStyle(tag)
 	{
 		switch(tag.property){

@@ -6,20 +6,16 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const {Pool, Client} = require('pg');
 
-const {PERM, auth, reqHasPerm} = require("./server/auth.js");
+const {PERM, auth, reqHasPerm, getSession} = require("./server/auth.js");
 const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
 
 const app = express();
 const port = process.env.PORT || 80;
 app.use(cors());
 
-
 // getOgPropertiesFromURL("http://www.brambleshadow4.net/music/dustcar-37/", {logProperties:true});
 
-
 db = new Pool();
-
-
 
 
 let tableQueries = fs.readFileSync("./server/tables.sql", {encoding:'utf8'})
@@ -30,8 +26,6 @@ for (query of tableQueries)
 	db.query(query, (err, res) =>
 	{
 		if(err) {
-			console.log(query);
-			console.error(err);
 			process.exit(1);
 			//throw new Error(err);
 		}
@@ -39,6 +33,21 @@ for (query of tableQueries)
 }
 
 app.use(express.static('public'));
+
+app.post("/api/login", processJSON, async (req,res) =>{
+
+	let session = await getSession(req);
+
+	if(session)
+	{
+		session.status = 200;
+		res.json(session);
+		return;
+	}
+
+	res.json({status: 400})
+
+})
 
 
 app.post("/api/tagAutofill", processJSON, async (req,res) =>
@@ -54,10 +63,10 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 	pattern = "%" + pattern + "%";
 
 	if(property == "artist" || property == "featured artist") {
-		var {rows} = await db.query("SELECT DISTINCT value FROM track_tags WHERE (property = 'artist' OR property = 'featured artist') and value LIKE $1", [pattern]);
+		var {rows} = await db.query("SELECT DISTINCT value FROM track_tags WHERE (property = 'artist' OR property = 'featured artist') and LOWER(value) LIKE $1", [pattern]);
 	}
 	else {
-		var {rows} = await db.query("SELECT DISTINCT value FROM track_tags WHERE property = $1 and value LIKE $2", [property, pattern]);
+		var {rows} = await db.query("SELECT DISTINCT value FROM track_tags WHERE property = $1 and LOWER(value) LIKE $2", [property, pattern]);
 	}
 
 	let strippedRows = rows.map(x => {return {text: x.value, value: x.value, property}});
@@ -84,6 +93,22 @@ app.get("/api/view/tracks", async(req,res) => {
 	res.json(rows);
 });
 
+
+// 
+app.get("/api/history/track/*", async(req,res) =>{
+
+	let id = req.params[0];
+
+	let {rows} = await db.query(
+		`SELECT track_history.*, users.name FROM track_history LEFT JOIN users ON user_id = id WHERE track_id=$1 ORDER BY timestamp DESC LIMIT 200`
+	, [id]);
+
+	let response = rows || {status: 400};
+	res.json(response);
+
+});
+
+
 app.get("/api/track/*", async(req,res) =>{
 
 	let id = req.params[0];
@@ -95,10 +120,10 @@ app.get("/api/track/*", async(req,res) =>{
 
 	for(tag of tagRows)
 	{
-		if(!isNaN(tag.number)){
+		if(!isNaN(tag.number)) {
 			response.tags.push({property: tag.property, value: tag.value, number: tag.number});
 		}
-		else{
+		else {
 			response.tags.push({property: tag.property, value: tag.value});
 		}
 	}
@@ -110,6 +135,7 @@ app.get("/api/track/*", async(req,res) =>{
 	res.json(response);
 });
 
+
 app.post("/api/track", processJSON,
 	auth(PERM.UPDATE_TRACK), async (req,res) =>
 {
@@ -119,7 +145,8 @@ app.post("/api/track", processJSON,
 	let release_date = data.release_date.trim();
 
 
-	if(isNaN(new Date(release_date).getTime())){
+	if(isNaN(new Date(release_date).getTime()))
+	{
 		res.json({status:400});
 		return;
 	}
@@ -174,6 +201,9 @@ app.post("/api/track", processJSON,
 		}
 	}
 
+	let userID = (await getSession(req)).user_id;
+	await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, release_date, tags: data.tags}]);
+
 	res.json({status: 200, id});
 });
 
@@ -187,7 +217,8 @@ function processJSON(req, res, next){
 		try{
 			req.body = JSON.parse(req.body);
 		}
-		catch(e){
+		catch(e)
+		{
 			res.json({status: 400});
 			return;
 		}

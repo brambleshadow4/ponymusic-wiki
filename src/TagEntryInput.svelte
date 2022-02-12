@@ -75,6 +75,8 @@
 
 		let matches = await data.json();
 
+		console.log(matches);
+
 		options = matches;
 
 	}
@@ -120,6 +122,8 @@
 	function select(tag)
 	{
 		inOptionList = false; 
+
+		value = tag.text;
 
 		if(tag.property == "album")
 		{

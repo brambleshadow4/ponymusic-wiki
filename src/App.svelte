@@ -5,6 +5,9 @@
 	$: path = window.location.pathname;
 	$: avatar = "./avatar.svg";
 
+
+	let tab = 0;
+	let signedIn = !!sessionStorage.role;
 	let loadedTrackID = "";
 
 	function openTrack(event){
@@ -25,6 +28,32 @@
 			return false;
 		}
 	}
+
+	async function restoreSession()
+	{
+		if(localStorage.session && !sessionStorage.session)
+		{
+			let request = await fetch("/api/login", {
+				method: "POST",
+				headers: {"Content-Type": "text/json"},
+				body: JSON.stringify({
+					session: localStorage.session
+				})
+			});
+
+			let data = await request.json();	
+
+			if(data.status == 200)
+			{
+				sessionStorage.role = data.role;
+				sessionStorage.session = data.session;
+				localStorage.session = data.session;
+				signedIn = true;
+			}
+		}
+	}
+
+	restoreSession();
 
 </script>
 
@@ -66,8 +95,11 @@
 	.main
 	{
 		margin: auto;
-		padding: 8px;
 		padding-left: .5in;
+
+		display: flex;
+		flex-direction: column;
+		height: 100%;
 	}
 
 
@@ -86,13 +118,10 @@
 		top: 0px;
 		bottom: 0px;
 
-		background-color: white;
-		
 		max-width: calc(100% - .5in);
-		width: 800px;
-
-		padding-left: .5in;
+		width: 800px;		
 	}
+
 
 	.login{
 		position: fixed;
@@ -120,44 +149,46 @@
 		vertical-align: top;
 		padding: 0px 20px;
 	}
+
+
 </style>
 
 
 <nav>
-	<a href="/">Home</a>
-	<a href="/tracks">T<span on:click={debugLogin}>r</span>acks</a>
+	<a href="/about">About</a>
+	<a href="/">Tracks</a>
 	<a href="/artists">Artists</a>
 	<a>Albums</a>
 </nav>
 
 <div class='login'>
-	{#if !sessionStorage.role}<span>Sign in</span>{/if}<img src={avatar} alt="avatar"/>
+	{#if !signedIn}<span>Sign in</span>{/if}<img src={avatar} alt="avatar"/>
 </div>
 
 <div class='main-container'>
 
-	<div class='main'>
-		{#if path.startsWith("/track/")}
-			<TrackEditor />
+	{#if path.startsWith("/track/")}
+		
+	{:else if path == "/" || path == ""}
+		<TrackList on:openTrack={openTrack} selectedId={loadedTrackID} />
 
-		{:else if path.startsWith("/tracks")}
-			
-			<TrackList on:openTrack={openTrack} selectedId={loadedTrackID} />
+	{:else if path == "/about"}
+		
+		<div class='main'>
+			<h1>About the Pony Music Wiki</h1>
+			<p>I'm trying to make it a thing</p>
+		</div>
+	{/if}
 
-		{:else}
-			<h1>Pony Music Wiki</h1>
-			<p>Welcome to the pony music wiki. I'm trying to make it a thing</p>
-		{/if}
-	</div>
 	
 	{#if loadedTrackID}
 		<div class='shield' on:click={()=>{openTrack({detail:""})}}></div>
-	{/if}
+		
 
 
-	{#if loadedTrackID}
 		<div class='sidebar'>
-			<TrackEditor id={loadedTrackID} on:close={openTrack}/>
+
+			<TrackEditor id={loadedTrackID} on:close={openTrack} />
 		</div>
 	{/if}	
 </div>

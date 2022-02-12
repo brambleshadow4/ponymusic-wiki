@@ -15,4 +15,27 @@ CREATE TABLE IF NOT EXISTS track_tags(
 	number INTEGER
 );
 
+CREATE TABLE IF NOT EXISTS track_history(
+	track_id INTEGER,
+	user_id VARCHAR(355),
+	timestamp TIMESTAMP,
+	value JSONB
+);
+
+CREATE TABLE IF NOT EXISTS users (
+	id VARCHAR(255) PRIMARY KEY,
+	name VARCHAR(255) NOT NULL,
+	role INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+	session VARCHAR(255) PRIMARY KEY,
+	user_id VARCHAR(255),
+	expire_time TIMESTAMP
+);
+
+-- 
+-- INSERT INTO users (id, name, role) VALUES('1', 'System', 1)
+-- -- INSERT INTO users (id, name, role) VALUES('1', 'System', 1)
+-- INSERT INTO sessions (session, user_id, expire_time) VALUES ('1', '1', NOW() + interval '1 year')
 
