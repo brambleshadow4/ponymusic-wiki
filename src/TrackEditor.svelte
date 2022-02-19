@@ -16,7 +16,6 @@
 	let tagNumber = undefined;
 	let ref;
 
-
 	export let id = "new";
 	export let mode = 0;
 
@@ -47,6 +46,8 @@
 		{
 			mode = 1;
 			tabProps = [];
+
+			console.log("loading the track");
 		}
 	}
 

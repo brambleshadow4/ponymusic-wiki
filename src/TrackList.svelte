@@ -1,6 +1,8 @@
 
 <script>
-	
+	import FilterButton from "./FilterButton.svelte";
+	import { createEventDispatcher } from 'svelte';
+
 	export let selectedId = "";
 
 	let songs = [];
@@ -8,6 +10,9 @@
 
 	let inResizeMode = -1;
 	let prevMouseX = 0;
+
+	let tableContainer = undefined;
+	let pinnedRow = undefined;
 
 
 	async function load()
@@ -18,7 +23,7 @@
 	load();
 
 
-	import { createEventDispatcher } from 'svelte';
+	
 	const dispatch = createEventDispatcher();
 
 	function openTrack(id)
@@ -42,7 +47,6 @@
 
 	function colToResize(element, clientX)
 	{
-
 		let box = element.getBoundingClientRect();
 		let closeToLeft = clientX - box.left;
 		let closeToRight = clientX - box.right;
@@ -121,6 +125,26 @@
 		document.body.style.cursor = "default";
 	})
 
+	function adjustTopRowPosition(e)
+	{
+		pinnedRow.style.top = tableContainer.scrollTop + "px";
+	}
+
+	function combineMulti(s)
+	{
+		return s.replace(/\x1E/g,", ")
+	}
+
+	function enumText(s){
+		switch(s)
+		{
+			case "2": return "Obvious";
+			case "1": return "Subtle";
+			case "0": return "None";
+			default: return "";
+		}
+	}
+
 	// on:click={()=>{openTrack(song.id)}}
 
 </script>
@@ -134,20 +158,21 @@
 </div-->
 
 <div class='frame'>
-	<h1>Pony Music Wiki</h1>
+
+	<h1 class='no-margin'>Pony Music Wiki</h1>
 	<div>All the pony music! (unless it's made by a Nazi/sexual predator)</div>
 			
 	<a href="#" on:click={()=>{openTrack("new")}}>+ Add a track</a>
-
-	<div class='table-container'>
+	
+	<div class='table-container' on:scroll={adjustTopRowPosition} bind:this={tableContainer}>
 		<table>
-			<tr>
+			<tr class='pinned-row' bind:this={pinnedRow}>
 				<th class="col0" 
 					on:mousemove={onMouseMove}
 					on:mousedown={onMouseDown}
 					on:onmouseup={onMouseUp}
 				>
-					Artist <img class='filter' src="./filter.svg" width="15">
+					Artist <FilterButton filter="artist" on:openFilter />
 				</th>
 				<th class="col1"
 					on:mousemove={onMouseMove}
@@ -169,7 +194,7 @@
 					on:mousedown={onMouseDown}
 					on:onmouseup={onMouseUp}
 				>
-					Refs <img class='filter' src="./filter.svg" width="15">
+					Refs 
 				</th>
 				<th class="col4"
 					on:mousemove={onMouseMove}
@@ -189,19 +214,19 @@
 			{#each data as song}
 				<tr class={song.id == selectedId ? "selected row" : "row"} on:click={(e) => {onTrackClick(song.id)}}>
 					<td class="col0">
-						{song.artist.replace(/\x1E/g,", ")}
+						{combineMulti(song.artist)}
 					</td>
 					<td class="col1">
 						{song.title} 
 					</td>
 					<td class="col2">
-						{song.album.replace(/\x1E/g,", ")}
+						{combineMulti(song.album)}
 					</td>
 					<td class="col3">
-						{song.pl}
+						{enumText(song.pl)}
 					</td>
 					<td class="col4">
-						{song.genre.replace(/\x1E/g,", ")}
+						{combineMulti(song.genre)}
 					</td>
 					<td class="col5">
 						{song.release_date.substring(0,10)}
@@ -253,10 +278,6 @@
 		
 	}
 
-	h1{
-		margin: 0px;	
-	}
-
 	tr{
 		display: block;
 	}
@@ -297,11 +318,7 @@
 	.col4{ width: var(--col4-width); }
 	.col5{ width: var(--col5-width); }
 
-	.filter{
-		position: relative;
-		bottom: -2px;
-		cursor: pointer;
-	}
+
 
 	.table-container
 	{
@@ -317,6 +334,18 @@
 	{
 		display: inline-block;
 		padding: 2px 10px;
+	}
+
+	.pinned-row{
+		position: relative;
+	}
+
+	.table-container{
+		position: relative;
+	}
+
+	.no-margin{
+		margin: 0;
 	}
 
 </style>

@@ -2,8 +2,8 @@ require('dotenv').config()
 const {Pool} = require('pg');
 
 const ROLE = {
-	ADMIN: "1",
-	DEFAULT: "2",
+	DEFAULT: "1",
+	ADMIN: "2"
 }
 
 const PERM = {
@@ -28,7 +28,9 @@ let sessions = {}; // string => {id: ###} map
 function reqHasPerm(req, permission)
 {
 	let ses = req.body && req.body.session;
-	let role = sessions[ses] && sessions[ses].role || ROLE.DEFAULT;
+	let role = (sessions[ses] && sessions[ses].role) || ROLE.DEFAULT;
+
+	console.log(role);
 	return lookup[role][permission];
 }
 
@@ -41,7 +43,7 @@ async function buildSession(req)
 	{
 		delete sessions[ses];
 
-		let {rows} = await db.query(`
+		let {rows, err} = await db.query(`
 			SELECT * FROM sessions LEFT JOIN users ON user_id=id WHERE sessions.session = $1
 		`, [ses]);
 

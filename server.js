@@ -13,7 +13,7 @@ const app = express();
 const port = process.env.PORT || 80;
 app.use(cors());
 
-// getOgPropertiesFromURL("http://www.brambleshadow4.net/music/dustcar-37/", {logProperties:true});
+getOgPropertiesFromURL("https://www.youtube.com/watch?v=CNPdO5TZ1DQ", {logProperties:true});
 
 db = new Pool();
 
@@ -23,11 +23,13 @@ let tableQueries = fs.readFileSync("./server/tables.sql", {encoding:'utf8'})
 
 for (query of tableQueries)
 {
+	console.log(query);
+
 	db.query(query, (err, res) =>
 	{
 		if(err) {
 			process.exit(1);
-			//throw new Error(err);
+			throw new Error(err);
 		}
 	});
 }
@@ -112,6 +114,13 @@ app.get("/api/history/track/*", async(req,res) =>{
 app.get("/api/track/*", async(req,res) =>{
 
 	let id = req.params[0];
+
+	if(isNaN(id))
+	{
+		res.json({status: 400});
+		return;
+	}
+
 	let trackRows = (await db.query("SELECT * FROM tracks WHERE id=$1", [id])).rows;
 	let tagRows = (await db.query("SELECT * FROM track_tags WHERE track_id=$1", [id])).rows;
 
@@ -151,13 +160,13 @@ app.post("/api/track", processJSON,
 		return;
 	}
 
-
 	if(title.length == 0){
 		return;
 	}
 
 	let id = data.id;
-	let ogcache = await getOgCache(data);
+	let ogcache = await getOgCache(data) || {};
+	var info = {};
 
 	// validate tags 
 
@@ -182,7 +191,8 @@ app.post("/api/track", processJSON,
 			res.json({status: 400});
 		}
 
-		await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3 WHERE id=$4", [title, release_date, ogcache, id]);		
+		info = await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3 WHERE id=$4", [title, release_date, ogcache, id]);	
+		if(info.err){ console.log("2 " + info.err); }	
 	}
 
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
@@ -193,16 +203,22 @@ app.post("/api/track", processJSON,
 			continue;
 		}
 
-		if(!isNaN(tag.number)){
-			await db.query("INSERT INTO track_tags (track_id, property, value, number) VALUES ($1, $2, $3, $4)", [id, tag.property, tag.value, tag.number]);
+		if(!isNaN(tag.number))
+		{
+			info = await db.query("INSERT INTO track_tags (track_id, property, value, number) VALUES ($1, $2, $3, $4)", [id, tag.property, tag.value, tag.number]);
+			if(info.err){ console.log("3 " + info.err); }	
 		}
-		else {
-			await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, $2, $3)", [id, tag.property, tag.value,]);
+		else
+		{
+			info = await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, $2, $3)", [id, tag.property, tag.value,]);
+			if(info.err){ console.log("4 " + info.err); }	
 		}
 	}
 
 	let userID = (await getSession(req)).user_id;
-	await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, release_date, tags: data.tags}]);
+	info = await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, release_date, tags: data.tags}]);
+
+	if (info.err) {console.log("5 " + info.err); }
 
 	res.json({status: 200, id});
 });
@@ -229,6 +245,7 @@ function processJSON(req, res, next){
 
 
 app.get('*', (req, res) => {
+
 	res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
 });
 

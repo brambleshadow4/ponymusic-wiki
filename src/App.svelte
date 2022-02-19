@@ -1,6 +1,7 @@
 <script>
 	import TrackEditor from "./TrackEditor.svelte";
 	import TrackList from "./TrackList.svelte";
+	import FilterPopup from "./FilterPopup.svelte";
 	
 	$: path = window.location.pathname;
 	$: avatar = "./avatar.svg";
@@ -9,10 +10,17 @@
 	let tab = 0;
 	let signedIn = !!sessionStorage.role;
 	let loadedTrackID = "";
+	let loadedFilter = "";
 
 	function openTrack(event){
 
+		console.log("opening a track!");
 		loadedTrackID = event.detail;
+	}
+
+	function openFilter(event)
+	{
+		loadedFilter = event.detail;
 	}
 
 
@@ -150,6 +158,10 @@
 		padding: 0px 20px;
 	}
 
+	.no-margin{
+		margin: 0;
+	}
+
 
 </style>
 
@@ -170,7 +182,7 @@
 	{#if path.startsWith("/track/")}
 		
 	{:else if path == "/" || path == ""}
-		<TrackList on:openTrack={openTrack} selectedId={loadedTrackID} />
+		<TrackList on:openTrack={openTrack} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
 	{:else if path == "/about"}
 		
@@ -181,14 +193,24 @@
 	{/if}
 
 	
-	{#if loadedTrackID}
-		<div class='shield' on:click={()=>{openTrack({detail:""})}}></div>
-		
 
-
-		<div class='sidebar'>
-
-			<TrackEditor id={loadedTrackID} on:close={openTrack} />
-		</div>
-	{/if}	
 </div>
+
+{#if loadedTrackID}
+	<div class='shield' on:click={()=>{openTrack({detail:""})}}></div>
+
+	<div class='sidebar'>
+
+		<TrackEditor id={loadedTrackID} on:close={openTrack} />
+	</div>
+{/if}
+
+{#if loadedFilter}
+	<div class='shield'>
+		
+		<FilterPopup />
+	</div>
+
+	
+
+{/if}
