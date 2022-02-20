@@ -57,11 +57,8 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 {
 	let property = req.body.property;
 
-	console.log(req.body);
-
 	if(property == "" || req.body.value == undefined)
 	{
-		console.log("did we go down this code path?")
 		res.json([]);
 		return;
 	}
@@ -81,14 +78,11 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 
 	let strippedRows = rows.map(x => {return {text: x.value, value: x.value, property}});
 
-	console.log(strippedRows);
-
 	res.json(strippedRows);
 })
 
 app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 {
-
 	console.log(req.query);
 
 	let tagFilter = '(tag "artist" "vylet pony")';
@@ -98,15 +92,12 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let whereClause = "";
 	let whereClauses = [];
 
-	if(req.query.artist)
-	{
-		let artists = req.query.artist.map(sqlEscapeString).join(",");
-		whereClauses.push(`id IN (SELECT track_id FROM track_tags WHERE value IN (${artists}) AND property='artist')`)
+
+	if(req.query.artist){
+		whereClauses.push(buildWhereClause("artist", req.query.artist, false))
 	}
-	else if (req.query.x_artist)
-	{
-		let artists = req.query.x_artist.map(sqlEscapeString).join(",");
-		whereClauses.push(`id IN (SELECT track_id FROM track_tags WHERE value NOT IN (${artists}) AND property='artist')`)
+	else if(req.query.x_artist){
+		whereClauses.push(buildWhereClause("artist", req.query.x_artist, true))
 	}
 
 	if(whereClauses.length)
@@ -266,6 +257,56 @@ app.post("/api/track", processJSON,
 
 	res.json({status: 200, id});
 });
+
+function buildWhereClause(property, valueList, negate)
+{
+	let valueListNoNulls = valueList.filter(x => x).map(sqlEscapeString).join(",");
+	let hasBlank = valueList.filter(x => !x).length > 0;
+
+	let clauses = [];
+
+	if(negate)
+	{
+		if(valueListNoNulls.length)
+		{
+			clauses.push(`id NOT IN (SELECT track_id FROM track_tags WHERE value IN (${valueListNoNulls}) AND property='${property}')`)
+		}
+
+		if(hasBlank)
+		{
+			// if excluding blanks, have to have the proeprty
+			clauses.push(`id IN (SELECT track_id FROM track_tags WHERE property='${property}')`)
+		}
+
+		if(clauses.length == 2)
+		{
+			return `((${clauses[0]}) AND (${clauses[1]}))`
+		}
+
+		return clauses[0];
+
+	}
+	else
+	{
+		if(valueListNoNulls.length)
+		{
+			clauses.push(`id IN (SELECT track_id FROM track_tags WHERE value IN (${valueListNoNulls}) AND property='${property}')`)
+		}
+
+		if(hasBlank)
+		{
+			// if including blanks, get tracks without the property
+			clauses.push(`id NOT IN (SELECT track_id FROM track_tags WHERE property='${property}')`)
+		}
+
+		if(clauses.length == 2)
+		{
+			return `((${clauses[0]}) OR (${clauses[1]}))`
+		}
+
+		return clauses[0];
+	}
+}
 
 function sqlEscapeString(s)
 {

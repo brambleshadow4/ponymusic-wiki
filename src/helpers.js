@@ -26,6 +26,32 @@ function propertyOrder(prop){
 }
 
 
+/**
+ * filters: string => {noFilter: true} | {exclude: string[]} | {include: string[]}
+ */
+export function buildFilterQuery(filters)
+{
+	let params = [];
+	for(let property in filters)
+	{
+		if(filters[property].noFilter){
+			delete filters[property];
+			continue;
+		}
+
+		let items = filters[property].exclude || filters[property].include;
+		let param = property + "=" + items.map(x => encodeURIComponent(x.replace(/,/g, ",,")));
+
+		if(filters[property].exclude){
+			param = "x_" + param;
+		}
+
+		params.push(param);
+	}
+
+	return "?" + params.join("&");
+}
+
 export async function getAutofill(propName, count, searchString)
 {
 	let body = {

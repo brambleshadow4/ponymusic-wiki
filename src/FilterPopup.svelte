@@ -7,33 +7,38 @@
 
 	let dispatch = createEventDispatcher();
 	
-
 	let filterItems = [];
 	let title = "";
 
 	let groups = {
 		name: "All",
 		level: 0,
-		children: []
+		children: [],
+		checked: 3,
 	};
 
-	async function loadPopupData()
+	async function loadPopupData(value)
 	{
 		groups = {
 			name: "All",
 			level: 0,
-			children: []
+			children: [],
+			checked: 3,
 		};
-
-		console.log(property);
 
 		switch(property)
 		{
 			case "artist":
-				let rows = await getAutofill("artist", -1, "");
-				rows = rows.map(x => x.value);
-				groups.children = rows.map(x => {return {name: x, value: x, level: 1, parent: groups[0]}});
+				groups = await autofillGroups("artist")
 				title = "Artist"
+				break;
+			case "genre":
+				groups = await autofillGroups("genre")
+				title = "Genre"
+				break;
+			case "album":
+				groups = await autofillGroups("album")
+				title = "Album"
 				break;
 			case "release_date":
 				groups = releaseDateGroups(); 
@@ -43,11 +48,17 @@
 
 		flattenGroups(filterItems, groups)
 
-		filterItems = filterItems;
+		initialCheckItems(groups);
 
+		filterItems = filterItems; //render
 	}
 
-	loadPopupData();
+	function nxor(a,b)
+	{
+		return (!a && !b) || (a && b);
+	}
+
+	$: dummy = loadPopupData(value);
 
 	function releaseDateGroups()
 	{
@@ -62,6 +73,7 @@
 		let groups = {
 			name: "All",
 			level: 0,
+			checked: 3,
 			children: []
 		};
 
@@ -73,7 +85,8 @@
 				name: "" + year,
 				level: 1,
 				children: [],
-				parent: groups
+				parent: groups,
+				checked: 3,
 			}
 
 			groups.children.push(yearGroup);
@@ -86,7 +99,8 @@
 						name: months[month] + " " + year,
 						level: 2,
 						value: year + "-" + pad0(month),
-						parent: yearGroup
+						parent: yearGroup,
+						checked: 3,
 					});
 				}
 			}
@@ -94,6 +108,68 @@
 			year--;
 		}
 
+		return groups;
+	}
+
+	function initialCheckItems(groups)
+	{
+		if(value.noFilter){
+			return;
+		}
+
+		let includeValues = !!value.include;
+		let valueSet = new Set(value.include || value.exclude);
+
+		recursiveInitialCheckItems(groups, includeValues, valueSet);
+	}
+
+	function recursiveInitialCheckItems(group, includeValues, valueSet)
+	{
+		if(group.children)
+		{
+			for(let child of group.children)
+			{
+				recursiveInitialCheckItems(child, includeValues, valueSet);
+			}
+		}
+
+		if(group.value != undefined)
+		{
+			if(nxor(includeValues, valueSet.has(group.value)))
+			{
+				group.checked = 2;
+			}
+			else
+			{
+				group.checked = 1;
+			}
+		}
+
+		if(group.parent)
+		{
+			group.parent.checked = group.parent.checked & group.checked;
+		}
+	}
+
+	async function autofillGroups(property)
+	{
+		let groups = {
+			name: "All",
+			level: 0,
+			children: [],
+			checked: 3
+		};
+		let rows = await getAutofill(property, -1, "");
+		rows = rows.map(x => x.value);
+
+		groups.children.push({
+			name: "(blank)",
+			level: 1,
+			checked: 3,
+			value: ""
+		})
+
+		groups.children = groups.children.concat(rows.map(x => {return {name: x, value: x, level: 1, parent: groups}}));
 		return groups;
 	}
 
@@ -170,7 +246,7 @@
 				if(el.indeterminate)
 				{
 					allFalse = false;
-					allFalse = true;
+					allTrue = false;
 				}
 
 				if(!allTrue && !allFalse){
@@ -270,7 +346,7 @@
 
 	function cancelFilter()
 	{
-
+		dispatch('change', value);
 	}
 </script>
 
@@ -334,7 +410,16 @@
 	<div class='filter-items'>
 		{#each filterItems as filter, i}
 
-			<div><input class={"indent-" + filter.level} type="checkbox" id={"filter-"+i} on:click={(e) => toggleCheckBox(e, i, filter)} /><label for={"filter-"+i}>{filter.name}</label></div>
+			<div>
+				<input 
+					class={"indent-" + filter.level}
+					checked={filter.checked == 2}
+					indeterminate={filter.checked == 0}
+					type="checkbox" 
+					id={"filter-"+i}
+					on:click={(e) => toggleCheckBox(e, i, filter)} />
+				<label for={"filter-"+i}>{filter.name}</label>
+			</div>
 
 		{/each}
 	</div>

@@ -2,6 +2,7 @@
 <script>
 	import FilterButton from "./FilterButton.svelte";
 	import { createEventDispatcher } from 'svelte';
+	import {buildFilterQuery} from "./helpers.js";
 
 	export let selectedId = "";
 	export let filters = {};
@@ -18,28 +19,7 @@
 
 	async function load(filters)
 	{
-		let params = [];
-		for(let property in filters)
-		{
-			if(filters[property].noFilter){
-				delete filters[property];
-				continue;
-			}
-
-			let items = filters[property].exclude || filters[property].include;
-			let param = property + "=" + items.map(x => encodeURIComponent(x.replace(/,/g, ",,")));
-
-			if(filters[property].exclude){
-				param = "x_" + param;
-			}
-
-			params.push(param);
-		}
-
-		let query = "?" + params.join("&");
-
-		console.log(query);
-
+		let query = buildFilterQuery(filters);
 		data = await (await fetch("/api/view/tracks" + query)).json();
 	}
 
@@ -128,14 +108,8 @@
 		else{
 			inResizeMode = -1;
 		}
-
-		console.log("mouse down")
 	}
 
-	function onMouseUp(id, e)
-	{
-		console.log("mouseup")
-	}
 
 	function onTrackClick(id){
 		openTrack(id)
@@ -205,7 +179,7 @@
 					<th class={"col" + i + (filters[column.property] ? " active" : "")}
 						on:mousemove={onMouseMove}
 						on:mousedown={onMouseDown}
-						on:onmouseup={onMouseUp}
+
 					>
 						{column.name} <FilterButton active={!!filters[column.property]} property={column.property} on:openFilter />
 					</th>

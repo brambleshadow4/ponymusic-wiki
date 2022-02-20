@@ -2,6 +2,7 @@
 	import TrackEditor from "./TrackEditor.svelte";
 	import TrackList from "./TrackList.svelte";
 	import FilterPopup from "./FilterPopup.svelte";
+	import {buildFilterQuery} from "./helpers.js";
 	
 	$: path = window.location.pathname;
 	$: avatar = "./avatar.svg";
@@ -14,15 +15,44 @@
 
 	let filters = {};
 
-	function openTrack(event){
+	if(window.location.search)
+	{
 
-		console.log("opening a track!");
+		console.log("are we heere?")
+		let query = window.location.search.substring(1);
+
+		for (let text of query.split("&"))
+		{
+			let [param, value] = text.split("=");
+
+			let typ = "include";
+
+			if(param.substring(0,2) == "x_")
+			{
+				typ = "exclude";
+				param = param.substring(2);
+			}
+
+			let values = value.replace(/,,/g, "\uE000").split(",").map(x => decodeURIComponent(x).replace(/\uE000/g, ","));
+
+			console.log(values);
+
+			filters[param] = {property: param};
+			filters[param][typ] = values;
+		}
+
+		console.log(filters);
+
+	}
+
+
+	function openTrack(event)
+	{
 		loadedTrackID = event.detail;
 	}
 
 	function openFilter(event)
 	{
-		console.log(event);
 		loadedFilter = event.detail;
 	}
 
@@ -30,6 +60,8 @@
 	{
 		loadedFilter = "";
 		filters[event.detail.property] = event.detail;
+
+		history.pushState("idk", "", buildFilterQuery(filters));
 
 		filters = filters;
 	}
@@ -203,7 +235,6 @@
 		</div>
 	{/if}
 
-	
 
 </div>
 
@@ -219,7 +250,7 @@
 {#if loadedFilter}
 	<div class='shield'>
 		
-		<FilterPopup property={loadedFilter} value={{noFilter: true}} on:change={changeFilter}/>
+		<FilterPopup property={loadedFilter} value={filters[loadedFilter]} on:change={changeFilter}/>
 	</div>
 
 	
