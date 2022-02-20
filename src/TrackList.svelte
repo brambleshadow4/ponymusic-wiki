@@ -4,6 +4,7 @@
 	import { createEventDispatcher } from 'svelte';
 
 	export let selectedId = "";
+	export let filters = {};
 
 	let songs = [];
 	let data = [];
@@ -15,12 +16,34 @@
 	let pinnedRow = undefined;
 
 
-	async function load()
+	async function load(filters)
 	{
-		data = await (await fetch("/api/view/tracks")).json();
+		let params = [];
+		for(let property in filters)
+		{
+			if(filters[property].noFilter){
+				delete filters[property];
+				continue;
+			}
+
+			let items = filters[property].exclude || filters[property].include;
+			let param = property + "=" + items.map(x => encodeURIComponent(x.replace(/,/g, ",,")));
+
+			if(filters[property].exclude){
+				param = "x_" + param;
+			}
+
+			params.push(param);
+		}
+
+		let query = "?" + params.join("&");
+
+		console.log(query);
+
+		data = await (await fetch("/api/view/tracks" + query)).json();
 	}
 
-	load();
+	$: loadThisThing = load(filters);
 
 
 	
@@ -52,6 +75,7 @@
 		let closeToRight = clientX - box.right;
 
 		let colClass = element.className.split(" ").filter(x => x.startsWith("col"))[0];
+		if(colClass == undefined) return -1;
 		return Number(colClass.substring(3));
 	}
 
@@ -110,7 +134,6 @@
 
 	function onMouseUp(id, e)
 	{
-		
 		console.log("mouseup")
 	}
 
@@ -145,6 +168,16 @@
 		}
 	}
 
+
+	let columnDefs = [
+		{name: "Artist", property: "artist", printFn: combineMulti},
+		{name: "Title", property: "title", printFn: (x) => x},
+		{name: "Album", property: "album", printFn: combineMulti},
+		{name: "Refs", property: "pl", printFn: enumText},
+		{name: "Genre", property: "genre", printFn: combineMulti},
+		{name: "Released", property: "release_date", printFn: (x) => x.substring(0,10)}
+	]
+
 	// on:click={()=>{openTrack(song.id)}}
 
 </script>
@@ -167,49 +200,16 @@
 	<div class='table-container' on:scroll={adjustTopRowPosition} bind:this={tableContainer}>
 		<table>
 			<tr class='pinned-row' bind:this={pinnedRow}>
-				<th class="col0" 
-					on:mousemove={onMouseMove}
-					on:mousedown={onMouseDown}
-					on:onmouseup={onMouseUp}
-				>
-					Artist <FilterButton filter="artist" on:openFilter />
-				</th>
-				<th class="col1"
-					on:mousemove={onMouseMove}
 
-					on:mousedown={onMouseDown}
-					on:onmouseup={onMouseUp}
-				>
-					Track <img class='filter' src="./filter.svg" width="15">
-				</th>
-				<th class="col2"
-					on:mousemove={onMouseMove}
-					on:mousedown={onMouseDown}
-					on:onmouseup={onMouseUp}
-				>
-					Album <img class='filter' src="./filter.svg" width="15">
-				</th>
-				<th class="col3"
-					on:mousemove={onMouseMove}
-					on:mousedown={onMouseDown}
-					on:onmouseup={onMouseUp}
-				>
-					Refs 
-				</th>
-				<th class="col4"
-					on:mousemove={onMouseMove}
-					on:mousedown={onMouseDown}
-					on:onmouseup={onMouseUp}
-				>
-					Genre <img class='filter' src="./filter.svg" width="15">
-				</th>
-				<th class="col5"
-					on:mousemove={onMouseMove}
-					on:mousedown={onMouseDown}
-					on:onmouseup={onMouseUp}
-				>
-					Released <img class='filter' src="./filter.svg" width="15">
-				</th>
+				{#each columnDefs as column,i}
+					<th class={"col" + i + (filters[column.property] ? " active" : "")}
+						on:mousemove={onMouseMove}
+						on:mousedown={onMouseDown}
+						on:onmouseup={onMouseUp}
+					>
+						{column.name} <FilterButton active={!!filters[column.property]} property={column.property} on:openFilter />
+					</th>
+				{/each}
 			</tr>
 			{#each data as song}
 				<tr class={song.id == selectedId ? "selected row" : "row"} on:click={(e) => {onTrackClick(song.id)}}>
@@ -289,6 +289,10 @@
 	th{
 		background-color: #E8E8E8;
 		display: inline-block;
+	}
+
+	th.active {
+		color: blue;
 	}
 
 	tr:hover{

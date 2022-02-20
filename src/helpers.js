@@ -24,3 +24,25 @@ function propertyOrder(prop){
 		default: return 4;
 	}
 }
+
+
+export async function getAutofill(propName, count, searchString)
+{
+	let body = {
+		property: propName,
+		value: searchString,
+		count
+	}
+
+	let request = {
+		method: "POST",
+		headers: {"Content-Type": "text/json"},
+		body: JSON.stringify(body)
+	}
+	
+	let data = await fetch("/api/tagAutofill", request);
+	let matches = await data.json();
+
+	return matches;
+}
+	

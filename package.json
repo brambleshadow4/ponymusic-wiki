@@ -28,7 +28,7 @@
 		"pg": "^8.7.1",
 		"sirv-cli": "^1.0.0"
 	},
-	"description": "*Looking for a shareable component template? Go here --> [sveltejs/component-template](https://github.com/sveltejs/component-template)*",
+	"description": "",
 	"main": "server.js",
 	"author": "brambleshadow4",
 	"license": "ISC"

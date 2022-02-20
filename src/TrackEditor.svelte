@@ -4,7 +4,7 @@
 	import TrackHistory from "./TrackHistory.svelte";
 	import Tag from "./Tag.svelte";
 	import { createEventDispatcher } from 'svelte';
-	import {tagComp} from "./tagHelpers.js";
+	import {tagComp} from "./helpers.js";
 
 	const dispatch = createEventDispatcher();
 

@@ -13,7 +13,7 @@ const app = express();
 const port = process.env.PORT || 80;
 app.use(cors());
 
-getOgPropertiesFromURL("https://www.youtube.com/watch?v=CNPdO5TZ1DQ", {logProperties:true});
+// getOgPropertiesFromURL("https://www.youtube.com/watch?v=CNPdO5TZ1DQ", {logProperties:true});
 
 db = new Pool();
 
@@ -23,11 +23,11 @@ let tableQueries = fs.readFileSync("./server/tables.sql", {encoding:'utf8'})
 
 for (query of tableQueries)
 {
-	console.log(query);
-
 	db.query(query, (err, res) =>
 	{
-		if(err) {
+		if(err)
+		{
+			console.log(query);
 			process.exit(1);
 			throw new Error(err);
 		}
@@ -36,7 +36,8 @@ for (query of tableQueries)
 
 app.use(express.static('public'));
 
-app.post("/api/login", processJSON, async (req,res) =>{
+app.post("/api/login", processJSON, async (req,res) =>
+{
 
 	let session = await getSession(req);
 
@@ -56,30 +57,64 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 {
 	let property = req.body.property;
 
-	if(property == "" || !req.body.value){
+	console.log(req.body);
+
+	if(property == "" || req.body.value == undefined)
+	{
+		console.log("did we go down this code path?")
 		res.json([]);
 		return;
 	}
 
-	let pattern = req.body.value.replace(/%/,"\\%").toLowerCase();
-	pattern = "%" + pattern + "%";
+	var pattern = "%" + req.body.value.replace(/%/,"\\%").toLowerCase() + "%";
+
+
+	
 
 	if(property == "artist" || property == "featured artist") {
-		var {rows} = await db.query("SELECT DISTINCT value FROM track_tags WHERE (property = 'artist' OR property = 'featured artist') and LOWER(value) LIKE $1", [pattern]);
+		var {rows, err} = await db.query("SELECT DISTINCT value FROM track_tags WHERE (property = 'artist' OR property = 'featured artist') and LOWER(value) LIKE $1 ORDER BY value ASC", [pattern]);
+		
 	}
 	else {
-		var {rows} = await db.query("SELECT DISTINCT value FROM track_tags WHERE property = $1 and LOWER(value) LIKE $2", [property, pattern]);
+		var {rows} = await db.query("SELECT DISTINCT value FROM track_tags WHERE property = $1 and LOWER(value) LIKE $2 ORDER BY value ASC", [property, pattern]);
 	}
 
 	let strippedRows = rows.map(x => {return {text: x.value, value: x.value, property}});
 
+	console.log(strippedRows);
+
 	res.json(strippedRows);
 })
 
-app.get("/api/view/tracks", async(req,res) => {
+app.get("/api/view/tracks", queryProcessing, async(req,res) =>
+{
+
+	console.log(req.query);
 
 	let tagFilter = '(tag "artist" "vylet pony")';
-	let order = "(desc release_date)"
+	let order = "(desc release_date)";
+
+
+	let whereClause = "";
+	let whereClauses = [];
+
+	if(req.query.artist)
+	{
+		let artists = req.query.artist.map(sqlEscapeString).join(",");
+		whereClauses.push(`id IN (SELECT track_id FROM track_tags WHERE value IN (${artists}) AND property='artist')`)
+	}
+	else if (req.query.x_artist)
+	{
+		let artists = req.query.x_artist.map(sqlEscapeString).join(",");
+		whereClauses.push(`id IN (SELECT track_id FROM track_tags WHERE value NOT IN (${artists}) AND property='artist')`)
+	}
+
+	if(whereClauses.length)
+	{
+		whereClause = "WHERE " + whereClauses.join(" AND ") + " ";
+	}
+
+	//console.log(whereClause)
 
 	let {rows} = await db.query(`
 		SELECT id, title, release_date,
@@ -89,6 +124,7 @@ app.get("/api/view/tracks", async(req,res) => {
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='album') as album,
 			(SELECT COALESCE(value, '') from track_tags WHERE track_id=id and property='pl') as pl
 		FROM tracks 
+		${whereClause}
 		ORDER BY release_date DESC
 		`, []);
 
@@ -97,8 +133,8 @@ app.get("/api/view/tracks", async(req,res) => {
 
 
 // 
-app.get("/api/history/track/*", async(req,res) =>{
-
+app.get("/api/history/track/*", async(req,res) =>
+{
 	let id = req.params[0];
 
 	let {rows} = await db.query(
@@ -111,8 +147,8 @@ app.get("/api/history/track/*", async(req,res) =>{
 });
 
 
-app.get("/api/track/*", async(req,res) =>{
-
+app.get("/api/track/*", async(req,res) =>
+{
 	let id = req.params[0];
 
 	if(isNaN(id))
@@ -192,7 +228,9 @@ app.post("/api/track", processJSON,
 		}
 
 		info = await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3 WHERE id=$4", [title, release_date, ogcache, id]);	
-		if(info.err){ console.log("2 " + info.err); }	
+		if(info.err){ 
+			console.log("2 " + info.err); 
+		}	
 	}
 
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
@@ -206,30 +244,41 @@ app.post("/api/track", processJSON,
 		if(!isNaN(tag.number))
 		{
 			info = await db.query("INSERT INTO track_tags (track_id, property, value, number) VALUES ($1, $2, $3, $4)", [id, tag.property, tag.value, tag.number]);
-			if(info.err){ console.log("3 " + info.err); }	
+			if(info.err){ 
+				console.log("3 " + info.err); 
+			}	
 		}
 		else
 		{
 			info = await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, $2, $3)", [id, tag.property, tag.value,]);
-			if(info.err){ console.log("4 " + info.err); }	
+			if(info.err){ 
+				console.log("4 " + info.err); 
+			}	
 		}
 	}
 
 	let userID = (await getSession(req)).user_id;
 	info = await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, release_date, tags: data.tags}]);
 
-	if (info.err) {console.log("5 " + info.err); }
+	if (info.err) {
+		console.log("5 " + info.err); 
+	}
 
 	res.json({status: 200, id});
 });
 
+function sqlEscapeString(s)
+{
+	return "'" + s.replace(/'/g, "''") + "'";
+}
 
-function processJSON(req, res, next){
 
+function processJSON(req, res, next)
+{
 	let doTheThing = bodyParser.text({type: "text/json"});
 
-	doTheThing(req, res, function(){
-
+	doTheThing(req, res, function()
+	{
 		try{
 			req.body = JSON.parse(req.body);
 		}
@@ -244,12 +293,27 @@ function processJSON(req, res, next){
 }
 
 
-app.get('*', (req, res) => {
+function queryProcessing(req, res, next)
+{
+	for(key in req.query)
+	{
+		let s = req.query[key].replace(/,,/g, "\uE000");
+		s = s.split(",");
+		s = s.map(x => x.replace(/\uE000/g, ","));
+		req.query[key] = s;
+	}
 
+	next();
+}
+
+
+app.get('*', (req, res) => 
+{
 	res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
 });
 
-app.listen(port, () => {
+app.listen(port, () => 
+{
 	console.log(`Server is up at port ${port}`);
 });
 

@@ -3,11 +3,12 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
-	export let filter="";
+	export let property="";
+	export let active=false;
 
 	function openFilter(id)
 	{
-		dispatch("openFilter", filter);
+		dispatch("openFilter", property);
 	}
 
 
@@ -20,4 +21,8 @@
 	}
 </style>
 
-<img class='filter' alt="filter button" src="./filter.svg" width="15" on:click={openFilter}>
+{#if active}
+	<img class='filter' alt="filter button" src="./filterActive.svg" width="15" on:click={openFilter}>
+{:else}
+	<img class='filter' alt="filter button" src="./filter.svg" width="15" on:click={openFilter}>
+{/if}

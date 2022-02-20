@@ -12,6 +12,8 @@
 	let loadedTrackID = "";
 	let loadedFilter = "";
 
+	let filters = {};
+
 	function openTrack(event){
 
 		console.log("opening a track!");
@@ -20,7 +22,16 @@
 
 	function openFilter(event)
 	{
+		console.log(event);
 		loadedFilter = event.detail;
+	}
+
+	function changeFilter(event)
+	{
+		loadedFilter = "";
+		filters[event.detail.property] = event.detail;
+
+		filters = filters;
 	}
 
 
@@ -182,7 +193,7 @@
 	{#if path.startsWith("/track/")}
 		
 	{:else if path == "/" || path == ""}
-		<TrackList on:openTrack={openTrack} selectedId={loadedTrackID} on:openFilter={openFilter} />
+		<TrackList on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
 	{:else if path == "/about"}
 		
@@ -208,7 +219,7 @@
 {#if loadedFilter}
 	<div class='shield'>
 		
-		<FilterPopup />
+		<FilterPopup property={loadedFilter} value={{noFilter: true}} on:change={changeFilter}/>
 	</div>
 
 	

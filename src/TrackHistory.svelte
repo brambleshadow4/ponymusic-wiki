@@ -1,6 +1,6 @@
 <script>
 
-	import {tagComp} from "./tagHelpers.js";
+	import {tagComp} from "./helpers.js";
 	import Tag from "./Tag.svelte";
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
