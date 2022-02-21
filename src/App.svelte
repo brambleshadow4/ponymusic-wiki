@@ -17,8 +17,6 @@
 
 	if(window.location.search)
 	{
-
-		console.log("are we heere?")
 		let query = window.location.search.substring(1);
 
 		for (let text of query.split("&"))
@@ -40,11 +38,7 @@
 			filters[param] = {property: param};
 			filters[param][typ] = values;
 		}
-
-		console.log(filters);
-
 	}
-
 
 	function openTrack(event)
 	{
@@ -252,7 +246,5 @@
 		
 		<FilterPopup property={loadedFilter} value={filters[loadedFilter]} on:change={changeFilter}/>
 	</div>
-
-	
 
 {/if}

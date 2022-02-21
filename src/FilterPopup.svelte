@@ -6,6 +6,10 @@
 	export let value = {noFilter: true};
 
 	let dispatch = createEventDispatcher();
+
+	let freeTextInput = false;
+	var freeTextPrompts;
+
 	
 	let filterItems = [];
 	let title = "";
@@ -43,6 +47,14 @@
 			case "release_date":
 				groups = releaseDateGroups(); 
 				title = "Release Date";
+				break;
+			case "pl":
+				groups = plGroups(); 
+				title = "Pony References";
+				break;
+			case "title":
+				freeTextInput = true;
+				title = "keywords in Title";
 				break;
 		}
 
@@ -98,7 +110,7 @@
 					yearGroup.children.push({
 						name: months[month] + " " + year,
 						level: 2,
-						value: year + "-" + pad0(month),
+						value: year + "-" + pad0(month+1),
 						parent: yearGroup,
 						checked: 3,
 					});
@@ -108,6 +120,50 @@
 			year--;
 		}
 
+		return groups;
+	}
+
+	function plGroups()
+	{
+		let groups = {
+			name: "All",
+			level: 0,
+			checked: 3,
+			children: []
+		};
+
+		let children = [
+			{
+				name: "(blank)",
+				level: 1,
+				checked: 3,
+				value: "",
+				parent: groups
+			},
+			{
+				name: "Obvious Refs",
+				level: 1,
+				checked: 3,
+				value: "2",
+				parent: groups
+			},
+			{
+				name: "Subtle Refs",
+				level: 1,
+				checked: 3,
+				value: "1",
+				parent: groups
+			},
+			{
+				name: "No Refs",
+				level: 1,
+				checked: 3,
+				value: "0",
+				parent: groups
+			},
+		];
+
+		groups.children = children;
 		return groups;
 	}
 
@@ -173,6 +229,36 @@
 		return groups;
 	}
 
+	function updateFreeTexts()
+	{
+		var inputs = freeTextPrompts.getElementsByTagName('input');
+		let hasEmptyPrompt = false;
+
+		for(var i=0; i<inputs.length; i++)
+		{
+			let isLast = (i+1 == inputs.length)
+			let isEmpty = inputs[i].value.trim() == ""
+
+			if(!isLast && isEmpty)
+			{
+				inputs[i].parentNode.parentNode.removeChild(inputs[i].parentNode)
+				i--;
+				continue;
+			}
+
+			if(isLast && !isEmpty)
+			{
+				let div = document.createElement('div');
+				let input = document.createElement('input');
+				input.placeholder = "Keyword/phrase";
+				input.oninput = updateFreeTexts;
+
+				div.appendChild(input);
+				freeTextPrompts.appendChild(div);
+			}
+		}
+	}
+
 	function pad0(n)
 	{
 		if(n < 10){
@@ -195,10 +281,6 @@
 			}
 		}
 	}
-
-
-
-
 
 	function toggleCheckBox(e, index, filter)
 	{
@@ -299,6 +381,11 @@
 
 	function saveFilter()
 	{
+		if(freeTextInput){
+			saveFreeTextInputFilter();
+			return;
+		}
+
 		let posFilters = [];
 		let negFilters = [];
 
@@ -344,10 +431,41 @@
 		}
 	}
 
+	function saveFreeTextInputFilter()
+	{
+		var inputs = freeTextPrompts.getElementsByTagName('input');
+		let vals = [];
+
+		for(var i=0; i<inputs.length; i++)
+		{
+			if(inputs[i].value.trim() != "")
+			{
+				vals.push(inputs[i].value.trim());
+			}
+		}
+
+		if(vals.length)
+		{
+			dispatch('change', {
+				property,
+				include: vals
+			})
+		}
+		else
+		{
+			dispatch('change', {
+				property,
+				noFilter: true
+			})
+		}
+	}
+
 	function cancelFilter()
 	{
 		dispatch('change', value);
 	}
+
+
 </script>
 
 
@@ -406,22 +524,37 @@
 
 <div class='popup'>
 	<h1>Filter by {title}</h1>
-	<div><input type="search" placeholder="Search" on:input={updateSearch}/></div>
-	<div class='filter-items'>
-		{#each filterItems as filter, i}
 
-			<div>
-				<input 
-					class={"indent-" + filter.level}
-					checked={filter.checked == 2}
-					indeterminate={filter.checked == 0}
-					type="checkbox" 
-					id={"filter-"+i}
-					on:click={(e) => toggleCheckBox(e, i, filter)} />
-				<label for={"filter-"+i}>{filter.name}</label>
-			</div>
+	{#if !freeTextInput}
+		<div><input type="search" placeholder="Search" on:input={updateSearch}/></div>
+		<div class='filter-items'>
+			{#each filterItems as filter, i}
 
-		{/each}
-	</div>
+				<div>
+					<input 
+						class={"indent-" + filter.level}
+						checked={filter.checked == 2}
+						indeterminate={filter.checked == 0}
+						type="checkbox" 
+						id={"filter-"+i}
+						on:click={(e) => toggleCheckBox(e, i, filter)} />
+					<label for={"filter-"+i}>{filter.name}</label>
+				</div>
+
+			{/each}
+		</div>
+	{:else}
+
+		<div bind:this={freeTextPrompts}>
+
+			{#if value.include}
+				{#each value.include as item}
+					<div><input type="text" placeholder="Keyword/phrase" class='freeText' on:input={updateFreeTexts} value={item}/></div>
+				{/each}
+			{/if}
+
+			<div><input type="text" placeholder="Keyword/phrase" class='freeText' on:input={updateFreeTexts}/></div>
+		</div>
+	{/if}
 	<div><button on:click={saveFilter}>Apply</button><button on:click={cancelFilter}>Cancel</button></div>
 </div>

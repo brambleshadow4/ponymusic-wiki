@@ -100,12 +100,53 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 		whereClauses.push(buildWhereClause("artist", req.query.x_artist, true))
 	}
 
+	if(req.query.album){
+		whereClauses.push(buildWhereClause("album", req.query.album, false))
+	}
+	else if(req.query.x_album){
+		whereClauses.push(buildWhereClause("album", req.query.x_album, true))
+	}
+
+	if(req.query.genre){
+		whereClauses.push(buildWhereClause("genre", req.query.genre, false))
+	}
+	else if(req.query.x_genre){
+		whereClauses.push(buildWhereClause("genre", req.query.x_genre, true))
+	}
+
+	if(req.query.pl){
+		whereClauses.push(buildWhereClause("pl", req.query.pl, false))
+	}
+	else if(req.query.x_pl){
+		whereClauses.push(buildWhereClause("pl", req.query.x_pl, true))
+	}
+
+	if(req.query.release_date)
+	{
+		let months = req.query.release_date.filter(x => x).map(sqlEscapeString).join(",");
+		whereClauses.push(`TO_CHAR(release_date, 'YYYY-MM') IN (${months}) `)
+	}
+	else if(req.query.x_release_date)
+	{
+		let months = req.query.x_release_date.filter(x => x).map(sqlEscapeString).join(",");
+		whereClauses.push(`TO_CHAR(release_date, 'YYYY-MM') NOT IN (${months}) `)
+	}
+
+	if(req.query.title){
+		let words = req.query.title
+			.filter(x => x)
+			.map(s => ("%" + sqlEscapeStringNoQuotes(s) + "%").toLowerCase())
+			.join("|");
+		whereClauses.push(`LOWER(title) SIMILAR TO '${words}'`);
+	}
+
 	if(whereClauses.length)
 	{
 		whereClause = "WHERE " + whereClauses.join(" AND ") + " ";
 	}
 
-	//console.log(whereClause)
+
+	console.log(whereClause)
 
 	let {rows} = await db.query(`
 		SELECT id, title, release_date,
@@ -310,9 +351,22 @@ function buildWhereClause(property, valueList, negate)
 
 function sqlEscapeString(s)
 {
-	return "'" + s.replace(/'/g, "''") + "'";
+	s = s.replace(/\\/g, "\\\\");
+	s = s.replace(/'/g, "''");
+	s = s.replace(/%/g,"\\%")
+	s = s.replace(/\|/g, "\\|");
+
+	return "'" + s + "'";
 }
 
+function sqlEscapeStringNoQuotes(s)
+{
+	s = s.replace(/\\/g, "\\\\");
+	s = s.replace(/'/g, "''");
+	s = s.replace(/%/g,"\\%")
+	s = s.replace(/\|/g, "\\|");
+	return s;
+}
 
 function processJSON(req, res, next)
 {
@@ -333,7 +387,6 @@ function processJSON(req, res, next)
 	});
 }
 
-
 function queryProcessing(req, res, next)
 {
 	for(key in req.query)
@@ -347,7 +400,6 @@ function queryProcessing(req, res, next)
 	next();
 }
 
-
 app.get('*', (req, res) => 
 {
 	res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
@@ -357,5 +409,3 @@ app.listen(port, () =>
 {
 	console.log(`Server is up at port ${port}`);
 });
-
-
