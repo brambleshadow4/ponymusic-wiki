@@ -55,7 +55,7 @@
 		loadedFilter = "";
 		filters[event.detail.property] = event.detail;
 
-		history.pushState("idk", "", buildFilterQuery(filters));
+		history.pushState("", "", buildFilterQuery(filters));
 
 		filters = filters;
 	}
@@ -137,14 +137,20 @@
 		right: 0;
 	}
 
+	p,ol{
+		margin-top: 0px;
+	}
+
 	.main
 	{
 		margin: auto;
-		padding-left: .5in;
+		padding: 0in .5in;
 
 		display: flex;
 		flex-direction: column;
 		height: 100%;
+
+		overflow-y: auto;
 	}
 
 
@@ -225,7 +231,59 @@
 		
 		<div class='main'>
 			<h1>About the Pony Music Wiki</h1>
-			<p>I'm trying to make it a thing</p>
+
+			<p>There's hundreds (if not thousands) of musicians out there releasing tons and tons of My Little Pony fan music. With so much creativity in the fandom, not all of it can be given the spotlight, but the least we can do is keep track of it.</p>
+
+			<p>The Pony Music Wiki is designed to be just that—a community database of all pony music known to Equestria. Anypony is allowed to add missing tracks and make corrections to ensure the wiki has the most up-to-date list of music, that way the burden of responsibility never falls on just a single pony. Like Wikipedia, the wiki also comes with tools to quickly revert any bad changes made by accident or malice. The wiki does not host music files but rather links out to the artist's original upload, be it on Bandcamp or YouTube or Soundcloud. This allows the community to create a more complete database without having to upload an artist's song without their permission. If you are looking for a pony website to upload your tracks to, <a href="https://pony.fm">pony.fm</a> or <a href="https://projectvinyl.net/">Project Vinyl</a> might better suit your needs.</p>
+
+
+			<h2 id="rules-and-guidelines">Rules and Guidelines</h2>
+			<p>There are a few rules to help maintain the peace</p>
+
+			<ol>
+				<li>Fuck Nazis. Your music is not welcome. Get out.</li>
+				<li>Fuck pedophiles and other sexual predators. Your music is not welcome. Get out.</li>
+			</ol>
+
+			<p>There are also several guidelines to help everypony work together in maintaining this database</p>
+
+			<ol>
+				<li>This site is for pony music. Anything inspired by My Little Pony source material or the brony fandom counts as pony music. Please do not upload tracks if they are not related to pony
+					<ol>
+						<li>Exception: If a pony album has a non-pony song on it, the non-pony song is allowed to be listed so the whole album can be in the database</li>
+						<li>Exception: If it's not clear if a song is pony inspired or not, you may add it. If it's later deemed not pony, it can be tagged as "Not Pony" to avoid duplicate entries</li>
+					</ol>
+				</li>
+				<li>Double check a song isn't already listed before adding it</li>
+				<li>The primary reason to delete a track is if it's a duplicate or it's clearly not a pony song.</li>
+				<li>If someone makes a bad edit, assume it's an honest mistake and revert it.</li>
+				<li>Guidelines are subject to change as the site evolves</li>
+
+			</ol>
+
+			<h2>Planned New Features, coming soon maybe</h2>
+
+			<h2 id="pony-references">What are pony references?</h2>
+
+			<p>Pony references are a high level way of classifying how much MLP/brony source material is incorporated into a track. There are three classifications: Obvious Refs, Subtle Refs, and No Refs</p>
+
+			<ul><li>Obvious refs is for tracks which make heavy use of source material, likely to the point someone not familiar with My Little Pony could pick up that it's pony related. This includes
+	
+					<ul>
+						<li>Remixes of show songs</li>
+						<li>Songs w/ lyrics directly about MLP or brony culture</li>
+						<li>Songs which use extensive chops of clips from the show</li>
+					</ul>
+					Examples of obvious ref songs include
+					<ul>
+						<li>Discord by Eurobeat Brony</li>
+					</ul>
+				</li>
+				<li>
+					Subtle refs is for tracks which build upon source material, but in a way that people not familiar with MLP would likely not pick up on. 
+			</ul>
+
+
 		</div>
 	{/if}
 
