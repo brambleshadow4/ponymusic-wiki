@@ -11,6 +11,9 @@ const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
 
 const app = express();
 const port = process.env.PORT || 80;
+
+const PAGE_COUNT = 100;
+
 app.use(cors());
 
 // getOgPropertiesFromURL("https://www.youtube.com/watch?v=CNPdO5TZ1DQ", {logProperties:true});
@@ -27,8 +30,7 @@ for (query of tableQueries)
 	{
 		if(err)
 		{
-			console.log(query);
-			process.exit(1);
+			console.error(query);
 			throw new Error(err);
 		}
 	});
@@ -65,9 +67,6 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 
 	var pattern = "%" + req.body.value.replace(/%/,"\\%").toLowerCase() + "%";
 
-
-	
-
 	if(property == "artist" || property == "featured artist") {
 		var {rows, err} = await db.query("SELECT DISTINCT value FROM track_tags WHERE (property = 'artist' OR property = 'featured artist') and LOWER(value) LIKE $1 ORDER BY value ASC", [pattern]);
 		
@@ -84,6 +83,8 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 {
 	console.log(req.query);
+	let page = Number(req.query.page) || 0; 
+	let offset = page*PAGE_COUNT;
 
 	let tagFilter = '(tag "artist" "vylet pony")';
 	let order = "(desc release_date)";
@@ -146,9 +147,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	}
 
 
-	console.log(whereClause)
-
-	let {rows} = await db.query(`
+	let query = `
 		SELECT id, title, release_date,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='artist') as artist, 
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='hyperlink') as hyperlink,
@@ -158,9 +157,12 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 		FROM tracks 
 		${whereClause}
 		ORDER BY release_date DESC
-		`, []);
+		LIMIT ${PAGE_COUNT} OFFSET ${offset}`;
 
-	res.json(rows);
+	let {rows} = await db.query(query,[]);
+	let countRequest = await db.query(`SELECT COUNT(*) as count FROM tracks ${whereClause}`,[]);
+
+	res.json({rows, pages: Math.ceil(countRequest.rows[0].count/PAGE_COUNT)});
 });
 
 
@@ -170,13 +172,29 @@ app.get("/api/history/track/*", async(req,res) =>
 	let id = req.params[0];
 
 	let {rows} = await db.query(
-		`SELECT track_history.*, users.name FROM track_history LEFT JOIN users ON user_id = id WHERE track_id=$1 ORDER BY timestamp DESC LIMIT 200`
+		`SELECT track_history.*, users.name FROM track_history LEFT JOIN users ON user_id = id WHERE track_id=$1 ORDER BY timestamp DESC LIMIT ${PAGE_COUNT}`
 	, [id]);
 
 	let response = rows || {status: 400};
 	res.json(response);
 
 });
+
+app.get('/api/history', async(req,res) =>
+{
+	let page = Number(req.query.page) || 0; 
+	let offset = page*PAGE_COUNT;
+
+	let {rows} = await db.query(
+		`SELECT track_history.timestamp, track_history.track_id, track_history.user_id, users.name as user_name, tracks.title as track_title
+		FROM track_history LEFT JOIN users ON user_id = users.id LEFT JOIN tracks on track_id = tracks.id 
+		ORDER BY timestamp DESC
+		LIMIT ${PAGE_COUNT} OFFSET ${offset}`
+	, []);
+
+	let response = rows || {status: 400};
+	res.json(response);
+})
 
 
 app.get("/api/track/*", async(req,res) =>

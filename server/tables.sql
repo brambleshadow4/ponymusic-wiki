@@ -34,7 +34,6 @@ CREATE TABLE IF NOT EXISTS sessions (
 	expire_time TIMESTAMP
 );
 
--- 
 -- INSERT INTO users (id, name, role) VALUES('1', 'System', 2)
 -- INSERT INTO sessions (session, user_id, expire_time) VALUES ('1', '1', NOW() + interval '1 year')
 

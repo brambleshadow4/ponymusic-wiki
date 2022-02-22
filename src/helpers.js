@@ -29,7 +29,7 @@ function propertyOrder(prop){
 /**
  * filters: string => {noFilter: true} | {exclude: string[]} | {include: string[]}
  */
-export function buildFilterQuery(filters)
+export function buildFilterQuery(filters, page)
 {
 	let params = [];
 	for(let property in filters)
@@ -47,6 +47,12 @@ export function buildFilterQuery(filters)
 		}
 
 		params.push(param);
+	}
+
+	let pageQuery = "";
+	if(page)
+	{
+		params.push("page=" + page);
 	}
 
 	return "?" + params.join("&");

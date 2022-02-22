@@ -7,8 +7,13 @@
 	export let selectedId = "";
 	export let filters = {};
 
+	let filterHash = "";
+
+
 	let songs = [];
 	let data = [];
+	let pages = 1;
+	let page = 0;
 
 	let inResizeMode = -1;
 	let prevMouseX = 0;
@@ -19,13 +24,31 @@
 
 	async function load(filters)
 	{
-		let query = buildFilterQuery(filters);
-		data = await (await fetch("/api/view/tracks" + query)).json();
+		if(JSON.stringify(filters) != filterHash)
+		{
+			page = 0;
+			filterHash = JSON.stringify(filters);
+		}
+
+		let query = buildFilterQuery(filters, page);
+		let response = await (await fetch("/api/view/tracks" + query)).json();
+		data = response.rows;
+		pages = response.pages;
+	}
+
+	function incPage()
+	{
+		page++;
+		load(filters);
+	}
+
+	function decPage()
+	{
+		page = Math.max(page-1, 0);
+		load(filters);
 	}
 
 	$: loadThisThing = load(filters);
-
-
 	
 	const dispatch = createEventDispatcher();
 
@@ -101,8 +124,6 @@
 		if(isCloseToColBorder(e.target, e.clientX) && inResizeMode == -1)
 		{
 			inResizeMode = colToResize(e.target, e.clientX);
-
-
 			prevMouseX = e.clientX;
 		}
 		else{
@@ -110,10 +131,8 @@
 		}
 	}
 
-
 	function onTrackClick(id){
 		openTrack(id)
-
 	}
 
 	window.addEventListener("mouseup", function(){
@@ -210,7 +229,11 @@
 		</table>
 	</div>
 
-	<div>Page 1/1</div>
+	<div class='pager'>
+		{#if page>0}<a class='decPage' on:click={decPage}>&lt;- Previous</a>{/if}
+		<span>Page {page+1}/{pages}</span>
+		{#if page+1<pages}<a class='incPage' on:click={incPage}>Next -></a>{/if}
+	</div>
 </div>
 
 <style>
@@ -296,6 +319,7 @@
 	.col4{ width: var(--col4-width); }
 	.col5{ width: var(--col5-width); }
 
+	.pager {text-align: center;}
 
 
 	.table-container

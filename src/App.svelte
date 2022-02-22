@@ -2,6 +2,7 @@
 	import TrackEditor from "./TrackEditor.svelte";
 	import TrackList from "./TrackList.svelte";
 	import FilterPopup from "./FilterPopup.svelte";
+	import EditList from "./EditList.svelte";
 	import {buildFilterQuery} from "./helpers.js";
 	
 	$: path = window.location.pathname;
@@ -128,6 +129,18 @@
 		text-decoration: none;
 	}
 
+	nav a.smalllink
+	{
+		font-size: initial;
+		color: rgb(0,100,200);;
+		text-decoration: underline;
+	}
+
+	nav a.smalllink:hover
+	{
+		background-color: transparent;
+	}
+
 	.main-container
 	{
 		position: fixed;
@@ -212,8 +225,7 @@
 <nav>
 	<a href="/about">About</a>
 	<a href="/">Tracks</a>
-	<a href="/artists">Artists</a>
-	<a>Albums</a>
+	<a class='smalllink' href="/edits">Recent Edits</a>
 </nav>
 
 <div class='login'>
@@ -267,8 +279,8 @@
 
 			<p>Pony references are a high level way of classifying how much MLP/brony source material is incorporated into a track. There are three classifications: Obvious Refs, Subtle Refs, and No Refs</p>
 
-			<ul><li>Obvious refs is for tracks which make heavy use of source material, likely to the point someone not familiar with My Little Pony could pick up that it's pony related. This includes
-	
+			<ul><li>
+					Obvious refs is for tracks which make heavy use of source material, likely to the point someone not familiar with My Little Pony could pick up that it's pony related. This includes
 					<ul>
 						<li>Remixes of show songs</li>
 						<li>Songs w/ lyrics directly about MLP or brony culture</li>
@@ -280,11 +292,24 @@
 					</ul>
 				</li>
 				<li>
-					Subtle refs is for tracks which build upon source material, but in a way that people not familiar with MLP would likely not pick up on. 
+					Subtle refs is for tracks which build upon source material, but in a way that people not familiar with MLP would likely not pick up on. Most fans, however, would see the connection.
+					<ul>
+						<li>Pieces with melodic references to show songs</li>
+						<li>Songs with lyrics that fit the pony context without explicilty mentioning names/events/etc. from the show/fandom.</li>
+						<li>Obscure chops that aren't easily identified as originanting from the show/fandom</li>
+					</ul>
+				</li>
+				<li>
+					No refs is for tracks which don't reference any material from the show/fandom - it is still pony music, but you wouldn't have any way of telling just listening to the track alone
+				</li>
 			</ul>
 
 
 		</div>
+	
+	{:else if path=="/edits"}
+		<EditList on:openTrack={openTrack}/>
+
 	{/if}
 
 
