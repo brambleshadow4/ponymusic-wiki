@@ -38,6 +38,8 @@
 		rawHistory = await (await fetch("/api/history/track/" + id)).json();
 		let changes = [];
 
+		console.log(rawHistory);
+
 		rawHistory.push({ value: {title: "", release_date: "", tags: []}});
 
 		for(let i=0; i < rawHistory.length - 1; i++)
@@ -45,8 +47,22 @@
 			let newEntry = rawHistory[i].value;
 			let oldEntry = rawHistory[i+1].value;
 
-
 			let delta = {}
+			delta.timestamp = rawHistory[i].timestamp;
+			delta.name =  rawHistory[i].name
+
+			if(newEntry.deleted)
+			{
+				delta.deleted = true;
+				changes.push(delta);
+				continue;
+			}
+			if(oldEntry.deleted)
+			{
+				oldEntry.title = ""
+				oldEntry.release_date = "";
+				oldEntry.tags = [];
+			}
 
 			if(newEntry.title != oldEntry.title){
 				delta.titleChange = [oldEntry.title, newEntry.title];
@@ -56,8 +72,7 @@
 				delta.releaseDateChange = [oldEntry.release_date, newEntry.release_date];
 			}
 
-			delta.timestamp = rawHistory[i].timestamp;
-			delta.name =  rawHistory[i].name
+			
 
 			delta.tagsAdded = [];
 			delta.tagsRemoved = [];
@@ -114,24 +129,27 @@
 
 </script>
 
-
-
 {#if history.length}
 	
 	<div class='frame'>
 		{#each history as item,i}
 			<div class='history-entry'><input id={"history-entry-"+i} type="checkbox" on:click={select(i)}/><label for={"history-entry-"+i}>{item.name} – {new Date(item.timestamp).toLocaleString()}</label></div>
 
-			{#if item.titleChange}<div>Title: <em>{item.titleChange[0]}</em> => <em>{item.titleChange[1]}</em></div>{/if}
+			{#if item.deleted}
+				<div>Track deleted</div>
+			{:else}
 
-			{#if item.releaseDateChange}<div>Released: <em>{item.releaseDateChange[0]}</em> => <em>{item.releaseDateChange[1]}</em></div>{/if}
+				{#if item.titleChange}<div>Title: <em>{item.titleChange[0]}</em> => <em>{item.titleChange[1]}</em></div>{/if}
 
-			{#if item.tagsAdded.length}
-				<div>Tags added: {#each item.tagsAdded as aTag}<Tag tag={aTag}/> {/each}</div>
-			{/if}
+				{#if item.releaseDateChange}<div>Released: <em>{item.releaseDateChange[0]}</em> => <em>{item.releaseDateChange[1]}</em></div>{/if}
 
-			{#if item.tagsRemoved.length}
-				<div>Tags removed: {#each item.tagsRemoved as aTag}<Tag tag={aTag}/>{/each}</div>
+				{#if item.tagsAdded.length}
+					<div>Tags added: {#each item.tagsAdded as aTag}<Tag tag={aTag}/> {/each}</div>
+				{/if}
+
+				{#if item.tagsRemoved.length}
+					<div>Tags removed: {#each item.tagsRemoved as aTag}<Tag tag={aTag}/>{/each}</div>
+				{/if}
 			{/if}
 		{/each}
 

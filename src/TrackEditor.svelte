@@ -5,6 +5,7 @@
 	import Tag from "./Tag.svelte";
 	import { createEventDispatcher } from 'svelte';
 	import {tagComp} from "./helpers.js";
+	import {PERM, hasPerm} from "./authClient.js";
 
 	const dispatch = createEventDispatcher();
 
@@ -15,6 +16,7 @@
 	let tagValue = "";
 	let tagNumber = undefined;
 	let ref;
+	let trackDeleted = false;
 
 	export let id = "new";
 	export let mode = 0;
@@ -35,6 +37,15 @@
 		{
 			console.log("loading stuff")
 			track = await (await fetch("/api/track/" + id)).json();
+
+			if(track.deleted) // it's been deleted
+			{
+				console.log("it's been deleted")
+				tabProps = [[2,"History"]];
+				track = {title:"", release_date:"", tags:[]};
+				mode = 2;
+				return;
+			}
 
 			track.tags.sort(tagComp);
 			track.tags = track.tags;
@@ -150,6 +161,15 @@
 
 		load();
 	}
+
+	async function deleteTrack()
+	{
+		var response = await (await fetch("/api/track", {
+			method: "DELETE",
+			headers: {"Content-Type": "text/json"},
+			body: JSON.stringify({id, session: sessionStorage.session})
+		})).json();
+	}
 </script>
 
 <style>
@@ -254,8 +274,6 @@
 	{/each}
 </div>
 
-
-
 <div class='main'>
 	
 	{#if id=="new"}
@@ -336,7 +354,13 @@
 			</div>
 		</div>
 
-	<div><button on:click={saveData}>Update</button></div>
+		<div>
+			<button on:click={saveData}>Update</button>
+			{#if hasPerm(PERM.DELETE_TRACK)}
+				<button style="float: right; margin-right:.5in" on:click={deleteTrack}>Delete</button>
+			{/if}
+
+		</div>
 
 	{/if}
 

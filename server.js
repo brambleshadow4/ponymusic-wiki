@@ -210,7 +210,14 @@ app.get("/api/track/*", async(req,res) =>
 	let trackRows = (await db.query("SELECT * FROM tracks WHERE id=$1", [id])).rows;
 	let tagRows = (await db.query("SELECT * FROM track_tags WHERE track_id=$1", [id])).rows;
 
-	let response = trackRows[0] || {status: 400};
+	let response = trackRows[0];
+
+	if(!response)
+	{
+		res.json({status: 200, deleted:true});
+		return;
+	}
+
 	response.tags = [];
 
 	for(tag of tagRows)
@@ -231,10 +238,10 @@ app.get("/api/track/*", async(req,res) =>
 });
 
 
-app.post("/api/track", processJSON,
-	auth(PERM.UPDATE_TRACK), async (req,res) =>
+app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 {
 	var data = req.body;
+	let userID = (await getSession(req)).user_id;
 
 	let title = (data.title || "").trim();
 	let release_date = data.release_date.trim();
@@ -253,6 +260,10 @@ app.post("/api/track", processJSON,
 	let id = data.id;
 	let ogcache = await getOgCache(data) || {};
 	var info = {};
+	let deleted = false;
+
+	
+
 
 	// validate tags 
 
@@ -277,10 +288,19 @@ app.post("/api/track", processJSON,
 			res.json({status: 400});
 		}
 
-		info = await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3 WHERE id=$4", [title, release_date, ogcache, id]);	
-		if(info.err){ 
-			console.log("2 " + info.err); 
-		}	
+		let {rows} = await db.query("SELECT * FROM tracks WHERE id=$1", [id]);
+		if(rows.length)
+		{
+			info = await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3 WHERE id=$4", [title, release_date, ogcache, id]);	
+			if(info.err){ 
+				console.log("2 " + info.err); 
+			}	
+		}
+		else
+		{
+			// restoring a deleted track
+			await db.query("INSERT INTO tracks (id, title, release_date, locked, ogcache) VALUES ($1, $2, $3, false, $4)", [id, title, release_date, ogcache]);
+		}
 	}
 
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
@@ -307,12 +327,32 @@ app.post("/api/track", processJSON,
 		}
 	}
 
-	let userID = (await getSession(req)).user_id;
+	
 	info = await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, release_date, tags: data.tags}]);
 
 	if (info.err) {
 		console.log("5 " + info.err); 
 	}
+
+	res.json({status: 200, id});
+});
+
+app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =>
+{
+	var data = req.body;
+	let userID = (await getSession(req)).user_id;
+
+	let id = Number(data.id)
+
+	if(isNaN(id)){
+		res.json({status: 400});
+	}
+
+	console.log("DELETEING " + id);
+
+	await db.query("DELETE FROM tracks WHERE id=$1", [id]);	
+	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
+	await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {deleted:true}]);
 
 	res.json({status: 200, id});
 });

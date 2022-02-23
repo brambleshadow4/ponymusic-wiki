@@ -1,4 +1,3 @@
-
 <script>
 	import FilterButton from "./FilterButton.svelte";
 	import { createEventDispatcher } from 'svelte';
@@ -198,7 +197,6 @@
 					<th class={"col" + i + (filters[column.property] ? " active" : "")}
 						on:mousemove={onMouseMove}
 						on:mousedown={onMouseDown}
-
 					>
 						{column.name} <FilterButton active={!!filters[column.property]} property={column.property} on:openFilter />
 					</th>

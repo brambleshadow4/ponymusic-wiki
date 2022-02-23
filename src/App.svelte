@@ -150,7 +150,7 @@
 		right: 0;
 	}
 
-	p,ol{
+	p, ol, h2{
 		margin-top: 0px;
 	}
 

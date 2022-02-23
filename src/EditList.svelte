@@ -9,9 +9,13 @@
 		</tr>
 		{#each edits as edit}
 		<tr>
-			<td>{new Date(edit.timestamp).toISOString().substring(0,19).replace("T"," ")}</td>
+			<td>{new Date(edit.timestamp).toLocaleString()}</td>
 			<td>{edit.user_name}</td>
-			<td><a on:click={() => openTrack(edit.track_id)}>{edit.track_title}</a></td>
+			{#if edit.track_title == null}
+				<td><a class='deleted' on:click={() => openTrack(edit.track_id)}>deleted ({edit.track_id})</a></td>
+			{:else}
+				<td><a on:click={() => openTrack(edit.track_id)}>{edit.track_title}</a></td>
+			{/if}
 		</tr>
 		{/each}
 	</table>
@@ -30,11 +34,18 @@
 		padding: 0px 10px;
 	}
 
+	a.deleted
+	{
+		color: red;
+	}
+
 </style>
 
 
 <script>
 	import {createEventDispatcher} from "svelte";
+
+
 
 
 	let dispatch = createEventDispatcher();
