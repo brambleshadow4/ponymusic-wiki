@@ -49,6 +49,8 @@
 				return "tan";
 			case "album":
 				return "pink";
+			case "tag":
+				return "green";
 
 		}
 		return "";
@@ -100,7 +102,11 @@
 		color: #9852a3;
 		background-color: #dec5e2;
 		border-color: #cda7d3;
-
+	}
+	.green{
+		color: #6f8f0e;
+		background-color: #d0e29c;
+		border-color: #b3cf5d;
 	}
 </style>
 

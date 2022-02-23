@@ -65,7 +65,7 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 		return;
 	}
 
-	var pattern = "%" + req.body.value.replace(/%/,"\\%").toLowerCase() + "%";
+	var pattern = "%" + sqlEscapeStringNoQuotes(req.body.value).toLowerCase() + "%";
 
 	if(property == "artist" || property == "featured artist") {
 		var {rows, err} = await db.query("SELECT DISTINCT value FROM track_tags WHERE (property = 'artist' OR property = 'featured artist') and LOWER(value) LIKE $1 ORDER BY value ASC", [pattern]);
@@ -305,9 +305,11 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
 
+	let validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl"];
+
 	for(tag of data.tags)
 	{
-		if (!tag.property || !tag.value){
+		if (!tag.property || !tag.value || validProperties.indexOf(tag.property) == -1){
 			continue;
 		}
 

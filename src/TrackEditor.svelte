@@ -285,7 +285,6 @@
 
 	{#if mode==1}
 		<div>
-			
 			<div class='field'>
 				<span class="label" >Title:</span>
 				<input id='name' type="text" maxlength="255" bind:this={nameInput} value={track.title}/>
@@ -346,11 +345,13 @@
 				<button on:click={()=>{addTag({property:"pl",value:"2"})}}>Obvious Refs</button>
 				<button on:click={()=>{addTag({property:"pl",value:"1"})}}>Sublte Refs</button>
 				<button on:click={()=>{addTag({property:"pl",value:"0"})}}>No refs</button>
+				<a target="_blank" href="/pony-refs">What's this?</a>
 			</div>
 			<div>
 				<button on:click={addTagEntryField("genre")}>+ Genre</button>
 				<button on:click={addTagEntryField("album")}>+ Album</button>
-				<button>+ Remix</button>
+				<button on:click={addTagEntryField("tag")}>+ Tag</button>
+				<!--<button>+ Remix</button>-->
 			</div>
 		</div>
 
