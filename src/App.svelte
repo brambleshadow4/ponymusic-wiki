@@ -282,7 +282,10 @@
 		</div>
 	
 	{:else if path=="/edits"}
-		<EditList on:openTrack={openTrack}/>
+
+		<div class='main'>
+			<EditList on:openTrack={openTrack}/>
+		</div>
 
 	{:else if path=="/pony-refs"}
 		<div class='main'>

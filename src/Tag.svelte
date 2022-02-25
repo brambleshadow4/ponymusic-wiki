@@ -25,15 +25,12 @@
 
 			return text;
 		}
-
-		if(tag.property){
-			text = tag.property + ":" + tag.value;
-		}
-		else{
-			text = tag.value
+		if(tag.property == "tag"){
+			return tag.value;
 		}
 
-		return text;
+		return tag.property + ":" + tag.value;
+		
 	}	
 
 

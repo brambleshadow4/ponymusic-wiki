@@ -1,0 +1,136 @@
+require('dotenv').config()
+const fs = require('fs');
+const {Pool, Client} = require('pg');
+const readline = require('node:readline');
+const pro = require('process');
+
+main();
+
+var rl;
+
+
+async function main()
+{
+	rl = readline.createInterface({ input: pro.stdin, output: pro.stdout });
+	
+	console.clear();
+	console.log("+------Ponymusic.wiki LOADER------+");
+	console.log("|  1. DUMP                        |")         
+	console.log("|  2. LOAD                        |");
+	console.log("+---------------------------------+")
+
+	let x = await read(">");
+
+	if(x == "1"){
+		await doExport();
+	}
+	
+	if(x == "2"){
+		await doLoad();
+	}
+
+	process.exit();
+}
+
+async function doLoad()
+{
+	let filename = await read("File: ");
+	let tableQueries = fs.readFileSync(filename, {encoding:'utf8'}).split(";\n").map(x => x.replace(/\n/g, " "));
+
+	let db = new Pool();
+	
+	for(let query of tableQueries)
+	{
+		let {rows, err} = await db.query(query);
+
+		if(err)
+		{
+			console.error(err);
+			console.log("there was an error")
+		}
+	}
+}
+
+function sqlEscapeString(s)
+{
+	s = s.replace(/\\/g, "\\\\");
+	s = s.replace(/'/g, "''");
+	s = s.replace(/%/g,"\\%")
+	s = s.replace(/\n/g,"\\n")
+	s = s.replace(/\|/g, "\\|");
+
+	return "'" + s + "'";
+}
+
+
+async function doExport()
+{
+	let now = new Date();
+	fileName = "EXPORT " + now.toISOString().substring(0,10) + ".sql";
+	console.log("DUMPING TO \"" + fileName +'"');
+
+	let textArr = [];
+
+	textArr.push(await exportTable("users", {id: "string", name: "string", role: "number"}));
+	textArr.push(await exportTable("tracks", {id: "number", title: "string", release_date: "date", locked: "bool", ogcache: "json"}));
+	textArr.push(await exportTable("track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"}));
+	textArr.push(await exportTable("track_history", {track_id: "number", user_id: "number", value:"json", timestamp: "date"}));
+
+	fs.writeFileSync(fileName, textArr.join(""));
+}
+
+async function exportTable(table, cols)
+{
+	let db = new Pool();
+	let response = await db.query("SELECT * FROM " + table); 
+
+	let text = `DELETE FROM ${table};\n`;
+	let header = "\tINSERT INTO "+table+" (" + Object.keys(cols).join(", ") + ") VALUES\n"
+	let values = [];
+
+	for(let row of response.rows)
+	{
+		//console.log(row);
+
+		let rowVals = [];
+
+		for (let col in cols)
+		{
+			switch(cols[col])
+			{
+				case "string": 
+					rowVals.push(sqlEscapeString(row[col]));
+					break;
+				case "json":
+					rowVals.push(sqlEscapeString(JSON.stringify(row[col])));
+					break;
+				case "bool":
+					rowVals.push(row[col] ? "TRUE" : "FALSE");
+					break;
+				case "date":
+					rowVals.push("'" + row[col].toISOString() + "'");
+					break;
+				case "number|null": 
+				case "number": 
+					rowVals.push("" + row[col]);
+					break;
+			}
+		}
+
+		values.push("\t("+ rowVals.join(",")+")");
+	}
+
+	text += header +  values.join(",\n") + ";\n";
+	return text;
+}
+
+
+async function read(prompt)
+{
+	prompt = prompt || "";
+	return new Promise((accept, reject )=>{
+		rl.question(prompt, accept);
+	})
+}
+
+
