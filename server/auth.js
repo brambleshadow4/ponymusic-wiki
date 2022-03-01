@@ -69,6 +69,7 @@ async function buildSession(req)
 			SELECT * FROM sessions LEFT JOIN users ON user_id=id WHERE sessions.session = $1
 		`, [ses]);
 
+		console.log(rows);
 
 		if(rows[0] && rows[0].expire_time.getTime() >= now)
 		{

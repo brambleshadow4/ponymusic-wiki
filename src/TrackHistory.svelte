@@ -2,7 +2,9 @@
 
 	import {tagComp} from "./helpers.js";
 	import Tag from "./Tag.svelte";
+	import Spinner from "./Spinner.svelte";
 	import { createEventDispatcher } from 'svelte';
+
 	const dispatch = createEventDispatcher();
 
 	export let id = undefined;
@@ -11,6 +13,7 @@
 	let selected = {};
 
 	let rawHistory = [];
+	let loaded = false;
 
 	$: selectionCount = Object.keys(selected).length;
 
@@ -19,7 +22,7 @@
 		return function()
 		{
 			if(selected[i]){
-				delete selected[i]
+				delete selected[i];
 			}
 			else {
  				selected[i] = true;
@@ -31,6 +34,8 @@
 
 	async function loadHistory()
 	{
+		loaded = false;
+
 		if(id == undefined){
 			return;
 		}
@@ -72,8 +77,6 @@
 				delta.releaseDateChange = [oldEntry.release_date, newEntry.release_date];
 			}
 
-			
-
 			delta.tagsAdded = [];
 			delta.tagsRemoved = [];
 			newEntry.tags.sort(tagComp);
@@ -99,6 +102,7 @@
 		}
 
 		history = changes;
+		loaded = true;
 	}
 
 	loadHistory();
@@ -129,46 +133,51 @@
 
 </script>
 
-{#if history.length}
-	
-	<div class='frame'>
-		{#each history as item,i}
-			<div class='history-entry'><input id={"history-entry-"+i} type="checkbox" on:click={select(i)}/><label for={"history-entry-"+i}>{item.name} – {new Date(item.timestamp).toLocaleString()}</label></div>
 
-			{#if item.deleted}
-				<div>Track deleted</div>
+{#if loaded}
+	{#if history.length}
+		
+		<div class='frame'>
+			{#each history as item,i}
+				<div class='history-entry'><input id={"history-entry-"+i} type="checkbox" on:click={select(i)}/><label for={"history-entry-"+i}>{item.name} – {new Date(item.timestamp).toLocaleString()}</label></div>
+
+				{#if item.deleted}
+					<div>Track deleted</div>
+				{:else}
+
+					{#if item.titleChange}<div>Title: <em>{item.titleChange[0]}</em> => <em>{item.titleChange[1]}</em></div>{/if}
+
+					{#if item.releaseDateChange}<div>Released: <em>{item.releaseDateChange[0]}</em> => <em>{item.releaseDateChange[1]}</em></div>{/if}
+
+					{#if item.tagsAdded.length}
+						<div>Tags added: {#each item.tagsAdded as aTag}<Tag tag={aTag}/> {/each}</div>
+					{/if}
+
+					{#if item.tagsRemoved.length}
+						<div>Tags removed: {#each item.tagsRemoved as aTag}<Tag tag={aTag}/>{/each}</div>
+					{/if}
+				{/if}
+			{/each}
+
+			<div style="height: 1in">&nbsp;</div>
+		</div>
+
+		<div class='action-menu'>
+
+			{#if selectionCount == 1}
+				<button on:click={restoreVersion}>Restore This Version</button>
+			{:else if selectionCount == 2}
+				<button>Compare Versions</button>
 			{:else}
-
-				{#if item.titleChange}<div>Title: <em>{item.titleChange[0]}</em> => <em>{item.titleChange[1]}</em></div>{/if}
-
-				{#if item.releaseDateChange}<div>Released: <em>{item.releaseDateChange[0]}</em> => <em>{item.releaseDateChange[1]}</em></div>{/if}
-
-				{#if item.tagsAdded.length}
-					<div>Tags added: {#each item.tagsAdded as aTag}<Tag tag={aTag}/> {/each}</div>
-				{/if}
-
-				{#if item.tagsRemoved.length}
-					<div>Tags removed: {#each item.tagsRemoved as aTag}<Tag tag={aTag}/>{/each}</div>
-				{/if}
+				Select a version to restore, or select two versions to compare their values
 			{/if}
-		{/each}
+		</div>
 
-		<div style="height: 1in">&nbsp;</div>
-	</div>
-
-	<div class='action-menu'>
-
-		{#if selectionCount == 1}
-			<button on:click={restoreVersion}>Restore This Version</button>
-		{:else if selectionCount == 2}
-			<button>Compare Versions</button>
-		{:else}
-			Select a version to restore, or select two versions to compare their values
-		{/if}
-	</div>
-
+	{:else}
+		<div>No recorded history for this track</div>
+	{/if}
 {:else}
-	<div>No recorded history for this track</div>
+	<Spinner />
 {/if}
 
 

@@ -4,14 +4,12 @@
 	import FilterPopup from "./FilterPopup.svelte";
 	import EditList from "./EditList.svelte";
 	import PonyRefs from "./PonyRefs.svelte";
+	import LoginButton from "./LoginButton.svelte";
 	import {buildFilterQuery} from "./helpers.js";
 	
 	$: path = window.location.pathname;
-	$: avatar = "./avatar.svg";
-
 
 	let tab = 0;
-	let signedIn = !!sessionStorage.role;
 	let loadedTrackID = "";
 	let loadedFilter = "";
 
@@ -34,8 +32,6 @@
 			}
 
 			let values = value.replace(/,,/g, "\uE000").split(",").map(x => decodeURIComponent(x).replace(/\uE000/g, ","));
-
-			console.log(values);
 
 			filters[param] = {property: param};
 			filters[param][typ] = values;
@@ -60,47 +56,7 @@
 		history.pushState("", "", buildFilterQuery(filters));
 
 		filters = filters;
-	}
-
-
-	function debugLogin(e)
-	{
-		if(e.shiftKey)
-		{
-			e.preventDefault();
-			sessionStorage.role = 1;
-			sessionStorage.session = 1;
-			localStorage.session = 1;
-			location.reload();
-			return false;
-		}
-	}
-
-	async function restoreSession()
-	{
-		if(localStorage.session && !sessionStorage.session)
-		{
-			let request = await fetch("/api/login", {
-				method: "POST",
-				headers: {"Content-Type": "text/json"},
-				body: JSON.stringify({
-					session: localStorage.session
-				})
-			});
-
-			let data = await request.json();	
-
-			if(data.status == 200)
-			{
-				sessionStorage.role = data.role;
-				sessionStorage.session = data.session;
-				localStorage.session = data.session;
-				signedIn = true;
-			}
-		}
-	}
-
-	restoreSession();
+	}	
 
 </script>
 
@@ -112,7 +68,6 @@
 		bottom: 0;
 		left: 0;
 		width: 300px;
-
 		background-color: #101010;
 	}
 
@@ -187,39 +142,9 @@
 		width: 800px;		
 	}
 
-
-	.login{
-		position: fixed;
-		top: 20px;
-		right: 20px;
-
-		background-color:  #101010;
-		border-radius: 25px;
-		display: inline-block;
-
-		height:  50px;
-	}
-
-	.login img{
-		width: 50px;
-		height: 50px;
-		border-radius: 25px;
-	}
-
-	.login span
-	{
-		line-height: 50px;
-		color: white;
-		display: inline-block;
-		vertical-align: top;
-		padding: 0px 20px;
-	}
-
 	.no-margin{
 		margin: 0;
 	}
-
-
 </style>
 
 
@@ -229,9 +154,7 @@
 	<a class='smalllink' href="/edits">Recent Edits</a>
 </nav>
 
-<div class='login'>
-	{#if !signedIn}<span>Sign in</span>{/if}<img src={avatar} alt="avatar"/>
-</div>
+<LoginButton />
 
 <div class='main-container'>
 

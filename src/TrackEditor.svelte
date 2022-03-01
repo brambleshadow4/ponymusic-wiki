@@ -3,6 +3,7 @@
 	import TagEntryInput from "./TagEntryInput.svelte";
 	import TrackHistory from "./TrackHistory.svelte";
 	import Tag from "./Tag.svelte";
+	import Spinner from "./Spinner.svelte";
 	import { createEventDispatcher } from 'svelte';
 	import {tagComp} from "./helpers.js";
 	import {PERM, hasPerm} from "./authClient.js";
@@ -17,6 +18,7 @@
 	let tagNumber = undefined;
 	let ref;
 	let trackDeleted = false;
+	let errorMessage = "";
 
 	export let id = "new";
 	export let mode = 0;
@@ -29,22 +31,33 @@
 	let mediaEmbed = [];
 	let audioEmbed = "";
 
+	let spinner1 = false;
+	let sendingRequest = false;
+
 	async function load()
 	{
-		tabProps = [[0, "Track"],[1, "Edit"],[2,"History"]];
+		tabProps = [];
 
 		if(id != "new")
 		{
-			console.log("loading stuff")
+			spinner1 = true;
 			track = await (await fetch("/api/track/" + id)).json();
 
 			if(track.deleted) // it's been deleted
 			{
-				console.log("it's been deleted")
 				tabProps = [[2,"History"]];
 				track = {title:"", release_date:"", tags:[]};
 				mode = 2;
+
+				spinner1 = false;
 				return;
+			}
+
+			tabProps = [[0, "Track"],[1, "Edit"],[2,"History"]];
+
+			if(!hasPerm(PERM.UPDATE_TRACK))
+			{
+				tabProps.splice(1,1);
 			}
 
 			track.tags.sort(tagComp);
@@ -52,13 +65,12 @@
 
 			mode = 0;
 			enteringTag = false;
+			spinner1 = false;
 		}
 		else
 		{
 			mode = 1;
 			tabProps = [];
-
-			console.log("loading the track");
 		}
 	}
 
@@ -67,8 +79,6 @@
 	function formatDate(dte)
 	{
 		let months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-
-		console.log(dte);
 		let year = dte.substring(0,4)
 		let month = months[Number(dte.substring(5,7)-1)];
 		let day = Number(dte.substring(8,10))
@@ -78,8 +88,8 @@
 
 	function addTagEntryField(tagType)
 	{
-		return function(){
-
+		return function()
+		{
 			if(ref) {
 				ref.value = "";
 			}
@@ -125,8 +135,6 @@
 		{
 			for(let i=0; i<track.tags.length; i++)
 			{
-				console.log(track.tags[i]);
-
 				if(track.tags[i].property == tag.property && track.tags[i].value == tag.value)
 				{
 					track.tags.splice(i, 1)
@@ -140,6 +148,7 @@
 
 	async function saveData()
 	{
+		sendingRequest = true;
 		var data = {
 			id,
 			title: nameInput.value.trim(),
@@ -148,12 +157,25 @@
 			session: sessionStorage.session
 		}
 
-		var response = await (await fetch("/api/track", {
-			method: "POST",
-			headers: {"Content-Type": "text/json"},
-			body: JSON.stringify(data)
-		})).json();
+		var response = undefined;
 
+		try 
+		{
+			response = await (await fetch("/api/track", {
+				method: "POST",
+				headers: {"Content-Type": "text/json"},
+				body: JSON.stringify(data)
+			})).json();
+		}
+		catch(e){};
+
+		sendingRequest = false;
+
+		if(!response || response.status != 200)
+		{
+			errorMessage = "Request failed";
+			return;
+		}
 
 		if(id == "new"){
 			id = response.id;
@@ -164,11 +186,29 @@
 
 	async function deleteTrack()
 	{
-		var response = await (await fetch("/api/track", {
-			method: "DELETE",
-			headers: {"Content-Type": "text/json"},
-			body: JSON.stringify({id, session: sessionStorage.session})
-		})).json();
+		sendingRequest = true;
+
+		let response = undefined;
+
+		try {
+			response = await (await fetch("/api/track", {
+				method: "DELETE",
+				headers: {"Content-Type": "text/json"},
+				body: JSON.stringify({id, session: sessionStorage.session})
+			})).json();
+		}
+		catch(e){}
+
+		sendingRequest = false;
+
+		if(!response || response.status != 200)
+		{
+			errorMessage = "Request failed";
+		}
+		else
+		{	
+			dispatch("close");
+		}
 	}
 </script>
 
@@ -276,93 +316,103 @@
 
 <div class='main'>
 	
-	{#if id=="new"}
-		<h1>Add Track</h1>
+	{#if spinner1}
+		<Spinner />
 	{:else}
-		<h1 class={"h1-" + mode}>{track.title}</h1>
-		{#if mode==0}<h2>{formatDate(track.release_date)}</h2>{/if}
-	{/if}
 
-	{#if mode==1}
-		<div>
-			<div class='field'>
-				<span class="label" >Title:</span>
-				<input id='name' type="text" maxlength="255" bind:this={nameInput} value={track.title}/>
-			</div>
-			<div class='field'>
-				<span class="label">Released:</span>
-				<input id='release-date' type="date" bind:this={dateInput} value={track.release_date.substring(0,10)}/>
-			</div>
-		</div>
-	{:else if mode ==2}
-		<TrackHistory id={id} on:reloadtrack={load}/>
-		
-	{:else}
-		{#if track.ogcache && track.ogcache.embed}
-			<iframe src={track.ogcache.embed} width={track.ogcache.width} height={track.ogcache.height} 
-				frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
-
-			></iframe>
-		{:else if track.ogcache && track.ogcache.audio}
-			<audio controls>
-				<source src={track.ogcache.audio} />
-			</audio> 
+		{#if id=="new"}
+			<h1>Add Track</h1>
+		{:else}
+			<h1 class={"h1-" + mode}>{track.title}</h1>
+			{#if mode==0}<h2>{formatDate(track.release_date)}</h2>{/if}
 		{/if}
-	{/if}
 
-
-	{#if mode== 0 || mode == 1}
-	<div>Tags:</div>
-	<div>
+		{#if mode==1}
+			<div>
+				<div class='field'>
+					<span class="label" >Title:</span>
+					<input id='name' type="text" maxlength="255" bind:this={nameInput} value={track.title}/>
+				</div>
+				<div class='field'>
+					<span class="label">Released:</span>
+					<input id='release-date' type="date" bind:this={dateInput} value={track.release_date.substring(0,10)}/>
+				</div>
+			</div>
+		{:else if mode ==2}
+			<TrackHistory id={id} on:reloadtrack={load}/>
 			
-		{#each track.tags as tag}
-			<Tag canRemove={mode==1} tag={tag} on:remove={removeTag(tag)}/>
-		{/each}
+		{:else}
+			{#if track.ogcache && track.ogcache.embed}
+				<iframe src={track.ogcache.embed} width={track.ogcache.width} height={track.ogcache.height} 
+					frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
 
-		{#if enteringTag}
-			<TagEntryInput 
-				property={tagProperty}
-				value={tagValue}
-				number={tagNumber}
-				bind:ref
-				on:valueSet={onEntry}
-			/>
-
+				></iframe>
+			{:else if track.ogcache && track.ogcache.audio}
+				<audio controls>
+					<source src={track.ogcache.audio} />
+				</audio> 
+			{/if}
 		{/if}
 
-		<div id="tag-warnings"></div>
-	</div>
-	{/if}
 
-	{#if mode==1}
-		<div class='field post-tags'>
-
-			<div>
-				<button on:click={addTagEntryField("hyperlink")}>+ Hyperlink</button>
-				<button on:click={addTagEntryField("artist")}>+ Artist</button>
-				<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button></div>
-			<div>
-				<button on:click={()=>{addTag({property:"pl",value:"2"})}}>Obvious Refs</button>
-				<button on:click={()=>{addTag({property:"pl",value:"1"})}}>Sublte Refs</button>
-				<button on:click={()=>{addTag({property:"pl",value:"0"})}}>No refs</button>
-				<a target="_blank" href="/pony-refs">What's this?</a>
-			</div>
-			<div>
-				<button on:click={addTagEntryField("genre")}>+ Genre</button>
-				<button on:click={addTagEntryField("album")}>+ Album</button>
-				<button on:click={addTagEntryField("tag")}>+ Tag</button>
-				<!--<button>+ Remix</button>-->
-			</div>
-		</div>
-
+		{#if mode== 0 || mode == 1}
+		<div>Tags:</div>
 		<div>
-			<button on:click={saveData}>Update</button>
-			{#if hasPerm(PERM.DELETE_TRACK)}
-				<button style="float: right; margin-right:.5in" on:click={deleteTrack}>Delete</button>
+				
+			{#each track.tags as tag}
+				<Tag canRemove={mode==1} tag={tag} on:remove={removeTag(tag)}/>
+			{/each}
+
+			{#if enteringTag}
+				<TagEntryInput 
+					property={tagProperty}
+					value={tagValue}
+					number={tagNumber}
+					bind:ref
+					on:valueSet={onEntry}
+				/>
+
 			{/if}
 
+			<div id="tag-warnings"></div>
 		</div>
+		{/if}
 
+		{#if mode==1}
+			<div class='field post-tags'>
+
+				<div>
+					<button on:click={addTagEntryField("hyperlink")}>+ Hyperlink</button>
+					<button on:click={addTagEntryField("artist")}>+ Artist</button>
+					<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button></div>
+				<div>
+					<button on:click={()=>{addTag({property:"pl",value:"2"})}}>Obvious Refs</button>
+					<button on:click={()=>{addTag({property:"pl",value:"1"})}}>Sublte Refs</button>
+					<button on:click={()=>{addTag({property:"pl",value:"0"})}}>No refs</button>
+					<a target="_blank" href="/pony-refs">What's this?</a>
+				</div>
+				<div>
+					<button on:click={addTagEntryField("genre")}>+ Genre</button>
+					<button on:click={addTagEntryField("album")}>+ Album</button>
+					<button on:click={addTagEntryField("tag")}>+ Tag</button>
+					<!--<button>+ Remix</button>-->
+				</div>
+			</div>
+
+			<div>
+				<button on:click={saveData} disabled={sendingRequest}>Update</button>
+				{#if hasPerm(PERM.DELETE_TRACK) && id != "new"}
+					<button style="float: right; margin-right:.5in" on:click={deleteTrack} disabled={sendingRequest}>Delete</button>
+				{/if}
+				{#if errorMessage}
+					<p>{errorMessage}</p>
+				{/if}
+				{#if sendingRequest}
+					<Spinner />
+				{/if}
+
+			</div>
+		{/if}
 	{/if}
 
 </div>

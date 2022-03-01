@@ -2,6 +2,7 @@
 export function hasPerm(perm)
 {
 	let role = sessionStorage.role || ROLE.DEFAULT;
+	console.log(role);
 	return lookup[role][perm]
 }
 

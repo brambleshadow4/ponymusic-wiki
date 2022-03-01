@@ -1,16 +1,19 @@
 <script>
+	import Spinner from "./Spinner.svelte";
 	import { createEventDispatcher } from 'svelte';
 	import { getAutofill } from "./helpers.js";
 
 	export let property="release_date";
 	export let value = {noFilter: true};
 
+
+
 	let dispatch = createEventDispatcher();
 
 	let freeTextInput = false;
 	var freeTextPrompts;
 
-	
+	let loadingFilters = false;
 	let filterItems = [];
 	let title = "";
 
@@ -30,31 +33,33 @@
 			checked: 3,
 		};
 
+		loadingFilters = true;
+
 		switch(property)
 		{
 			case "artist":
-				groups = await autofillGroups("artist")
 				title = "Artist"
+				groups = await autofillGroups("artist")
 				break;
 			case "genre":
-				groups = await autofillGroups("genre")
 				title = "Genre"
+				groups = await autofillGroups("genre")
 				break;
 			case "album":
-				groups = await autofillGroups("album")
 				title = "Album"
+				groups = await autofillGroups("album")
 				break;
 			case "release_date":
-				groups = releaseDateGroups(); 
 				title = "Release Date";
+				groups = releaseDateGroups(); 
 				break;
 			case "pl":
-				groups = plGroups(); 
 				title = "Pony References";
+				groups = plGroups(); 
 				break;
 			case "title":
-				freeTextInput = true;
 				title = "keywords in Title";
+				freeTextInput = true;
 				break;
 		}
 
@@ -63,6 +68,8 @@
 		initialCheckItems(groups);
 
 		filterItems = filterItems; //render
+
+		loadingFilters = false;
 	}
 
 	function nxor(a,b)
@@ -525,36 +532,41 @@
 <div class='popup'>
 	<h1>Filter by {title}</h1>
 
-	{#if !freeTextInput}
-		<div><input type="search" placeholder="Search" on:input={updateSearch}/></div>
-		<div class='filter-items'>
-			{#each filterItems as filter, i}
-
-				<div>
-					<input 
-						class={"indent-" + filter.level}
-						checked={filter.checked == 2}
-						indeterminate={filter.checked == 0}
-						type="checkbox" 
-						id={"filter-"+i}
-						on:click={(e) => toggleCheckBox(e, i, filter)} />
-					<label for={"filter-"+i}>{filter.name}</label>
-				</div>
-
-			{/each}
-		</div>
+	{#if loadingFilters}
+		<Spinner/>
 	{:else}
 
-		<div bind:this={freeTextPrompts}>
+		{#if !freeTextInput}
+			<div><input type="search" placeholder="Search" on:input={updateSearch}/></div>
+			<div class='filter-items'>
+				{#each filterItems as filter, i}
 
-			{#if value.include}
-				{#each value.include as item}
-					<div><input type="text" placeholder="Keyword/phrase" class='freeText' on:input={updateFreeTexts} value={item}/></div>
+					<div>
+						<input 
+							class={"indent-" + filter.level}
+							checked={filter.checked == 2}
+							indeterminate={filter.checked == 0}
+							type="checkbox" 
+							id={"filter-"+i}
+							on:click={(e) => toggleCheckBox(e, i, filter)} />
+						<label for={"filter-"+i}>{filter.name}</label>
+					</div>
+
 				{/each}
-			{/if}
+			</div>
+		{:else}
 
-			<div><input type="text" placeholder="Keyword/phrase" class='freeText' on:input={updateFreeTexts}/></div>
-		</div>
+			<div bind:this={freeTextPrompts}>
+
+				{#if value.include}
+					{#each value.include as item}
+						<div><input type="text" placeholder="Keyword/phrase" class='freeText' on:input={updateFreeTexts} value={item}/></div>
+					{/each}
+				{/if}
+
+				<div><input type="text" placeholder="Keyword/phrase" class='freeText' on:input={updateFreeTexts}/></div>
+			</div>
+		{/if}
 	{/if}
 	<div><button on:click={saveFilter}>Apply</button><button on:click={cancelFilter}>Cancel</button></div>
 </div>

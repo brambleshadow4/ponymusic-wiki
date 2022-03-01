@@ -2,6 +2,7 @@
 	import FilterButton from "./FilterButton.svelte";
 	import { createEventDispatcher } from 'svelte';
 	import {buildFilterQuery} from "./helpers.js";
+	import Spinner from "./Spinner.svelte";
 
 	export let selectedId = "";
 	export let filters = {};
@@ -19,10 +20,12 @@
 
 	let tableContainer = undefined;
 	let pinnedRow = undefined;
+	let loaded = false;
 
 
 	async function load(filters)
-	{
+	{	
+		loaded = false;
 		if(JSON.stringify(filters) != filterHash)
 		{
 			page = 0;
@@ -33,6 +36,7 @@
 		let response = await (await fetch("/api/view/tracks" + query)).json();
 		data = response.rows;
 		pages = response.pages;
+		loaded = true;
 	}
 
 	function incPage()
@@ -189,49 +193,54 @@
 			
 	<a href="#" on:click={()=>{openTrack("new")}}>+ Add a track</a>
 	
-	<div class='table-container' on:scroll={adjustTopRowPosition} bind:this={tableContainer}>
-		<table>
-			<tr class='pinned-row' bind:this={pinnedRow}>
+	{#if loaded}
 
-				{#each columnDefs as column,i}
-					<th class={"col" + i + (filters[column.property] ? " active" : "")}
-						on:mousemove={onMouseMove}
-						on:mousedown={onMouseDown}
-					>
-						{column.name} <FilterButton active={!!filters[column.property]} property={column.property} on:openFilter />
-					</th>
-				{/each}
-			</tr>
-			{#each data as song}
-				<tr class={song.id == selectedId ? "selected row" : "row"} on:click={(e) => {onTrackClick(song.id)}}>
-					<td class="col0">
-						{combineMulti(song.artist)}
-					</td>
-					<td class="col1">
-						{song.title} 
-					</td>
-					<td class="col2">
-						{combineMulti(song.album)}
-					</td>
-					<td class="col3">
-						{enumText(song.pl)}
-					</td>
-					<td class="col4">
-						{combineMulti(song.genre)}
-					</td>
-					<td class="col5">
-						{song.release_date.substring(0,10)}
-					</td>
+		<div class='table-container' on:scroll={adjustTopRowPosition} bind:this={tableContainer}>
+			<table>
+				<tr class='pinned-row' bind:this={pinnedRow}>
+
+					{#each columnDefs as column,i}
+						<th class={"col" + i + (filters[column.property] ? " active" : "")}
+							on:mousemove={onMouseMove}
+							on:mousedown={onMouseDown}
+						>
+							{column.name} <FilterButton active={!!filters[column.property]} property={column.property} on:openFilter />
+						</th>
+					{/each}
 				</tr>
-			{/each}
-		</table>
-	</div>
+				{#each data as song}
+					<tr class={song.id == selectedId ? "selected row" : "row"} on:click={(e) => {onTrackClick(song.id)}}>
+						<td class="col0">
+							{combineMulti(song.artist)}
+						</td>
+						<td class="col1">
+							{song.title} 
+						</td>
+						<td class="col2">
+							{combineMulti(song.album)}
+						</td>
+						<td class="col3">
+							{enumText(song.pl)}
+						</td>
+						<td class="col4">
+							{combineMulti(song.genre)}
+						</td>
+						<td class="col5">
+							{song.release_date.substring(0,10)}
+						</td>
+					</tr>
+				{/each}
+			</table>
+		</div>
 
-	<div class='pager'>
-		{#if page>0}<a class='decPage' on:click={decPage}>&lt;- Previous</a>{/if}
-		<span>Page {page+1}/{pages}</span>
-		{#if page+1<pages}<a class='incPage' on:click={incPage}>Next -></a>{/if}
-	</div>
+		<div class='pager'>
+			{#if page>0}<a class='decPage' on:click={decPage}>&lt;- Previous</a>{/if}
+			<span>Page {page+1}/{pages}</span>
+			{#if page+1<pages}<a class='incPage' on:click={incPage}>Next -></a>{/if}
+		</div>
+	{:else}
+		<Spinner />
+	{/if}
 </div>
 
 <style>

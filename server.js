@@ -14,7 +14,12 @@ const port = process.env.PORT || 80;
 
 const PAGE_COUNT = 100;
 
+
 app.use(cors());
+
+// Delay settings
+const DELAY = 1500; 
+app.use(addDelay);
 
 // getOgPropertiesFromURL("https://www.youtube.com/watch?v=CNPdO5TZ1DQ", {logProperties:true});
 
@@ -42,6 +47,7 @@ app.post("/api/login", processJSON, async (req,res) =>
 {
 
 	let session = await getSession(req);
+	console.log(session);
 
 	if(session)
 	{
@@ -262,8 +268,6 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	var info = {};
 	let deleted = false;
 
-	
-
 
 	// validate tags 
 
@@ -336,8 +340,15 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		console.log("5 " + info.err); 
 	}
 
+
+	//setTimeout(() => {
+
 	res.json({status: 200, id});
+	//}, 500);
+	
 });
+
+
 
 app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =>
 {
@@ -446,6 +457,20 @@ function processJSON(req, res, next)
 		next();
 	});
 }
+
+
+function addDelay(req, res, next)
+{
+	if(DELAY)
+	{
+		setTimeout(next, DELAY);
+	}
+	else
+	{
+		next();
+	}
+}
+
 
 function queryProcessing(req, res, next)
 {
