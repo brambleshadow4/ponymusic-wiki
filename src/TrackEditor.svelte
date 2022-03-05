@@ -173,7 +173,7 @@
 
 		if(!response || response.status != 200)
 		{
-			errorMessage = "Request failed";
+			errorMessage = "Request failed: " + (response.error || "");
 			return;
 		}
 
@@ -181,6 +181,7 @@
 			id = response.id;
 		}
 
+		errorMessage = "";
 		load();
 	}
 
@@ -400,7 +401,11 @@
 			</div>
 
 			<div>
-				<button on:click={saveData} disabled={sendingRequest}>Update</button>
+				{#if hasPerm(PERM.UPDATE_TRACK)}
+					<button on:click={saveData} disabled={sendingRequest}>Update</button>
+				{:else if !sessionStorage.session}
+					<p>Sign in to make edits to the wiki</p>
+				{/if}
 				{#if hasPerm(PERM.DELETE_TRACK) && id != "new"}
 					<button style="float: right; margin-right:.5in" on:click={deleteTrack} disabled={sendingRequest}>Delete</button>
 				{/if}

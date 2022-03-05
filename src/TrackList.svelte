@@ -188,8 +188,8 @@
 
 <div class='frame'>
 
-	<h1 class='no-margin'>Pony Music Wiki</h1>
-	<div>All the pony music! (unless it's made by a Nazi/sexual predator)</div>
+	<h1 class='no-margin'>Pony Music Wiki <span class='version'>(alpha build)</span></h1>
+	<div>A community maintained database of pony music.</div>
 			
 	<a href="#" on:click={()=>{openTrack("new")}}>+ Add a track</a>
 	
@@ -355,6 +355,12 @@
 
 	.no-margin{
 		margin: 0;
+	}
+
+	.version
+	{
+		font-size: 8pt;
+		color: red;
 	}
 
 </style>

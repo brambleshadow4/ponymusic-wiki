@@ -9,10 +9,15 @@ const {Pool, Client} = require('pg');
 const {PERM, auth, reqHasPerm, getSession} = require("./server/auth.js");
 const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
 
+const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl"];
+
 const app = express();
 const port = process.env.PORT || 80;
 
 const PAGE_COUNT = 100;
+
+const MAX_STRING_LENGTH = 256;
+const DAILY_RATE_LIMIT = 10;
 
 
 app.use(cors());
@@ -47,7 +52,7 @@ app.post("/api/login", processJSON, async (req,res) =>
 {
 
 	let session = await getSession(req);
-	console.log(session);
+
 
 	if(session)
 	{
@@ -88,7 +93,6 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 
 app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 {
-	console.log(req.query);
 	let page = Number(req.query.page) || 0; 
 	let offset = page*PAGE_COUNT;
 
@@ -172,7 +176,6 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 });
 
 
-// 
 app.get("/api/history/track/*", async(req,res) =>
 {
 	let id = req.params[0];
@@ -255,16 +258,36 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 	if(isNaN(new Date(release_date).getTime()))
 	{
-		res.json({status:400});
+		res.json({status:400, error: "Invalid date"});
 		return;
 	}
 
-	if(title.length == 0){
+	if(title.length == 0 || title.length > MAX_STRING_LENGTH)
+	{
+		res.json({status:400, error: "Invalid title"});
 		return;
+	}
+
+	if(!reqHasPerm(req, PERM.UNLIMITED_EDITS))
+	{
+		let {rows} = await db.query("SELECT COUNT(*) as count from track_history WHERE user_id=$1 AND timestamp > (NOW() - interval '1 day')", [userID]);
+		if(rows[0].count >= DAILY_RATE_LIMIT)
+		{
+			res.json({status:400, error: "You have reached the daily limit for edits you can perform. If you would like for the rate limit to be removed, contact a moderator"});
+			return;
+		}
 	}
 
 	let id = data.id;
-	let ogcache = await getOgCache(data) || {};
+
+	let ogcache = {};
+
+	try
+	{
+		ogcache = await getOgCache(data) || {};
+	}
+	catch(e){};
+
 	var info = {};
 	let deleted = false;
 
@@ -277,7 +300,8 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 		if(x.err)
 		{
-			res.json({status:400});
+			res.json({status:400, error: "Error code 1"});
+			return;
 		}
 		else
 		{
@@ -296,8 +320,10 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		if(rows.length)
 		{
 			info = await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3 WHERE id=$4", [title, release_date, ogcache, id]);	
-			if(info.err){ 
-				console.log("2 " + info.err); 
+			if(info.err)
+			{ 
+				res.json({status:400, error: "Error code 2"});
+				return;
 			}	
 		}
 		else
@@ -307,28 +333,36 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		}
 	}
 
+	for(tag of data.tags)
+	{
+		let value = tag.value.trim();
+
+		if (!tag.property || !tag.value || value.length == 0 || value.length > MAX_STRING_LENGTH || validProperties.indexOf(tag.property) == -1){
+			res.json({status:400, error: "Invalid tag " + JSON.stringinfy(tag) });
+			return;
+		}
+	}
+
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
 
-	let validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl"];
+	
 
 	for(tag of data.tags)
 	{
-		if (!tag.property || !tag.value || validProperties.indexOf(tag.property) == -1){
-			continue;
-		}
-
 		if(!isNaN(tag.number))
 		{
 			info = await db.query("INSERT INTO track_tags (track_id, property, value, number) VALUES ($1, $2, $3, $4)", [id, tag.property, tag.value, tag.number]);
 			if(info.err){ 
-				console.log("3 " + info.err); 
+				res.json({status:400, error: "Error code 3"});
+				return;
 			}	
 		}
 		else
 		{
 			info = await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, $2, $3)", [id, tag.property, tag.value,]);
 			if(info.err){ 
-				console.log("4 " + info.err); 
+				res.json({status:400, error: "Error code 4"});
+				return;
 			}	
 		}
 	}
@@ -337,14 +371,11 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	info = await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, release_date, tags: data.tags}]);
 
 	if (info.err) {
-		console.log("5 " + info.err); 
+		res.json({status:400, error: "error 5"});
+		return;
 	}
 
-
-	//setTimeout(() => {
-
 	res.json({status: 200, id});
-	//}, 500);
 	
 });
 

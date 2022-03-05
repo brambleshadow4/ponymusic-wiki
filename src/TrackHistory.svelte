@@ -4,6 +4,7 @@
 	import Tag from "./Tag.svelte";
 	import Spinner from "./Spinner.svelte";
 	import { createEventDispatcher } from 'svelte';
+	import {PERM, hasPerm} from "./authClient.js";
 
 	const dispatch = createEventDispatcher();
 
@@ -164,10 +165,10 @@
 
 		<div class='action-menu'>
 
-			{#if selectionCount == 1}
+			{#if selectionCount == 1 && hasPerm(PERM.UPDATE_TRACK)}
 				<button on:click={restoreVersion}>Restore This Version</button>
 			{:else if selectionCount == 2}
-				<button>Compare Versions</button>
+				<button>Compare Versions (TODO)</button>
 			{:else}
 				Select a version to restore, or select two versions to compare their values
 			{/if}

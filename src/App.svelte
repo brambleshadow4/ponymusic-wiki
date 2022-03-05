@@ -106,7 +106,7 @@
 		right: 0;
 	}
 
-	p, ol, h2{
+	p, ol, ul, h2,h3{
 		margin-top: 0px;
 	}
 
@@ -168,6 +168,8 @@
 		<div class='main'>
 			<h1>About the Pony Music Wiki</h1>
 
+			<p>This is an alpha release and this text will be updated as we figure out what works</p>
+
 			<p>There's hundreds (if not thousands) of musicians out there releasing tons and tons of My Little Pony fan music. With so much creativity in the fandom, not all of it can be given the spotlight, but the least we can do is keep track of it.</p>
 
 			<p>The Pony Music Wiki is designed to be just that—a community database of all pony music known to Equestria. Anypony is allowed to add missing tracks and make corrections to ensure the wiki has the most up-to-date list of music, that way the burden of responsibility never falls on just a single pony. Like Wikipedia, the wiki also comes with tools to quickly revert any bad changes made by accident or malice. The wiki does not host music files but rather links out to the artist's original upload, be it on Bandcamp or YouTube or Soundcloud. This allows the community to create a more complete database without having to upload an artist's song without their permission. If you are looking for a pony website to upload your tracks to, <a href="https://pony.fm">pony.fm</a> or <a href="https://projectvinyl.net/">Project Vinyl</a> might better suit your needs.</p>
@@ -198,6 +200,13 @@
 			</ol>
 
 			<h2>Planned New Features, coming soon maybe</h2>
+
+			<ul>
+				<li>Publicallly visible lists that only one person can edit</li>
+				<li>Mark as watched/watch later/not interested etc.</li>
+			</ul>
+
+			<p>reach out to brambleshadow4 for more info about upcoming features or if you'd like to request a feature</p>
 
 			<PonyRefs />
 

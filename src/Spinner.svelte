@@ -1,10 +1,6 @@
-<script>
-
-  export let small=false;
-</script>
-
-
-<div class={"loader " + (small ? "small" : "")}  ></div>
+<div class='loader-container'>
+<div class="loader"></div>
+</div>
 
 <style>
 .loader,
@@ -19,7 +15,7 @@
 .loader {
   color: #000000;
   text-indent: -9999em;
-  margin: 88px auto;
+  margin: 50px auto;
   position: relative;
   font-size: 11px;
   -webkit-transform: translateZ(0);
@@ -27,6 +23,7 @@
   transform: translateZ(0);
   -webkit-animation-delay: -0.16s;
   animation-delay: -0.16s;
+  height: 90px;
 }
 .loader:before,
 .loader:after {
@@ -69,6 +66,11 @@
 .loader.small
 {
   margin: 0px auto;
+}
+
+.loader-container
+{
+    height: 150px;
 }
 
 </style>
