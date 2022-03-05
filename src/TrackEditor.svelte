@@ -19,6 +19,7 @@
 	let ref;
 	let trackDeleted = false;
 	let errorMessage = "";
+	let duplicates = [];
 
 	export let id = "new";
 	export let mode = 0;
@@ -124,6 +125,11 @@
 			}
 		}
 
+		if(tag.property == "hyperlink")
+		{
+			findDuplicates();
+		}
+
 		track.tags.push(tag);
 		track.tags.sort(tagComp);
 		track.tags = track.tags;
@@ -146,6 +152,52 @@
 		}
 	}
 
+	let findDuplicatesChannelStatus = 0;
+
+
+	async function findDuplicates()
+	{
+		if(findDuplicatesChannelStatus == 0)
+		{
+			findDuplicatesChannelStatus = 1;
+
+			var data = {
+				id,
+				title: nameInput.value.trim(),
+				tags: track.tags,
+				session: sessionStorage.session
+			}
+
+			var response = {};
+			try 
+			{
+				response = await (await fetch("/api/findDuplicates", {
+					method: "POST",
+					headers: {"Content-Type": "text/json"},
+					body: JSON.stringify(data)
+				})).json();
+			}
+			catch(e){};
+
+			duplicates = response.duplicates;
+
+			// handle subsequent requests.
+			if(findDuplicatesChannelStatus == 1)
+			{
+				findDuplicatesChannelStatus = 0;
+			}
+			else if (findDuplicatesChannelStatus == 2)
+			{
+				findDuplicatesChannelStatus = 0;
+				findDuplicates();
+			}
+		}
+		else if (findDuplicatesChannelStatus == 1)
+		{
+			findDuplicatesChannelStatus = 2;
+		}
+	}
+
 	async function saveData()
 	{
 		sendingRequest = true;
@@ -157,7 +209,7 @@
 			session: sessionStorage.session
 		}
 
-		var response = undefined;
+		var response = {};
 
 		try 
 		{
@@ -171,7 +223,7 @@
 
 		sendingRequest = false;
 
-		if(!response || response.status != 200)
+		if(response.status != 200)
 		{
 			errorMessage = "Request failed: " + (response.error || "");
 			return;
@@ -189,7 +241,7 @@
 	{
 		sendingRequest = true;
 
-		let response = undefined;
+		let response = {};
 
 		try {
 			response = await (await fetch("/api/track", {
@@ -202,9 +254,9 @@
 
 		sendingRequest = false;
 
-		if(!response || response.status != 200)
+		if(response.status != 200)
 		{
-			errorMessage = "Request failed";
+			errorMessage = "Request failed: " + (response.error || "");
 		}
 		else
 		{	
@@ -305,6 +357,13 @@
 		z-index: -2;
 	}
 
+	.tag-warnings
+	{
+		background-color: #fff7e6;
+		border: solid 1px #ffcc66;
+		padding: 10px;
+	}
+
 </style>
 
 
@@ -331,8 +390,8 @@
 		{#if mode==1}
 			<div>
 				<div class='field'>
-					<span class="label" >Title:</span>
-					<input id='name' type="text" maxlength="255" bind:this={nameInput} value={track.title}/>
+					<span class="label">Title:</span>
+					<input id='name' type="text" maxlength="255" bind:this={nameInput} on:input={findDuplicates} value={track.title}/>
 				</div>
 				<div class='field'>
 					<span class="label">Released:</span>
@@ -375,7 +434,16 @@
 
 			{/if}
 
-			<div id="tag-warnings"></div>
+
+			{#if duplicates.length}
+			<div class="tag-warnings">
+				<div>This track has the same title/hyperlink as other tracks.<br>Please make sure it is not a duplicate of the following:</div>
+				{#each duplicates as item}
+					<div>{item.value}: {#each item.duplicates as num}<a target="_blank" href={"/track/" + num}>{num}</a> {/each}</div>
+				{/each}
+			</div>
+			{/if}
+			
 		</div>
 		{/if}
 

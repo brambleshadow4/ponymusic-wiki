@@ -145,6 +145,16 @@
 	.no-margin{
 		margin: 0;
 	}
+
+	blockquote
+	{
+		border-left: solid 3px #d6a172;
+		background-color: #f5ece4;
+		margin: 0px;
+		padding-left: .5in;
+		padding-top: 10px;
+		margin-top: .5in;
+	}
 </style>
 
 
@@ -166,9 +176,13 @@
 	{:else if path == "/about"}
 		
 		<div class='main'>
-			<h1>About the Pony Music Wiki</h1>
 
-			<p>This is an alpha release and this text will be updated as we figure out what works</p>
+			<blockquote>
+				<p>This is basically a design prototype for a potential way of keeping track of pony music. It's far from complete and will likely evolve based on input from the community (which is to say anypony who thinks this is remotely useful).</p>
+
+				<p>Reach out to brambleshadow4 if you'd like to provide design input + feedback.</p>
+			</blockquote>
+			<h1>About the Pony Music Wiki</h1>
 
 			<p>There's hundreds (if not thousands) of musicians out there releasing tons and tons of My Little Pony fan music. With so much creativity in the fandom, not all of it can be given the spotlight, but the least we can do is keep track of it.</p>
 
@@ -204,9 +218,10 @@
 			<ul>
 				<li>Publicallly visible lists that only one person can edit</li>
 				<li>Mark as watched/watch later/not interested etc.</li>
+				<li>Artist view: see the most recent track from each artist to quickly find active musicians</li>
+				<li>Tag view: quickly see all the tracks associated with a tag/artist/album/etc</li>
+				<li>Actually have tooling for moderators/admins</li>
 			</ul>
-
-			<p>reach out to brambleshadow4 for more info about upcoming features or if you'd like to request a feature</p>
 
 			<PonyRefs />
 

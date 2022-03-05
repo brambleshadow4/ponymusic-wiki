@@ -24,7 +24,7 @@ app.use(cors());
 
 // Delay settings
 const DELAY = 1500; 
-app.use(addDelay);
+//app.use(addDelay);
 
 // getOgPropertiesFromURL("https://www.youtube.com/watch?v=CNPdO5TZ1DQ", {logProperties:true});
 
@@ -99,10 +99,8 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let tagFilter = '(tag "artist" "vylet pony")';
 	let order = "(desc release_date)";
 
-
 	let whereClause = "";
 	let whereClauses = [];
-
 
 	if(req.query.artist){
 		whereClauses.push(buildWhereClause("artist", req.query.artist, false))
@@ -399,6 +397,57 @@ app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =
 	await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {deleted:true}]);
 
 	res.json({status: 200, id});
+});
+
+
+app.post("/api/findDuplicates", processJSON, async (req,res) =>
+{
+	var data = req.body;
+
+	let title = (data.title || "").trim();
+
+	let duplicates = [];
+
+	if(data.id == "new"){
+		data.id = -1;
+	}
+
+
+	let info = await db.query("SELECT id FROM tracks WHERE LOWER(title)=LOWER($2) AND id !=$1", [data.id, title]);
+
+	if(info.rows.length)
+	{
+		duplicates.push({value: title, duplicates: info.rows.map(x => x.id)});
+	}
+
+	// hyperlink tag
+
+	for(tag of data.tags)
+	{
+		let value = tag.value.trim();
+
+		if (!tag.property || !tag.value || value.length == 0 || value.length > MAX_STRING_LENGTH || validProperties.indexOf(tag.property) == -1){
+			res.json({status:400, error: "Invalid tag " + JSON.stringinfy(tag) });
+			return;
+		}
+	}
+
+	for(tag of data.tags)
+	{
+		info = await db.query("SELECT track_id FROM track_tags WHERE property='hyperlink' AND value=$1 AND track_id !=$2", [tag.value, data.id]);
+		if(info.rows){ 
+			res.json({status:400, error: "Error code 3"});
+			return;
+		}	
+
+		if(info.rows.length)
+		{
+			duplicates.push({value: tag.value, duplicates: info.rows.map(x => x.track_id)});
+		}
+	}
+
+	res.json({status: 200, duplicates});
+	
 });
 
 function buildWhereClause(property, valueList, negate)
