@@ -38,6 +38,12 @@
 		}
 	}
 
+	if(window.location.pathname.startsWith("/track/"))
+	{
+		let x = location.pathname.substring("/track/".length);
+		loadedTrackID = isNaN(x) ? "" : Number(x);
+	}
+
 	function openTrack(event)
 	{
 		loadedTrackID = event.detail;
@@ -168,9 +174,7 @@
 
 <div class='main-container'>
 
-	{#if path.startsWith("/track/")}
-		
-	{:else if path == "/" || path == ""}
+	{#if path == "/" || path == "" || path.startsWith("/track/")}
 		<TrackList on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
 	{:else if path == "/about"}

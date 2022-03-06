@@ -62,6 +62,11 @@ function sqlEscapeString(s)
 	return "'" + s + "'";
 }
 
+function escapeJSON(s)
+{
+	s = s.replace(/'/g, "''");
+	return "'" + s + "'";
+}
 
 async function doExport()
 {
@@ -102,7 +107,7 @@ async function exportTable(table, cols)
 					rowVals.push(sqlEscapeString(row[col]));
 					break;
 				case "json":
-					rowVals.push(sqlEscapeString(JSON.stringify(row[col])));
+					rowVals.push(escapeJSON(JSON.stringify(row[col])));
 					break;
 				case "bool":
 					rowVals.push(row[col] ? "TRUE" : "FALSE");

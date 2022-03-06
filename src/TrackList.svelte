@@ -146,11 +146,15 @@
 
 	function adjustTopRowPosition(e)
 	{
+		console.log(tableContainer.scrollTop);
 		pinnedRow.style.top = tableContainer.scrollTop + "px";
 	}
 
 	function combineMulti(s)
 	{
+		if(s == null || s == undefined){
+			return "";
+		}
 		return s.replace(/\x1E/g,", ")
 	}
 
@@ -167,10 +171,12 @@
 
 	let columnDefs = [
 		{name: "Artist", property: "artist", printFn: combineMulti},
+		{name: "Featured Arist", property: "featured_artist", printFn: combineMulti},
 		{name: "Title", property: "title", printFn: (x) => x},
 		{name: "Album", property: "album", printFn: combineMulti},
 		{name: "Refs", property: "pl", printFn: enumText},
 		{name: "Genre", property: "genre", printFn: combineMulti},
+		{name: "Tags", property: "tag", printFn: combineMulti},
 		{name: "Released", property: "release_date", printFn: (x) => x.substring(0,10)}
 	]
 
@@ -210,24 +216,11 @@
 				</tr>
 				{#each data as song}
 					<tr class={song.id == selectedId ? "selected row" : "row"} on:click={(e) => {onTrackClick(song.id)}}>
-						<td class="col0">
-							{combineMulti(song.artist)}
-						</td>
-						<td class="col1">
-							{song.title} 
-						</td>
-						<td class="col2">
-							{combineMulti(song.album)}
-						</td>
-						<td class="col3">
-							{enumText(song.pl)}
-						</td>
-						<td class="col4">
-							{combineMulti(song.genre)}
-						</td>
-						<td class="col5">
-							{song.release_date.substring(0,10)}
-						</td>
+						{#each columnDefs as column,i}
+							<td class={"col" + i}>
+								{column.printFn(song[column.property])}
+							</td>
+						{/each}
 					</tr>
 				{/each}
 			</table>
@@ -247,11 +240,13 @@
 
 	:root {
 		--col0-width: 200px;
-		--col1-width: 200px;
-		--col2-width: 100px;
+		--col1-width: 50px;
+		--col2-width: 200px;
 		--col3-width: 100px;
 		--col4-width: 100px;
 		--col5-width: 100px;
+		--col6-width: 100px;
+		--col7-width: 100px;
 	}
 
 	table{
@@ -325,6 +320,8 @@
 	.col3{ width: var(--col3-width); }
 	.col4{ width: var(--col4-width); }
 	.col5{ width: var(--col5-width); }
+	.col6{ width: var(--col6-width); }
+	.col7{ width: var(--col7-width); }
 
 	.pager {text-align: center;}
 

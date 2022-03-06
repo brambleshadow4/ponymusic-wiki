@@ -41,6 +41,10 @@
 				title = "Artist"
 				groups = await autofillGroups("artist")
 				break;
+			case "featured_artist":
+				title = "Featured Artist"
+				groups = await autofillGroups("artist")
+				break;
 			case "genre":
 				title = "Genre"
 				groups = await autofillGroups("genre")
@@ -60,6 +64,10 @@
 			case "title":
 				title = "keywords in Title";
 				freeTextInput = true;
+				break;
+			case "tag":
+				title = "Tags";
+				groups = await autofillGroups("tag")
 				break;
 		}
 

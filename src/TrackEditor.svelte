@@ -125,14 +125,15 @@
 			}
 		}
 
-		if(tag.property == "hyperlink")
-		{
-			findDuplicates();
-		}
-
 		track.tags.push(tag);
 		track.tags.sort(tagComp);
 		track.tags = track.tags;
+
+		if(tag.property == "hyperlink")
+		{
+			console.log("fining dups");
+			findDuplicates();
+		}
 	};
 
 	function removeTag(tag)
@@ -179,7 +180,7 @@
 			}
 			catch(e){};
 
-			duplicates = response.duplicates;
+			duplicates = response.duplicates || [];
 
 			// handle subsequent requests.
 			if(findDuplicatesChannelStatus == 1)
@@ -362,6 +363,7 @@
 		background-color: #fff7e6;
 		border: solid 1px #ffcc66;
 		padding: 10px;
+		margin-right: .5in;
 	}
 
 </style>
@@ -432,18 +434,7 @@
 					on:valueSet={onEntry}
 				/>
 
-			{/if}
-
-
-			{#if duplicates.length}
-			<div class="tag-warnings">
-				<div>This track has the same title/hyperlink as other tracks.<br>Please make sure it is not a duplicate of the following:</div>
-				{#each duplicates as item}
-					<div>{item.value}: {#each item.duplicates as num}<a target="_blank" href={"/track/" + num}>{num}</a> {/each}</div>
-				{/each}
-			</div>
-			{/if}
-			
+			{/if}			
 		</div>
 		{/if}
 
@@ -466,6 +457,15 @@
 					<button on:click={addTagEntryField("tag")}>+ Tag</button>
 					<!--<button>+ Remix</button>-->
 				</div>
+				
+				{#if duplicates.length}
+					<div class="tag-warnings">
+						<div>This track has the same title/hyperlink as other tracks. Please make sure it is not a duplicate of the following:<br><br></div>
+						{#each duplicates as item}
+							<div>{item.value}: {#each item.duplicates as num}<a target="_blank" href={"/track/" + num}>{num}</a> {/each}</div>
+						{/each}
+					</div>
+				{/if}
 			</div>
 
 			<div>

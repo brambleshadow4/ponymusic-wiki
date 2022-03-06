@@ -1,11 +1,24 @@
 <script>
 	import CircleSpinner from "./CircleSpinner.svelte";
 	let signedIn = !!sessionStorage.role;
-	let avatar = "./avatar.svg";
+	let avatar = "/avatar.svg";
 	let loading = false;
 
 	function handleClick(e)
 	{
+		if(signedIn)
+		{
+			delete sessionStorage.role
+			delete sessionStorage.session;
+			delete localStorage.session;
+			signedIn = false;
+			avatar = "/avatar.svg";
+		}
+	}
+
+	function handleContextMenu(e)
+	{
+		e.preventDefault();
 		if(!signedIn)
 		{
 			let x = prompt("SessionID")
@@ -14,14 +27,6 @@
 				localStorage.session = x;
 				restoreSession();
 			}
-		}
-		else
-		{
-			delete sessionStorage.role
-			delete sessionStorage.session;
-			delete localStorage.session;
-			signedIn = false;
-			avatar = "./avatar.svg";
 		}
 	}
 	
@@ -85,7 +90,7 @@
 		padding: 0px 20px;
 	}
 </style>
-<div class='login' on:click={handleClick}>
+<div class='login' on:click={handleClick} on:contextmenu={handleContextMenu}>
 	{#if loading}
 		<div style="width: 50px"><CircleSpinner/></div>
 	{:else}

@@ -22,7 +22,7 @@
 </style>
 
 {#if active}
-	<img class='filter' alt="filter button" src="./filterActive.svg" width="15" on:click={openFilter}>
+	<img class='filter' alt="filter button" src="/filterActive.svg" width="15" on:click={openFilter}>
 {:else}
-	<img class='filter' alt="filter button" src="./filter.svg" width="15" on:click={openFilter}>
+	<img class='filter' alt="filter button" src="/filter.svg" width="15" on:click={openFilter}>
 {/if}
