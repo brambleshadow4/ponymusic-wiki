@@ -5,6 +5,8 @@ const express = require('express');
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const {Pool, Client} = require('pg');
+const https = require("https")
+const http = require("http");
 
 const {PERM, auth, reqHasPerm, getSession} = require("./server/auth.js");
 const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
@@ -12,13 +14,21 @@ const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
 const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl"];
 
 const app = express();
-const port = process.env.PORT || 80;
+const PORT = process.env.PORT || 80;
 
 const PAGE_COUNT = 100;
-
 const MAX_STRING_LENGTH = 256;
 const DAILY_RATE_LIMIT = 10;
 
+var credentials = {};
+
+
+if(process.env.SSL_CERT)
+{
+	var privateKey  = fs.readFileSync(process.env.SSL_KEY, 'utf8');
+	var certificate = fs.readFileSync(process.env.SSL_CERT, 'utf8');
+	credentials = {key: privateKey, cert: certificate};
+}
 
 app.use(cors());
 
@@ -559,7 +569,18 @@ app.get('*', (req, res) =>
 	res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
 });
 
-app.listen(port, () => 
+
+if(process.env.SSL_CERT)
 {
-	console.log(`Server is up at port ${port}`);
-});
+	var httpsServer = https.createServer(credentials, app);
+	httpsServer.listen(PORT);
+	console.log("Running Ponymusic.wiki on SECURE port " + PORT)
+}
+else
+{
+	var httpServer = http.createServer(app);
+	httpServer.listen(PORT);
+	console.log("Running Ponymusic.wiki on port " + PORT)
+}
+
+

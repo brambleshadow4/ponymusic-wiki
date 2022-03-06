@@ -1,5 +1,7 @@
 /node_modules/
 /public/build/
+/server/*.pem
+*.sql
 
 .DS_Store
 
