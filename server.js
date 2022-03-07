@@ -121,7 +121,7 @@ app.get("/login", async (req,res) =>
 		response.on('end', function()
 		{
 			console.log("https call complete");
-			console.log(rawData);
+			console.log(rgit aawData);
 			res.redirect("/?session=1");
 		})
 	});
