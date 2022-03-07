@@ -14,6 +14,11 @@
 			signedIn = false;
 			avatar = "/avatar.svg";
 		}
+		else
+		{
+			
+			window.location = "https://discord.com/api/oauth2/authorize?client_id=949907518019223582&redirect_uri=https%3A%2F%2Fponymusic.wiki%2Flogin&response_type=code&scope=identify"
+		}
 	}
 
 	function handleContextMenu(e)

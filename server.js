@@ -7,9 +7,12 @@ const bodyParser = require('body-parser');
 const {Pool, Client} = require('pg');
 const https = require("https")
 const http = require("http");
+const {AuthorizationCode} = require('simple-oauth2');
 
 const {PERM, auth, reqHasPerm, getSession} = require("./server/auth.js");
 const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
+
+
 
 const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl"];
 
@@ -20,14 +23,14 @@ const PAGE_COUNT = 100;
 const MAX_STRING_LENGTH = 256;
 const DAILY_RATE_LIMIT = 10;
 
-var credentials = {};
+var httpsConfig = {};
 
 
 if(process.env.SSL_CERT)
 {
 	var privateKey  = fs.readFileSync(process.env.SSL_KEY, 'utf8');
 	var certificate = fs.readFileSync(process.env.SSL_CERT, 'utf8');
-	credentials = {key: privateKey, cert: certificate};
+	httpsConfig = {key: privateKey, cert: certificate};
 }
 
 app.use(cors());
@@ -58,11 +61,75 @@ for (query of tableQueries)
 
 app.use(express.static('public'));
 
+app.get("/login", async (req,res) =>
+{
+	const client = new AuthorizationCode({
+
+		client: {
+			id: process.env.DISCORD_APP_ID,
+			secret: process.env.DISCORD_APP_SECRET
+		},
+		auth: {
+			tokenHost: 'https://discord.com/api/',
+			tokenPath: 'oauth2/token',
+			authorizePath: 'oauth2/authorize'
+		}
+	});
+
+	/*const authorizationUri = client.authorizeURL({
+		redirect_uri: 'https://ponymusic.wiki/login',
+		scope: '<scope>'
+	});*/
+
+	// Redirect example using Express (see http://expressjs.com/api.html#res.redirect)
+	//res.redirect(authorizationUri);
+
+	console.log(req.query);
+
+	const tokenParams = {
+		code: req.query.code,
+		redirect_uri: 'https://ponymusic.wiki/login',
+		scope: 'identify', // see discord documentation https://discord.com/developers/docs/topics/oauth2#oauth2
+	};
+
+	let accessToken = {};
+
+	try {
+		accessToken = await client.getToken(tokenParams);
+	}
+	catch (error)
+	{	
+		//console.log('Access Token Error', error.message);
+		res.redirect("/");
+		return;
+	}
+
+	console.log(accessToken);
+
+	let options = {
+		headers:{
+			"Authorization": accessToken.token.token_type + " " + accessToken.token.access_token
+		}
+	}
+
+	https.get("https://discord.com/api/users/@me", options, function(response)
+	{
+		let rawData = "";
+		response.setEncoding('utf8');
+		response.on("data", (chunk) => {rawData += chunk});
+
+		response.on('end', function()
+		{
+			console.log("https call complete");
+			console.log(rawData);
+			res.redirect("/?session=1");
+		})
+	});
+});
+
 app.post("/api/login", processJSON, async (req,res) =>
 {
-
 	let session = await getSession(req);
-
 
 	if(session)
 	{
@@ -572,7 +639,7 @@ app.get('*', (req, res) =>
 
 if(process.env.SSL_CERT)
 {
-	var httpsServer = https.createServer(credentials, app);
+	var httpsServer = https.createServer(httpsConfig, app);
 	httpsServer.listen(PORT);
 	console.log("Running Ponymusic.wiki on SECURE port " + PORT)
 }
