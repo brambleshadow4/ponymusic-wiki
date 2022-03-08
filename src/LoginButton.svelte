@@ -1,13 +1,19 @@
 <script>
 	import CircleSpinner from "./CircleSpinner.svelte";
 	let signedIn = !!sessionStorage.role;
-	let avatar = "/avatar.svg";
+	let avatar = sessionStorage.avatar || "/avatar.svg";
 	let loading = false;
 
 	function handleClick(e)
 	{
 		if(signedIn)
 		{
+			let signOut = confirm("Do you want to sign out?");
+
+			if(!signOut){
+				return;
+			}
+
 			delete sessionStorage.role
 			delete sessionStorage.session;
 			delete localStorage.session;
@@ -16,7 +22,7 @@
 		}
 		else
 		{
-			
+			delete localStorage.session;
 			window.location = "https://discord.com/api/oauth2/authorize?client_id=949907518019223582&redirect_uri=https%3A%2F%2Fponymusic.wiki%2Flogin&response_type=code&scope=identify"
 		}
 	}
@@ -40,7 +46,7 @@
 		if(localStorage.session && !sessionStorage.session)
 		{
 			loading = true;
-			let request = await fetch("/api/login", {
+			let request = await fetch("/restoreSession", {
 				method: "POST",
 				headers: {"Content-Type": "text/json"},
 				body: JSON.stringify({
@@ -54,6 +60,8 @@
 			{
 				sessionStorage.role = data.role;
 				sessionStorage.session = data.session;
+				sessionStorage.avatar = data.avatar;
+				avatar = data.avatar;
 				localStorage.session = data.session;
 				signedIn = true;
 			}
@@ -62,6 +70,26 @@
 		}
 	}
 
+	async function getSessionFromURL()
+	{
+		let query = (window.location.search || "").substring(1);
+		if(query.startsWith("session="))
+		{
+			console.log(query);
+			let params = query.substring("session=".length).split(",")
+			localStorage.session = params[0];
+			sessionStorage.session = params[0];
+			sessionStorage.role = params[1];
+			sessionStorage.avatar = params[2];
+			avatar = params[2];
+
+			signedIn = true;
+
+			history.replaceState({}, undefined, "/");
+		}
+	}
+
+	getSessionFromURL();
 	restoreSession();
 
 </script>

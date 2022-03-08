@@ -8,8 +8,9 @@ const {Pool, Client} = require('pg');
 const https = require("https")
 const http = require("http");
 const {AuthorizationCode} = require('simple-oauth2');
+const { v4: uuidv4 } = require('uuid');
 
-const {PERM, auth, reqHasPerm, getSession} = require("./server/auth.js");
+const {PERM, ROLE, auth, reqHasPerm, getSession} = require("./server/auth.js");
 const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
 
 
@@ -104,8 +105,6 @@ app.get("/login", async (req,res) =>
 		return;
 	}
 
-	console.log(accessToken);
-
 	let options = {
 		headers:{
 			"Authorization": accessToken.token.token_type + " " + accessToken.token.access_token
@@ -118,16 +117,45 @@ app.get("/login", async (req,res) =>
 		response.setEncoding('utf8');
 		response.on("data", (chunk) => {rawData += chunk});
 
-		response.on('end', function()
+		response.on('end', async function()
 		{
 			console.log("https call complete");
-			console.log(rgit aawData);
-			res.redirect("/?session=1");
+			let data = {};
+			try{
+				data = JSON.parse(rawData);
+			}
+			catch(e){
+				return;
+			}
+
+
+			let role = ROLE.USER;
+
+			let userID = "d:" + data.id;
+			let avatar = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`
+			let {rows} = await db.query("SELECT * FROM users WHERE id = $1", [userID]);
+		
+			if(!rows.length)
+			{
+				await db.query("INSERT INTO users (id, name, avatar, role) VALUES ($1, $2, $3, $4)", [userID, data.username, avatar, role]);
+			}
+			else
+			{
+				role = rows[0].role;
+				await db.query("UPDATE users SET name=$2, avatar=$3 WHERE id=$1", [userID, data.username, avatar]);
+			}
+
+			await db.query("DELETE FROM sessions WHERE user_id=$1", [userID]);
+			let session = uuidv4();
+
+			await db.query("INSERT INTO sessions (session, user_id, expire_time) VALUES ($1, $2, NOW() + interval '1 month')", [session, userID]);
+
+			res.redirect("/?session=" + session + "," + role + "," + avatar);
 		})
 	});
 });
 
-app.post("/api/login", processJSON, async (req,res) =>
+app.post("/restoreSession", processJSON, async (req,res) =>
 {
 	let session = await getSession(req);
 
