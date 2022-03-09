@@ -74,9 +74,6 @@
 		});
 
 		let matches = await data.json();
-
-		console.log(matches);
-
 		options = matches;
 
 	}
@@ -106,7 +103,8 @@
 			value = value.trim();
 			let tag = {property, value};
 
-			if(!isNaN(number)){
+			if(!isNaN(number))
+			{
 				tag.number = number;
 
 				if(number <= 0){

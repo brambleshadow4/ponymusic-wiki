@@ -84,7 +84,7 @@ app.get("/login", async (req,res) =>
 	// Redirect example using Express (see http://expressjs.com/api.html#res.redirect)
 	//res.redirect(authorizationUri);
 
-	console.log(req.query);
+	//console.log(req.query);
 
 	const tokenParams = {
 		code: req.query.code,
@@ -118,7 +118,7 @@ app.get("/login", async (req,res) =>
 
 		response.on('end', async function()
 		{
-			console.log("https call complete");
+			//console.log("https call complete");
 			let data = {};
 			try{
 				data = JSON.parse(rawData);
@@ -488,8 +488,6 @@ app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =
 	if(isNaN(id)){
 		res.json({status: 400});
 	}
-
-	console.log("DELETEING " + id);
 
 	await db.query("DELETE FROM tracks WHERE id=$1", [id]);	
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);

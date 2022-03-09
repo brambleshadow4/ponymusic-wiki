@@ -11,6 +11,7 @@
 	const dispatch = createEventDispatcher();
 
 	let track = {title:"", release_date:"", tags:[]};
+	let hasProp = new Set();
 
 	let enteringTag = false;
 	let tagProperty = "";
@@ -63,6 +64,8 @@
 
 			track.tags.sort(tagComp);
 			track.tags = track.tags;
+			updateHasProperty();
+			
 
 			mode = 0;
 			enteringTag = false;
@@ -75,7 +78,27 @@
 		}
 	}
 
+	function updateHasProperty()
+	{
+		hasProp = {};
+		for(var k in track.tags)
+		{
+			hasProp[track.tags[k].property] = track.tags[k].value;
+		}
+		hasProp = hasProp;
+	}
+
 	load();
+
+	function btnClass(hasProp, prop, val)
+	{
+		if(val){
+			return hasProp[prop] == val ? "added" : "";
+		}
+		else{
+			return hasProp[prop] ? "added" : "";
+		}
+	}
 
 	function formatDate(dte)
 	{
@@ -128,10 +151,10 @@
 		track.tags.push(tag);
 		track.tags.sort(tagComp);
 		track.tags = track.tags;
+		updateHasProperty();
 
 		if(tag.property == "hyperlink")
 		{
-			console.log("fining dups");
 			findDuplicates();
 		}
 	};
@@ -150,6 +173,7 @@
 			}
 
 			track.tags = track.tags;
+			updateHasProperty();
 		}
 	}
 
@@ -321,6 +345,15 @@
 		position: relative;
 	}
 
+	button.added {
+		background-color: #D4F9D4;
+	}
+
+	button.added:active 
+	{
+		background-color: #C0E5C0;
+	}
+
 	.tabs
 	{
 		padding-left: 20px;
@@ -442,19 +475,21 @@
 			<div class='field post-tags'>
 
 				<div>
-					<button on:click={addTagEntryField("hyperlink")}>+ Hyperlink</button>
-					<button on:click={addTagEntryField("artist")}>+ Artist</button>
-					<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button></div>
+					<button class={btnClass(hasProp, "hyperlink")} on:click={addTagEntryField("hyperlink")}>+ Hyperlink</button>
+					<button class={btnClass(hasProp, "artist")} on:click={addTagEntryField("artist")}>+ Artist</button>
+					<button
+						class={btnClass(hasProp, "featured artist")}
+						on:click={addTagEntryField("featured artist")}>+ Featured Artist</button></div>
 				<div>
-					<button on:click={()=>{addTag({property:"pl",value:"2"})}}>Obvious Refs</button>
-					<button on:click={()=>{addTag({property:"pl",value:"1"})}}>Sublte Refs</button>
-					<button on:click={()=>{addTag({property:"pl",value:"0"})}}>No refs</button>
+					<button class={btnClass(hasProp, "pl","2")} on:click={()=>{addTag({property:"pl",value:"2"})}}>Obvious Refs</button>
+					<button class={btnClass(hasProp, "pl","1")} on:click={()=>{addTag({property:"pl",value:"1"})}}>Subtle Refs</button>
+					<button class={btnClass(hasProp, "pl","0")} on:click={()=>{addTag({property:"pl",value:"0"})}}>No refs</button>
 					<a target="_blank" href="/pony-refs">What's this?</a>
 				</div>
 				<div>
-					<button on:click={addTagEntryField("genre")}>+ Genre</button>
-					<button on:click={addTagEntryField("album")}>+ Album</button>
-					<button on:click={addTagEntryField("tag")}>+ Tag</button>
+					<button class={btnClass(hasProp, "genre")} on:click={addTagEntryField("genre")}>+ Genre</button>
+					<button class={btnClass(hasProp, "album")} on:click={addTagEntryField("album")}>+ Album</button>
+					<button class={btnClass(hasProp, "tag")} on:click={addTagEntryField("tag")}>+ Tag</button>
 					<!--<button>+ Remix</button>-->
 				</div>
 				

@@ -146,7 +146,6 @@
 
 	function adjustTopRowPosition(e)
 	{
-		console.log(tableContainer.scrollTop);
 		pinnedRow.style.top = tableContainer.scrollTop + "px";
 	}
 
