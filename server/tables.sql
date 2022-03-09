@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS track_tags(
 	number INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS track_history(
+CREATE TABLE IF NOT EXISTS track_history (
 	track_id INTEGER,
 	user_id VARCHAR(355),
 	timestamp TIMESTAMP,
@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS track_history(
 CREATE TABLE IF NOT EXISTS users (
 	id VARCHAR(255) PRIMARY KEY,
 	name VARCHAR(255) NOT NULL,
+	avatar VARCHAR(255),
 	role INTEGER
 );
 
@@ -37,3 +38,4 @@ CREATE TABLE IF NOT EXISTS sessions (
 -- INSERT INTO users (id, name, role) VALUES('1', 'System', 2)
 -- INSERT INTO sessions (session, user_id, expire_time) VALUES ('1', '1', NOW() + interval '1 year')
 
+-- SELECT pg_catalog.setval(pg_get_serial_sequence('tracks', 'id'), (SELECT MAX(track_id) FROM track_history)+1);

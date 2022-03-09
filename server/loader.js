@@ -1,7 +1,7 @@
 require('dotenv').config()
 const fs = require('fs');
 const {Pool, Client} = require('pg');
-const readline = require('node:readline');
+const readline = require('readline');
 const pro = require('process');
 
 main();

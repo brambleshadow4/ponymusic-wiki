@@ -7,9 +7,13 @@ const bodyParser = require('body-parser');
 const {Pool, Client} = require('pg');
 const https = require("https")
 const http = require("http");
+const {AuthorizationCode} = require('simple-oauth2');
+const { v4: uuidv4 } = require('uuid');
 
-const {PERM, auth, reqHasPerm, getSession} = require("./server/auth.js");
+const {PERM, ROLE, auth, reqHasPerm, getSession} = require("./server/auth.js");
 const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
+
+
 
 const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl"];
 
@@ -20,14 +24,14 @@ const PAGE_COUNT = 100;
 const MAX_STRING_LENGTH = 256;
 const DAILY_RATE_LIMIT = 10;
 
-var credentials = {};
+var httpsConfig = {};
 
 
 if(process.env.SSL_CERT)
 {
 	var privateKey  = fs.readFileSync(process.env.SSL_KEY, 'utf8');
 	var certificate = fs.readFileSync(process.env.SSL_CERT, 'utf8');
-	credentials = {key: privateKey, cert: certificate};
+	httpsConfig = {key: privateKey, cert: certificate};
 }
 
 app.use(cors());
@@ -57,11 +61,102 @@ for (query of tableQueries)
 
 app.use(express.static('public'));
 
-app.post("/api/login", processJSON, async (req,res) =>
+app.get("/login", async (req,res) =>
 {
+	const client = new AuthorizationCode({
 
+		client: {
+			id: process.env.DISCORD_APP_ID,
+			secret: process.env.DISCORD_APP_SECRET
+		},
+		auth: {
+			tokenHost: 'https://discord.com/api/',
+			tokenPath: 'oauth2/token',
+			authorizePath: 'oauth2/authorize'
+		}
+	});
+
+	/*const authorizationUri = client.authorizeURL({
+		redirect_uri: 'https://ponymusic.wiki/login',
+		scope: '<scope>'
+	});*/
+
+	// Redirect example using Express (see http://expressjs.com/api.html#res.redirect)
+	//res.redirect(authorizationUri);
+
+	console.log(req.query);
+
+	const tokenParams = {
+		code: req.query.code,
+		redirect_uri: 'https://ponymusic.wiki/login',
+		scope: 'identify', // see discord documentation https://discord.com/developers/docs/topics/oauth2#oauth2
+	};
+
+	let accessToken = {};
+
+	try {
+		accessToken = await client.getToken(tokenParams);
+	}
+	catch (error)
+	{	
+		//console.log('Access Token Error', error.message);
+		res.redirect("/");
+		return;
+	}
+
+	let options = {
+		headers:{
+			"Authorization": accessToken.token.token_type + " " + accessToken.token.access_token
+		}
+	}
+
+	https.get("https://discord.com/api/users/@me", options, function(response)
+	{
+		let rawData = "";
+		response.setEncoding('utf8');
+		response.on("data", (chunk) => {rawData += chunk});
+
+		response.on('end', async function()
+		{
+			console.log("https call complete");
+			let data = {};
+			try{
+				data = JSON.parse(rawData);
+			}
+			catch(e){
+				return;
+			}
+
+
+			let role = ROLE.USER;
+
+			let userID = "d:" + data.id;
+			let avatar = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`
+			let {rows} = await db.query("SELECT * FROM users WHERE id = $1", [userID]);
+		
+			if(!rows.length)
+			{
+				await db.query("INSERT INTO users (id, name, avatar, role) VALUES ($1, $2, $3, $4)", [userID, data.username, avatar, role]);
+			}
+			else
+			{
+				role = rows[0].role;
+				await db.query("UPDATE users SET name=$2, avatar=$3 WHERE id=$1", [userID, data.username, avatar]);
+			}
+
+			await db.query("DELETE FROM sessions WHERE user_id=$1", [userID]);
+			let session = uuidv4();
+
+			await db.query("INSERT INTO sessions (session, user_id, expire_time) VALUES ($1, $2, NOW() + interval '1 month')", [session, userID]);
+
+			res.redirect("/?session=" + session + "," + role + "," + avatar);
+		})
+	});
+});
+
+app.post("/restoreSession", processJSON, async (req,res) =>
+{
 	let session = await getSession(req);
-
 
 	if(session)
 	{
@@ -573,7 +668,7 @@ app.get('*', (req, res) =>
 
 if(process.env.SSL_CERT)
 {
-	var httpsServer = https.createServer(credentials, app);
+	var httpsServer = https.createServer(httpsConfig, app);
 	httpsServer.listen(PORT);
 	console.log("Running Ponymusic.wiki on SECURE port " + PORT)
 }

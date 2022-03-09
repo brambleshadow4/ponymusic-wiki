@@ -45,8 +45,6 @@ lookup[ROLE.VERIFIED_USER][PERM.UNLIMITED_EDITS] = true;
 lookup[ROLE.USER] = {};
 lookup[ROLE.USER][PERM.UPDATE_TRACK] = true;
 
-
-
 db = new Pool();
 
 let sessions = {}; // string => {id: ###} map
@@ -105,5 +103,5 @@ function auth(permission)
 }
 
 module.exports = {
-	PERM, auth, reqHasPerm, getSession
+	PERM, ROLE, auth, reqHasPerm, getSession
 }
