@@ -50,7 +50,6 @@ for (query of tableQueries)
 	{
 		if(err)
 		{
-			console.error(query);
 			throw new Error(err);
 		}
 	});
@@ -335,13 +334,15 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	}
 
 	for(tag of data.tags)
-	{
-		let value = tag.value.trim();
+	{	
+		let value = tag.value;
 
 		if (!tag.property || !tag.value || value.length == 0 || value.length > MAX_STRING_LENGTH || validProperties.indexOf(tag.property) == -1){
 			res.json({status:400, error: "Invalid tag " + JSON.stringinfy(tag) });
 			return;
 		}
+
+		tag.value = tag.value.trim();
 	}
 
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);

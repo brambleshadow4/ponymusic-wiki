@@ -103,6 +103,7 @@
 	{
 		if(e.key == "Enter")
 		{
+			value = value.trim();
 			let tag = {property, value};
 
 			if(!isNaN(number)){
@@ -141,8 +142,6 @@
 	function canOpenOptionList()
 	{
 		cool = document.activeElement == ref || inOptionList;
-
-		console.log(cool);
 	}
 
 </script>
