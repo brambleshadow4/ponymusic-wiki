@@ -146,7 +146,7 @@
 
 	function adjustTopRowPosition(e)
 	{
-		pinnedRow.style.top = tableContainer.scrollTop + "px";
+		//pinnedRow.style.top = tableContainer.scrollTop + "px";
 	}
 
 	function combineMulti(s)
@@ -342,7 +342,8 @@
 	}
 
 	.pinned-row{
-		position: relative;
+		position: sticky;
+		top: 0;
 	}
 
 	.table-container{
