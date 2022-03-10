@@ -41,12 +41,22 @@ async function doLoad()
 	
 	for(let query of tableQueries)
 	{
-		let {rows, err} = await db.query(query);
-
-		if(err)
+		try
 		{
-			console.error(err);
-			console.log("there was an error")
+			let {rows, err} = await db.query(query);
+			if(err)
+			{
+				
+				console.log(query);
+				console.log("there was an error");
+				console.error(err);
+				process.exit(1);
+			}
+		}
+		catch(e)
+		{
+			console.err(e);
+			process.exit(1);
 		}
 	}
 }
@@ -76,11 +86,12 @@ async function doExport()
 
 	let textArr = [];
 
-	textArr.push(await exportTable("users", {id: "string", name: "string", role: "number"}));
+	textArr.push(await exportTable("users", {id: "string", name: "string", role: "number", avatar: "string"}));
 	textArr.push(await exportTable("tracks", {id: "number", title: "string", release_date: "date", locked: "bool", ogcache: "json"}));
 	textArr.push(await exportTable("track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"}));
-	textArr.push(await exportTable("track_history", {track_id: "number", user_id: "number", value:"json", timestamp: "date"}));
-
+	textArr.push(await exportTable("track_history", {track_id: "number", user_id: "string", value:"json", timestamp: "date"}));
+	textArr.push("SELECT SETVAL(pg_get_serial_sequence('tracks', 'id'), (SELECT (MAX(track_id) + 1) FROM track_history));");
+	
 	fs.writeFileSync(fileName, textArr.join(""));
 }
 
