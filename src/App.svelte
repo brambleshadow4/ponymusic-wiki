@@ -5,6 +5,7 @@
 	import EditList from "./EditList.svelte";
 	import PonyRefs from "./PonyRefs.svelte";
 	import LoginButton from "./LoginButton.svelte";
+	import AutoImport from "./AutoImport.svelte";
 	import {buildFilterQuery} from "./helpers.js";
 	
 	$: path = window.location.pathname;
@@ -41,7 +42,15 @@
 	if(window.location.pathname.startsWith("/track/"))
 	{
 		let x = location.pathname.substring("/track/".length);
-		loadedTrackID = isNaN(x) ? "" : Number(x);
+		if(x == "new")
+		{
+			loadedTrackID = "new"
+		}
+		else
+		{
+			loadedTrackID = isNaN(x) ? "" : Number(x);
+		}
+		
 	}
 
 	function openTrack(event)
@@ -241,6 +250,13 @@
 	{:else if path=="/pony-refs"}
 		<div class='main'>
 			<PonyRefs />
+		</div>
+	{:else if path=="/auto-import"}
+		<div class='main'>
+			
+			<AutoImport />
+
+
 		</div>
 	{/if}
 </div>

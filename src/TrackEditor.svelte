@@ -75,6 +75,7 @@
 		{
 			mode = 1;
 			tabProps = [];
+			parseAutoImport();
 		}
 	}
 
@@ -223,6 +224,7 @@
 		}
 	}
 
+
 	async function saveData()
 	{
 		sendingRequest = true;
@@ -287,6 +289,37 @@
 		{	
 			dispatch("close");
 		}
+	}
+
+	async function parseAutoImport()
+	{	
+		let paramsRaw = window.location.search.substring(1);
+		let params = {};
+		paramsRaw = paramsRaw.split("&");
+		
+		for(let param of paramsRaw)
+		{
+			let [key, value] = param.split("=");
+			params[key] = decodeURIComponent(value);
+		}
+
+		if(params['artist'])
+		{
+			addTag({property: "artist", value: params['artist']});
+		}
+
+		if(params['url'])
+		{
+			addTag({property: "hyperlink", value: params['url']});
+		}
+
+		if(params['title'])
+		{
+			track.title = params['title']
+		}
+		
+
+		console.log(params);
 	}
 </script>
 

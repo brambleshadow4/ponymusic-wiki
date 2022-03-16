@@ -55,7 +55,7 @@ async function doLoad()
 		}
 		catch(e)
 		{
-			console.err(e);
+			console.error(e);
 			process.exit(1);
 		}
 	}
