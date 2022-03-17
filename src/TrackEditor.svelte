@@ -7,6 +7,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import {tagComp} from "./helpers.js";
 	import {PERM, hasPerm} from "./authClient.js";
+	import { onMount } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -35,6 +36,7 @@
 
 	let spinner1 = false;
 	let sendingRequest = false;
+	let findDuplicatesChannelStatus = 0;
 
 	async function load()
 	{
@@ -75,7 +77,7 @@
 		{
 			mode = 1;
 			tabProps = [];
-			parseAutoImport();
+			setTimeout(parseAutoImport, 0);
 		}
 	}
 
@@ -89,7 +91,7 @@
 		hasProp = hasProp;
 	}
 
-	load();
+	onMount(load);
 
 	function btnClass(hasProp, prop, val)
 	{
@@ -178,7 +180,7 @@
 		}
 	}
 
-	let findDuplicatesChannelStatus = 0;
+	
 
 
 	async function findDuplicates()
@@ -260,6 +262,29 @@
 			id = response.id;
 		}
 
+		// update autoImport album tags
+		let autoImportTags = [];
+		try{
+			autoImportTags = JSON.parse(localStorage.autoImportTags);
+		}
+		catch(e){};
+
+		for(let tag of autoImportTags)
+		{
+			if(tag.property == "album")
+			{
+				for(let tag2 of track.tags)
+				{
+					if(tag2.property == "album" && tag.value == tag2.value && tag.number == tag2.number)
+					{
+						tag.number++;
+						localStorage.autoImportTags = JSON.stringify(autoImportTags);
+					}
+				}		
+			}
+		}
+
+
 		errorMessage = "";
 		load();
 	}
@@ -317,9 +342,43 @@
 		{
 			track.title = params['title']
 		}
-		
 
-		console.log(params);
+		if(params['date'])
+		{
+			let rawDate = params['date'].toLowerCase();
+			rawDate = rawDate.replace("premiered ", "");
+
+			let match = /.*((january|february|march|april|may|june|july|august|september|october|november|december) \d\d?, \d\d\d\d).*/.exec(rawDate)
+
+			if(match){
+				rawDate = match[1];
+			}
+
+	
+			if(rawDate.indexOf("hours ago") > -1)
+			{
+				let d = new Date();
+				track.release_date = new Date(d.getTime() - 1000*60*d.getTimezoneOffset()).toISOString().substring(0,10);
+			}
+			else
+			{
+				track.release_date = new Date(rawDate).toISOString().substring(0,10);
+			}
+		}
+
+		if(localStorage.autoImportTags)
+		{
+			let autoImportTags = [];
+			try{
+				autoImportTags = JSON.parse(localStorage.autoImportTags);
+			}
+			catch(e){};
+
+			for(let tag of autoImportTags)
+			{
+				addTag(tag);
+			}
+		}
 	}
 </script>
 
@@ -430,6 +489,10 @@
 		border: solid 1px #ffcc66;
 		padding: 10px;
 		margin-right: .5in;
+	}
+
+	#name{
+		width: calc(100% - 1.5in);
 	}
 
 </style>
