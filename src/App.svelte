@@ -5,7 +5,7 @@
 	import EditList from "./EditList.svelte";
 	import PonyRefs from "./PonyRefs.svelte";
 	import LoginButton from "./LoginButton.svelte";
-	import AutoImport from "./AutoImport.svelte";
+	import ImportTools from "./ImportTools.svelte";
 	import {buildFilterQuery} from "./helpers.js";
 	
 	$: path = window.location.pathname;
@@ -16,7 +16,7 @@
 
 	let filters = {};
 
-	if(window.location.search)
+	if(window.location.search && (window.pathname == "/" || window.pathname == "/tracks"))
 	{
 		let query = window.location.search.substring(1);
 
@@ -50,7 +50,6 @@
 		{
 			loadedTrackID = isNaN(x) ? "" : Number(x);
 		}
-		
 	}
 
 	function openTrack(event)
@@ -177,6 +176,7 @@
 	<a href="/about">About</a>
 	<a href="/">Tracks</a>
 	<a class='smalllink' href="/edits">Recent Edits</a>
+	<a class='smalllink' href="/import-tools">Import Tools</a>
 </nav>
 
 <LoginButton />
@@ -187,6 +187,8 @@
 		<TrackList on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
 	{:else if path == "/about"}
+
+
 		
 		<div class='main'>
 
@@ -195,6 +197,7 @@
 
 				<p>Reach out to brambleshadow4 if you'd like to provide design input + feedback.</p>
 			</blockquote>
+
 			<h1>About the Pony Music Wiki</h1>
 
 			<p>There's hundreds (if not thousands) of musicians out there releasing tons and tons of My Little Pony fan music. With so much creativity in the fandom, not all of it can be given the spotlight, but the least we can do is keep track of it.</p>
@@ -238,7 +241,6 @@
 
 			<PonyRefs />
 
-
 		</div>
 	
 	{:else if path=="/edits"}
@@ -251,12 +253,10 @@
 		<div class='main'>
 			<PonyRefs />
 		</div>
-	{:else if path=="/auto-import"}
+	{:else if path=="/import-tools"}
 		<div class='main'>
 			
-			<AutoImport />
-
-
+			<ImportTools />
 		</div>
 	{/if}
 </div>

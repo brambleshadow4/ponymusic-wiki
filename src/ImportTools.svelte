@@ -6,12 +6,12 @@
 
 <h2>Bookmarklet</h2>
 
-<textarea bind:this={compiled}></textarea>
+<div><textarea rows="5" bind:this={compiled}></textarea></div>
 
 <p>It generally isn't a good idea to run code arbitrary code that you don't trust, including bookmarklets (though we kind of do it all the time). </p>
 
 <h3>Source code</h3>
-<textarea  rows="10" bind:this={source}>{
+<div><textarea  rows="10" bind:this={source}>{
 `url = encodeURIComponent(window.location);
 if(url.indexOf("youtube.com") > -1){
 	title = encodeURIComponent(document.getElementsByClassName('title ytd-video-primary-info-renderer')[0].children[0].innerHTML);
@@ -25,14 +25,13 @@ if (url.indexOf("bandcamp.com") > -1){
 	artist = encodeURIComponent(artistSpanLinks[artistSpanLinks.length-1].innerHTML);
 }
 
-x = window.open(\`http://localhost:8000/track/new?title=\${title}&date=\${date}&artist=\${artist}&url=\${url}\`,"_blank");`
-}</textarea>
-
+x = window.open(\`https://ponymusic.wiki/track/new?title=\${title}&date=\${date}&artist=\${artist}&url=\${url}\`,"_blank");`
+}</textarea></div>
 
 
 <h2>Bookmarklet Tags</h2>
 
-<p>These will be added to the track when you use the bookmarklet</p>
+<p>These will be added to the track when you use the bookmarklet. For album tags, the track number will increase automatically when adding a track</p>
 
 <div>		
 	{#each tags as tag}
@@ -50,29 +49,66 @@ x = window.open(\`http://localhost:8000/track/new?title=\${title}&date=\${date}&
 	{/if}			
 </div>
 
-
 <div class='field post-tags'>
-
 	<div>
 		<button on:click={addTagEntryField("artist")}>+ Artist</button>
 		<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button>
-	</div>
-	<div>
 		<button on:click={addTagEntryField("genre")}>+ Genre</button>
 		<button on:click={addTagEntryField("album")}>+ Album</button>
 		<button on:click={addTagEntryField("tag")}>+ Tag</button>
-		<!--<button>+ Remix</button>-->
 	</div>
-
 </div>
+
+<h2>Name Overrides</h2>
+
+<p>Some artists may have different names on their youTube/bandcamp. Adding it here will automatically change its name (or remove the tag if left blank).</p>
+
+<div id='name-override-list'>
+	<span style="display:inline-block; width: 2.5in">Arist name</span><span>Replace w/</span>
+	{#each nameOverrides as pair}
+		<div><input type="text" value={pair[0]} on:input={updateNameOverrides}/><input type="text" value={pair[1]} on:input={updateNameOverrides}/></div>
+	{/each}
+	<div><input type="text" on:input={updateNameOverrides}/><input type="text" on:input={updateNameOverrides}/></div>
+</div>
+
+<h2>Parse Rules</h2>
+
+<p>The youTube/bandcamp title often contains names of artists/genres of the track. This setting controls how that information is parsed</p>
+
+<RadioGroup 
+	checked={parseRule}
+	options={["No Parsing", "<artist1>, <artist2> & <artist3> - Track Title (feat. <featuredArtist>)[<genre>]"]} 
+	on:change={(e) => {localStorage.parseRule = e.detail}}
+	/>
+
 
 
 <h2>YouTube Channels</h2>
 
+<p>TODO, eventually we'll want to have a way of scanning brony youtubers and automatically checking which URLs have been added already and which ones haven't</p>
+
 <style>
+
+	h2 + p, h1 + p, p + h2 {
+		margin-top: 0px;
+	}
+
+	h2 + p{
+		margin-top: 0px;
+	}
+
 	.expand{
 		height: 10em;
 	}
+
+	textarea{
+		width: 100%;
+	}
+	input {
+		margin-right: 3px;
+		width: 2.5in;
+	}
+
 </style>
 
 <script>
@@ -80,21 +116,25 @@ x = window.open(\`http://localhost:8000/track/new?title=\${title}&date=\${date}&
 	import TagEntryInput from "./TagEntryInput.svelte";
 	import {tagComp} from "./helpers.js";
 	import Tag from "./Tag.svelte";
+	import RadioGroup from "./RadioGroup.svelte";
 
 	let compiled, source, ref, tagProperty, tagValue, tagNumber;
 
 	let enteringTag = false;
-
-	
-
 	let tags = [];
+	let nameOverrides = [];
+	try{
+		nameOverrides = JSON.parse(localStorage.nameOverrides);
+	}
+	catch(e){}
+
+	let parseRule = Number(localStorage.parseRule || 1);
+	localStorage.parseRule = parseRule;
 
 	try{
 		tags = JSON.parse(localStorage.autoImportTags);
 	}
 	catch(e){};
-
-
 
 	function mount(){
 
@@ -165,4 +205,55 @@ x = window.open(\`http://localhost:8000/track/new?title=\${title}&date=\${date}&
 		tags = tags;
 		localStorage.autoImportTags = JSON.stringify(tags);
 	};
+
+	function updateNameOverrides()
+	{
+		let inputs = document.getElementById("name-override-list").getElementsByTagName('input');
+
+		let newList = [];
+		let focusItem = -1;
+
+		for(let i=0; i<inputs.length; i+= 2)
+		{
+			let nameInput = inputs[i];
+			let replaceInput = inputs[i+1];
+			let pair = [nameInput.value, replaceInput.value];
+		
+	
+			if(pair[0])
+			{
+				newList.push(pair);
+			}
+
+			if(document.activeElement == nameInput){
+				focusItem = i;
+			}
+			else if (document.activeElement == replaceInput){
+				focusItem = i+1
+			}
+		}
+
+		nameOverrides = newList;
+
+		localStorage.nameOverrides = JSON.stringify(newList.map(x => [x[0].trim(), x[1].trim()]));
+
+		inputs = document.getElementById("name-override-list").getElementsByTagName('input');
+
+		setTimeout(function(){
+
+			inputs[inputs.length-2].value = "";
+			inputs[inputs.length-1].value = "";
+
+			console.log(focusItem)
+
+			if(inputs[focusItem]){
+				let x = inputs[focusItem];
+				setTimeout(() => x.focus(), 0)
+			}
+		}, 0)
+
+		
+
+		console.log(nameOverrides);
+	}
 </script>

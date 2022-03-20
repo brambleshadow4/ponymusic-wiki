@@ -22,6 +22,7 @@
 	let trackDeleted = false;
 	let errorMessage = "";
 	let duplicates = [];
+	let nameOverrides = {};
 
 	export let id = "new";
 	export let mode = 0;
@@ -41,6 +42,12 @@
 	async function load()
 	{
 		tabProps = [];
+
+		if(localStorage.session && !sessionStorage.role)
+		{
+			setTimeout(load, 100);
+			return;
+		}
 
 		if(id != "new")
 		{
@@ -68,7 +75,6 @@
 			track.tags = track.tags;
 			updateHasProperty();
 			
-
 			mode = 0;
 			enteringTag = false;
 			spinner1 = false;
@@ -77,7 +83,7 @@
 		{
 			mode = 1;
 			tabProps = [];
-			setTimeout(parseAutoImport, 0);
+			setTimeout(parseImportParams, 0);
 		}
 	}
 
@@ -189,7 +195,8 @@
 		{
 			findDuplicatesChannelStatus = 1;
 
-			var data = {
+			var data = 
+			{
 				id,
 				title: nameInput.value.trim(),
 				tags: track.tags,
@@ -242,7 +249,8 @@
 
 		try 
 		{
-			response = await (await fetch("/api/track", {
+			response = await (await fetch("/api/track", 
+			{
 				method: "POST",
 				headers: {"Content-Type": "text/json"},
 				body: JSON.stringify(data)
@@ -264,7 +272,8 @@
 
 		// update autoImport album tags
 		let autoImportTags = [];
-		try{
+		try
+		{
 			autoImportTags = JSON.parse(localStorage.autoImportTags);
 		}
 		catch(e){};
@@ -295,8 +304,10 @@
 
 		let response = {};
 
-		try {
-			response = await (await fetch("/api/track", {
+		try 
+		{
+			response = await (await fetch("/api/track", 
+			{
 				method: "DELETE",
 				headers: {"Content-Type": "text/json"},
 				body: JSON.stringify({id, session: sessionStorage.session})
@@ -316,21 +327,33 @@
 		}
 	}
 
-	async function parseAutoImport()
+	async function parseImportParams()
 	{	
 		let paramsRaw = window.location.search.substring(1);
 		let params = {};
 		paramsRaw = paramsRaw.split("&");
+
+		nameOverrides = {};
+		let nameOverridesRaw = [];
+		try{
+			nameOverridesRaw = JSON.parse(localStorage.nameOverrides)
+		}
+		catch(e){};
+
+		for(let pair of nameOverridesRaw)
+		{
+			nameOverrides[pair[0]] = pair[1];
+		}
 		
 		for(let param of paramsRaw)
 		{
 			let [key, value] = param.split("=");
-			params[key] = decodeURIComponent(value);
+			params[key] = decodeURIComponent(value).replace(/&amp;/g, "&");
 		}
 
 		if(params['artist'])
 		{
-			addTag({property: "artist", value: params['artist']});
+			addParsedArtist(params['artist'], "featured artist");
 		}
 
 		if(params['url'])
@@ -340,7 +363,43 @@
 
 		if(params['title'])
 		{
-			track.title = params['title']
+			let parseRule = localStorage.parseRule;
+			if(parseRule == "1" || parseRule == undefined)
+			{
+				let match = /(?:(.*)?(?:-|–))?(.*)/.exec(params['title']);
+
+				let artists = (match[1] || "").trim();
+				let parsedTitle = match[2].trim();
+				
+				if(artists)
+				{
+					artists = artists.split(/,|&/g).map(x => x.trim()).filter(x => x);
+
+					for(let artist of artists)
+					{
+						addParsedArtist(artist, "artist");
+					}
+				}
+
+				track.title = parsedTitle;
+
+				match = /.*\(fe?a?t?\. (.*)\)/.exec(parsedTitle);
+				if(match && match[1])
+				{
+					console.log(match)
+					artists = match[1].split(/,|&/g).map(x => x.trim()).filter(x => x);
+
+					for(let artist of artists)
+					{
+						addParsedArtist(artist, "featured artist");
+					}
+				}
+
+			}
+			if(parseRule == "0")
+			{
+				track.title = params['title']
+			}
 		}
 
 		if(params['date'])
@@ -350,11 +409,11 @@
 
 			let match = /.*((january|february|march|april|may|june|july|august|september|october|november|december) \d\d?, \d\d\d\d).*/.exec(rawDate)
 
-			if(match){
+			if(match)
+			{
 				rawDate = match[1];
 			}
 
-	
 			if(rawDate.indexOf("hours ago") > -1)
 			{
 				let d = new Date();
@@ -369,7 +428,8 @@
 		if(localStorage.autoImportTags)
 		{
 			let autoImportTags = [];
-			try{
+			try
+			{
 				autoImportTags = JSON.parse(localStorage.autoImportTags);
 			}
 			catch(e){};
@@ -378,6 +438,18 @@
 			{
 				addTag(tag);
 			}
+		}
+	}
+
+	/**
+	 * prop should be "artist" or "featured artist"
+	 */
+	function addParsedArtist(artistName, property)
+	{
+		let trueName = nameOverrides[artistName] != undefined ? nameOverrides[artistName] : artistName;
+		if(trueName)
+		{
+			addTag({property, value: trueName});
 		}
 	}
 </script>

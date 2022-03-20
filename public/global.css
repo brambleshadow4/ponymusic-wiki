@@ -30,7 +30,7 @@ label {
 	display: block;
 }
 
-input, button, select, textarea {
+input, button, select {
 	font-family: inherit;
 	font-size: inherit;
 	-webkit-padding: 0.4em 0;
@@ -62,4 +62,11 @@ button:not(:disabled):active {
 
 button:focus {
 	border-color: #666;
+}
+
+textarea
+{
+	-moz-tab-size : 4;
+      -o-tab-size : 4;
+         tab-size : 4;
 }

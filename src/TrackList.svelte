@@ -26,6 +26,8 @@
 	async function load(filters)
 	{	
 		loaded = false;
+		
+		// handle switching back to page 0 when filters change
 		if(JSON.stringify(filters) != filterHash)
 		{
 			page = 0;
