@@ -353,7 +353,7 @@
 
 		if(params['artist'])
 		{
-			addParsedArtist(params['artist'], "featured artist");
+			addParsedArtist(params['artist'], "artist");
 		}
 
 		if(params['url'])
