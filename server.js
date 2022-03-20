@@ -144,7 +144,7 @@ app.get("/login", async (req,res) =>
 				await db.query("UPDATE users SET name=$2, avatar=$3 WHERE id=$1", [userID, data.username, avatar]);
 			}
 
-			await db.query("DELETE FROM sessions WHERE user_id=$1", [userID]);
+			//await db.query("DELETE FROM sessions WHERE user_id=$1", [userID]);
 			let session = uuidv4();
 
 			await db.query("INSERT INTO sessions (session, user_id, expire_time) VALUES ($1, $2, NOW() + interval '1 month')", [session, userID]);

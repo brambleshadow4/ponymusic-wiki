@@ -65,6 +65,10 @@
 				localStorage.session = data.session;
 				signedIn = true;
 			}
+			else if(data.status == 400)
+			{
+				delete localStorage.session;
+			}
 
 			loading = false;
 		}
