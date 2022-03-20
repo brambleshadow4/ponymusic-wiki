@@ -63,6 +63,9 @@ async function doLoad()
 
 function sqlEscapeString(s)
 {
+	if(s == null || s == undefined){
+		return "''";
+	}
 	s = s.replace(/\\/g, "\\\\");
 	s = s.replace(/'/g, "''");
 	s = s.replace(/%/g,"\\%")
@@ -112,24 +115,35 @@ async function exportTable(table, cols)
 
 		for (let col in cols)
 		{
-			switch(cols[col])
+			try
 			{
-				case "string": 
-					rowVals.push(sqlEscapeString(row[col]));
-					break;
-				case "json":
-					rowVals.push(escapeJSON(JSON.stringify(row[col])));
-					break;
-				case "bool":
-					rowVals.push(row[col] ? "TRUE" : "FALSE");
-					break;
-				case "date":
-					rowVals.push("'" + row[col].toISOString() + "'");
-					break;
-				case "number|null": 
-				case "number": 
-					rowVals.push("" + row[col]);
-					break;
+				switch(cols[col])
+				{
+					case "string": 
+						rowVals.push(sqlEscapeString(row[col]));
+						break;
+					case "json":
+						rowVals.push(escapeJSON(JSON.stringify(row[col])));
+						break;
+					case "bool":
+						rowVals.push(row[col] ? "TRUE" : "FALSE");
+						break;
+					case "date":
+						rowVals.push("'" + row[col].toISOString() + "'");
+						break;
+					case "number|null": 
+					case "number": 
+						rowVals.push("" + row[col]);
+						break;
+				}
+			}
+			catch(e)
+			{
+				console.log("TABLE " + table);
+				console.log("ROW")
+				console.log(row);
+				console.log("COLUMN " + col);
+				throw e;
 			}
 		}
 
