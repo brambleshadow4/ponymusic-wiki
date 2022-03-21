@@ -198,6 +198,16 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 {
 	let page = Number(req.query.page) || 0; 
+
+	let userID = -1;
+
+	if(req.query.session)
+	{
+		userID = (await getSession(req)).user_id;
+	}
+
+	let session = req.query.session;
+
 	let offset = page*PAGE_COUNT;
 
 	let tagFilter = '(tag "artist" "vylet pony")';
@@ -258,13 +268,14 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='genre') as genre,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='album') as album,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='tag') as tag,
-			(SELECT COALESCE(value, '') from track_tags WHERE track_id=id and property='pl') as pl
+			(SELECT COALESCE(value, '') from track_tags WHERE track_id=id and property='pl') as pl,
+			(SELECT value FROM user_flags WHERE track_id=id AND user_id=$1 AND flag='status') as status
 		FROM tracks 
 		${whereClause}
 		ORDER BY release_date DESC
 		LIMIT ${PAGE_COUNT} OFFSET ${offset}`;
 
-	let {rows} = await db.query(query,[]);
+	let {rows} = await db.query(query,[userID]);
 	let countRequest = await db.query(`SELECT COUNT(*) as count FROM tracks ${whereClause}`,[]);
 
 	res.json({rows, pages: Math.ceil(countRequest.rows[0].count/PAGE_COUNT)});
@@ -542,6 +553,28 @@ app.post("/api/findDuplicates", processJSON, async (req,res) =>
 	res.json({status: 200, duplicates});
 	
 });
+
+app.put("/api/setUserFlag", processJSON, auth(PERM.USER_FLAGS), async (req, res) =>
+{
+	let userID = (await getSession(req)).user_id;
+	let ALLOWED_FLAGS = new Set(["status","fav","rating"]);
+	let data = req.body || {};
+	
+	if(!ALLOWED_FLAGS.has(data.flag))
+	{
+		res.json({status: 400, error:"Bad Flag type"});
+		return;
+	}
+
+	await db.query("DELETE FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag=$3", [data.track_id, userID, data.flag]);
+
+	if(data.value){
+		await db.query("INSERT INTO user_flags (track_id, user_id, flag, value) VALUES ($1, $2, $3, $4) ", [data.track_id, userID, data.flag, data.value]);
+	}
+
+	res.json({status: 200});
+
+} )
 
 function buildWhereClause(property, valueList, negate)
 {

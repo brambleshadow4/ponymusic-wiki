@@ -186,9 +186,6 @@
 		}
 	}
 
-	
-
-
 	async function findDuplicates()
 	{
 		if(findDuplicatesChannelStatus == 0)
@@ -292,7 +289,6 @@
 				}		
 			}
 		}
-
 
 		errorMessage = "";
 		load();

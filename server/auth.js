@@ -19,6 +19,7 @@ const PERM = {
 	DELETE_TRACK: "2",
 	LOCK_TRACK: "3",
 	UNLIMITED_EDITS: "4",
+	USER_FLAGS: "5",
 }
 
 const lookup = {}
@@ -30,20 +31,24 @@ lookup[ROLE.ADMIN][PERM.UPDATE_TRACK] = true;
 lookup[ROLE.ADMIN][PERM.DELETE_TRACK] = true;
 lookup[ROLE.ADMIN][PERM.LOCK_TRACK] = true;
 lookup[ROLE.ADMIN][PERM.UNLIMITED_EDITS] = true;
+lookup[ROLE.ADMIN][PERM.USER_FLAGS] = true;
 
 lookup[ROLE.MODERATOR] = {};
 lookup[ROLE.MODERATOR][PERM.UPDATE_TRACK] = true;
 lookup[ROLE.MODERATOR][PERM.DELETE_TRACK] = true;
 lookup[ROLE.MODERATOR][PERM.LOCK_TRACK] = true;
 lookup[ROLE.MODERATOR][PERM.UNLIMITED_EDITS] = true;
+lookup[ROLE.MODERATOR][PERM.USER_FLAGS] = true;
 
 lookup[ROLE.VERIFIED_USER] = {};
 lookup[ROLE.VERIFIED_USER][PERM.UPDATE_TRACK] = true;
 lookup[ROLE.VERIFIED_USER][PERM.DELETE_TRACK] = true;
 lookup[ROLE.VERIFIED_USER][PERM.UNLIMITED_EDITS] = true;
+lookup[ROLE.VERIFIED_USER][PERM.USER_FLAGS] = true;
 
 lookup[ROLE.USER] = {};
 lookup[ROLE.USER][PERM.UPDATE_TRACK] = true;
+lookup[ROLE.USER][PERM.USER_FLAGS] = true;
 
 db = new Pool();
 
@@ -60,7 +65,7 @@ function reqHasPerm(req, permission)
 
 async function buildSession(req)
 {
-	let ses = req.body && req.body.session;
+	let ses = (req.body && req.body.session) || (req.query && req.query.session[0]);
 	let now = new Date().getTime();
 
 	if(!sessions[ses] || sessions[ses].expire_time.getTime() >= now)
@@ -83,7 +88,7 @@ async function buildSession(req)
 async function getSession(req)
 {
 	await buildSession(req);
-	return sessions[req.body.session];
+	return sessions[req.body ? req.body.session : req.query.session];
 }
 
 function auth(permission)

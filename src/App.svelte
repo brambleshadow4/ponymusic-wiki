@@ -187,9 +187,6 @@
 		<TrackList on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
 	{:else if path == "/about"}
-
-
-		
 		<div class='main'>
 
 			<blockquote>

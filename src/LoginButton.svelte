@@ -16,9 +16,12 @@
 
 			delete sessionStorage.role
 			delete sessionStorage.session;
+			delete sessionStorage.avatar;
 			delete localStorage.session;
 			signedIn = false;
 			avatar = "/avatar.svg";
+
+			window.location.reload(true);
 		}
 		else
 		{
@@ -64,10 +67,15 @@
 				avatar = data.avatar;
 				localStorage.session = data.session;
 				signedIn = true;
+				window.location.reload(true);
 			}
 			else if(data.status == 400)
 			{
 				delete localStorage.session;
+				delete sessionStorage.role;
+				delete sessionStorage.avatar;
+				delete sessionStorage.session;
+				signedIn = false;
 			}
 
 			loading = false;
@@ -79,7 +87,6 @@
 		let query = (window.location.search || "").substring(1);
 		if(query.startsWith("session="))
 		{
-			console.log(query);
 			let params = query.substring("session=".length).split(",")
 			localStorage.session = params[0];
 			sessionStorage.session = params[0];
@@ -90,6 +97,7 @@
 			signedIn = true;
 
 			history.replaceState({}, undefined, "/");
+			window.location.reload(true);
 		}
 	}
 

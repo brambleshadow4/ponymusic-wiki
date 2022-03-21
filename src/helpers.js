@@ -29,9 +29,14 @@ function propertyOrder(prop){
 /**
  * filters: string => {noFilter: true} | {exclude: string[]} | {include: string[]}
  */
-export function buildFilterQuery(filters, page)
+export function buildFilterQuery(filters, page, includeSession)
 {
 	let params = [];
+
+	if(includeSession && sessionStorage.session){
+		params.push("session=" + sessionStorage.session);
+	}
+
 	for(let property in filters)
 	{
 		if(filters[property].noFilter){
@@ -77,4 +82,25 @@ export async function getAutofill(propName, count, searchString)
 
 	return matches;
 }
-	
+
+export async function setUserFlag(trackId, flag, value)
+{
+	let data = {
+		session: sessionStorage.session,
+		track_id: trackId,
+		flag,
+		value
+	};
+
+	if(flag == "fav"){
+		return;
+	}
+
+	let response = await (await fetch("/api/setUserFlag", {
+		method: "PUT",
+		headers: {"Content-Type": "text/json"},
+		body: JSON.stringify(data)
+	})).json();
+
+	return response.status;
+}
