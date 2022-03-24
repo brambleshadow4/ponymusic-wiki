@@ -5,7 +5,7 @@
 	{#if loading}
 		<Spinner />
 	{:else}
-		<div><a on:click={decPage}>Prev. Page</a>•<a on:click={incPage}>Next Page</a></div>
+		<div><a href="#prev" on:click={decPage}>Prev. Page</a>•<a href="#next" on:click={incPage}>Next Page</a></div>
 		<table>
 			<tr>
 				<th>Timestamp</th><th>User</th><th>Track</th>
@@ -15,9 +15,9 @@
 				<td>{new Date(edit.timestamp).toLocaleString()}</td>
 				<td>{edit.user_name}</td>
 				{#if edit.track_title == null}
-					<td><a class='deleted' on:click={() => openTrack(edit.track_id)}>deleted ({edit.track_id})</a></td>
+					<td><a href="#edit" class='deleted' on:click={() => openTrack(edit.track_id)}>deleted ({edit.track_id})</a></td>
 				{:else}
-					<td><a on:click={() => openTrack(edit.track_id)}>{edit.track_title}</a></td>
+					<td><a  href="#edit" on:click={() => openTrack(edit.track_id)}>{edit.track_title}</a></td>
 				{/if}
 			</tr>
 			{/each}

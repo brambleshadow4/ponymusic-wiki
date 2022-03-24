@@ -97,10 +97,6 @@ x = window.open(\`https://ponymusic.wiki/track/new?title=\${title}&date=\${date}
 		margin-top: 0px;
 	}
 
-	.expand{
-		height: 10em;
-	}
-
 	textarea{
 		width: 100%;
 	}

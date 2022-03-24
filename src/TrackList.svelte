@@ -237,7 +237,7 @@
 	<h1 class='no-margin'>Pony Music Wiki <span class='version'>(alpha build)</span></h1>
 	<div>A community maintained database of pony music.</div>
 			
-	<div><a href="#" on:click={()=>{openTrack("new")}}>+ Add a track</a></div>
+	<div><a href="#new" on:click={()=>{openTrack("new")}}>+ Add a track</a></div>
 	
 	{#if loaded}
 
@@ -285,9 +285,9 @@
 		</div>
 
 		<div class='pager'>
-			{#if page>0}<a class='decPage' on:click={decPage}>&lt;- Previous</a>{/if}
+			<a href="#next" class={'decPage' + (page>0 ? "" : " hidden")} on:click={decPage}>&lt;- Previous</a>
 			<span>Page {page+1}/{pages}</span>
-			{#if page+1<pages}<a class='incPage' on:click={incPage}>Next -></a>{/if}
+			<a href="#previous" class={'incPage' + (page+1<pages ? "" : ' hidden')} on:click={incPage}>Next -></a>
 		</div>
 	{:else}
 		<Spinner />
@@ -403,6 +403,16 @@
 
 	.pager {text-align: center;}
 
+	.pager a, .pager span
+	{
+		display: inline-block;
+		min-width: 100px;
+	}
+
+	.pager .hidden{
+		visibility: hidden;
+	}
+
 
 	.table-container
 	{
@@ -411,14 +421,6 @@
 	}
 
 	.row{cursor: pointer}
-
-
-
-	.tabs span
-	{
-		display: inline-block;
-		padding: 2px 10px;
-	}
 
 	.pinned-row{
 		position: sticky;

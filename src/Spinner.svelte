@@ -63,10 +63,6 @@
     height: 5em;
   }
 }
-.loader.small
-{
-  margin: 0px auto;
-}
 
 .loader-container
 {

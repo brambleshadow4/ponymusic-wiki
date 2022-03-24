@@ -204,10 +204,4 @@
 		padding-bottom: 20px;
 		height: 30px;
 	}
-
-	.main{
-		background-color: white;
-		margin: .5in;
-		overflow-y: auto;
-	}
 </style>

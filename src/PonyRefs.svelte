@@ -28,7 +28,7 @@
 </ul>
 
 <style>
-	p, ol, ul, h2{
+	p, ul, h2{
 	margin-top: 0px;
 }
 </style>

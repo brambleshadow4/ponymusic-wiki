@@ -476,11 +476,6 @@
 		margin-top: 20px;
 	}
 
-	h1 button{
-		font-size: 12pt;
-		line-height: 12pt;
-	}
-
 	h1{
 		margin-top: 0px;
 		padding-top: 12pt
@@ -602,7 +597,7 @@
 			
 		{:else}
 			{#if track.ogcache && track.ogcache.embed}
-				<iframe src={track.ogcache.embed} width={track.ogcache.width} height={track.ogcache.height} 
+				<iframe title="Embeded track" src={track.ogcache.embed} width={track.ogcache.width} height={track.ogcache.height} 
 					frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
 
 				></iframe>
