@@ -33,8 +33,8 @@ export function buildFilterQuery(filters, page, includeSession)
 {
 	let params = [];
 
-	if(includeSession && sessionStorage.session){
-		params.push("session=" + sessionStorage.session);
+	if(includeSession && localStorage.session){
+		params.push("session=" + localStorage.session);
 	}
 
 	for(let property in filters)

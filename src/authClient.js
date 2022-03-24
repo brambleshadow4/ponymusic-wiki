@@ -1,7 +1,7 @@
 
 export function hasPerm(perm)
 {
-	let role = sessionStorage.role || ROLE.DEFAULT;
+	let role = localStorage.role || ROLE.DEFAULT;
 	return lookup[role][perm]
 }
 

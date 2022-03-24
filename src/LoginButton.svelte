@@ -65,9 +65,26 @@
 				sessionStorage.session = data.session;
 				sessionStorage.avatar = data.avatar;
 				avatar = data.avatar;
+
 				localStorage.session = data.session;
 				signedIn = true;
-				window.location.reload(true);
+
+				let needReload = false;
+
+				for(let key of ["role","session","avatar"])
+				{
+					if(sessionStorage[key] != localStorage[key])
+					{
+						needReload = true;
+					}
+
+					localStorage[key] = sessionStorage[key];
+				}
+
+				if(needReload)
+				{
+					window.location.reload(true);
+				}
 			}
 			else if(data.status == 400)
 			{
