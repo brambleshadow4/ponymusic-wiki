@@ -199,7 +199,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 {
 	let page = Number(req.query.page) || 0; 
 
-	let userID = -1;
+	let userID ="";
 
 	if(req.query.session)
 	{
@@ -255,6 +255,17 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 		whereClauses.push(`LOWER(title) SIMILAR TO '${words}'`);
 	}
 
+
+	if(req.query.status && userID)
+	{
+		whereClauses.push(buildStatusClause(userID, req.query.status, false))
+	}
+	else if(req.query.x_status && userID)
+	{
+		whereClauses.push(buildStatusClause(userID, req.query.x_status, true))
+	}
+
+
 	if(whereClauses.length)
 	{
 		whereClause = "WHERE " + whereClauses.join(" AND ") + " ";
@@ -274,6 +285,8 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 		${whereClause}
 		ORDER BY release_date DESC
 		LIMIT ${PAGE_COUNT} OFFSET ${offset}`;
+
+	//console.log(query);
 
 	let {rows} = await db.query(query,[userID]);
 	let countRequest = await db.query(`SELECT COUNT(*) as count FROM tracks ${whereClause}`,[]);
@@ -622,6 +635,58 @@ function buildWhereClause(property, valueList, negate)
 		{
 			// if including blanks, get tracks without the property
 			clauses.push(`id NOT IN (SELECT track_id FROM track_tags WHERE property='${property}')`)
+		}
+
+		if(clauses.length == 2)
+		{
+			return `((${clauses[0]}) OR (${clauses[1]}))`
+		}
+
+		return clauses[0];
+	}
+}
+
+function buildStatusClause(userID, valueList, negate)
+{
+	let valueListNoNulls = valueList.filter(x => x != "").map(x => Number(x) + "").join(",");
+	let hasBlank = valueList.filter(x => x=="").length > 0;
+
+	let flag = "status";
+
+	let clauses = [];
+
+	if(negate)
+	{
+		if(valueListNoNulls.length)
+		{
+			clauses.push(`id NOT IN (SELECT track_id FROM user_flags WHERE user_id='${userID}' AND value IN (${valueListNoNulls}) AND flag='${flag}')`)
+		}
+
+		if(hasBlank)
+		{
+			// if excluding blanks, have to have the proeprty
+			clauses.push(`id IN (SELECT track_id FROM user_flags WHERE user_id='${userID}' AND flag='${flag}')`)
+		}
+
+		if(clauses.length == 2)
+		{
+			return `((${clauses[0]}) AND (${clauses[1]}))`
+		}
+
+		return clauses[0];
+
+	}
+	else
+	{
+		if(valueListNoNulls.length)
+		{
+			clauses.push(`id IN (SELECT track_id FROM user_flags WHERE user_id='${userID}' AND value IN (${valueListNoNulls}) AND flag='${flag}')`)
+		}
+
+		if(hasBlank)
+		{
+			// if including blanks, get tracks without the flag
+			clauses.push(`id NOT IN (SELECT track_id FROM user_flags WHERE user_id='${userID}' AND flag='${flag}')`)
 		}
 
 		if(clauses.length == 2)

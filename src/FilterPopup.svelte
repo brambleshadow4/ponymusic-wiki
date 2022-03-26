@@ -69,6 +69,8 @@
 				title = "Tags";
 				groups = await autofillGroups("tag")
 				break;
+			case "status":
+				groups = statusGroups();
 		}
 
 		flattenGroups(filterItems, groups)
@@ -135,6 +137,54 @@
 			year--;
 		}
 
+		return groups;
+	}
+
+	function statusGroups()
+	{
+		let groups = {
+			name: "All",
+			level: 0,
+			checked: 3,
+			children: []
+		};
+
+		let children = [
+			{
+				name: "(blank)",
+				level: 1,
+				checked: 3,
+				value: "",
+				icon: "",
+				parent: groups
+			},
+			{
+				name: "Heard it",
+				level: 1,
+				checked: 3,
+				value: "1",
+				icon: "/notes.png",
+				parent: groups
+			},
+			{
+				name: "Listen Later",
+				level: 1,
+				checked: 3,
+				value: "2",
+				icon: "/later.png",
+				parent: groups
+			},
+			{
+				name: "Skip",
+				level: 1,
+				checked: 3,
+				value: "3",
+				icon: "/rest.png",
+				parent: groups
+			},
+		];
+
+		groups.children = children;
 		return groups;
 	}
 
@@ -519,6 +569,12 @@
 		user-select: none;
 	}
 
+	label img
+	{
+		width: 20px;
+		height: 20px;
+	}
+
 	input[type="checkbox"]
 	{
 		margin: 0px 10px ;
@@ -557,7 +613,10 @@
 							type="checkbox" 
 							id={"filter-"+i}
 							on:click={(e) => toggleCheckBox(e, i, filter)} />
-						<label for={"filter-"+i}>{filter.name}</label>
+						<label for={"filter-"+i}>
+							{#if filter.icon}<img src={filter.icon} />{/if}
+							{filter.name}
+						</label>
 					</div>
 
 				{/each}
