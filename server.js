@@ -358,7 +358,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	var data = req.body;
 	let userID = (await getSession(req)).user_id;
 
-	let title = (data.title || "").trim();
+	let title = trim2(data.title || "")
 	let release_date = data.release_date.trim();
 
 
@@ -448,12 +448,19 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 			return;
 		}
 
-		tag.value = tag.value.trim();
+		tag.value = trim2(tag.value);
+
+		// Use whatever existing casing is in the database for the tag value.
+		if(tag.property != "hyperlink")
+		{
+			let goodTag = await db.query("SELECT value FROM track_tags WHERE property=$1 and value=LOWER($2)", [tag.property, tag.value]);
+			if(goodTag.rows.length){
+				tag.value = goodTag.rows[0].value;
+			}
+		}
 	}
 
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
-
-	
 
 	for(tag of data.tags)
 	{
@@ -625,6 +632,13 @@ function buildWhereClause(property, valueList, negate)
 		return clauses[0];
 	}
 }
+
+
+function trim2(s)
+{
+	return s.trim().replace(/\u200B/g,"");
+}
+
 
 function sqlEscapeString(s)
 {
