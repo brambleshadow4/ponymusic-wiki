@@ -16,7 +16,7 @@
 
 	let filters = {};
 
-	if(window.location.search && (window.pathname == "/" || window.pathname == "/tracks"))
+	if(location.search && (location.pathname == "/" || location.pathname == "/tracks"))
 	{
 		let query = window.location.search.substring(1);
 
@@ -55,6 +55,15 @@
 	function openTrack(event)
 	{
 		loadedTrackID = event.detail;
+
+		if(loadedTrackID){
+			history.replaceState({}, undefined, "/track/" + loadedTrackID);
+		}
+		else
+		{
+			history.replaceState({}, undefined, "/" + buildFilterQuery(filters, 0))
+		}
+		
 	}
 
 	function openFilter(event)
