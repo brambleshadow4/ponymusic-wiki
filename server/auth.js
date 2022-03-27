@@ -65,7 +65,7 @@ function reqHasPerm(req, permission)
 
 async function buildSession(req)
 {
-	let ses = (req.body && req.body.session) || (req.query && req.query.session[0]);
+	let ses = (req.body && req.body.session) || (req.query && req.query.session && req.query.session[0]);
 	let now = new Date().getTime();
 
 	if(!sessions[ses] || sessions[ses].expire_time.getTime() >= now)
@@ -88,7 +88,8 @@ async function buildSession(req)
 async function getSession(req)
 {
 	await buildSession(req);
-	return sessions[req.body ? req.body.session : req.query.session];
+	let ses = (req.body && req.body.session) || (req.query && req.query.session && req.query.session[0]);
+	return sessions[ses];
 }
 
 function auth(permission)

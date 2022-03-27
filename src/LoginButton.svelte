@@ -1,7 +1,7 @@
 <script>
 	import CircleSpinner from "./CircleSpinner.svelte";
-	let signedIn = !!sessionStorage.role;
-	let avatar = sessionStorage.avatar || "/avatar.svg";
+	let signedIn = !!localStorage.role;
+	let avatar = localStorage.avatar || "/avatar.svg";
 	let loading = false;
 
 	function handleClick(e)
@@ -14,10 +14,10 @@
 				return;
 			}
 
-			delete sessionStorage.role
 			delete sessionStorage.session;
-			delete sessionStorage.avatar;
+			delete localStorage.role
 			delete localStorage.session;
+			delete localStorage.avatar;
 			signedIn = false;
 			avatar = "/avatar.svg";
 
@@ -61,9 +61,6 @@
 
 			if(data.status == 200)
 			{
-				sessionStorage.role = data.role;
-				sessionStorage.session = data.session;
-				sessionStorage.avatar = data.avatar;
 				avatar = data.avatar;
 
 				localStorage.session = data.session;
@@ -73,13 +70,15 @@
 
 				for(let key of ["role","session","avatar"])
 				{
-					if(sessionStorage[key] != localStorage[key])
+					if(localStorage[key] != data[key])
 					{
 						needReload = true;
 					}
 
-					localStorage[key] = sessionStorage[key];
+					localStorage[key] = data[key];
 				}
+
+				sessionStorage.session = localStorage.session;
 
 				if(needReload)
 				{
@@ -88,9 +87,9 @@
 			}
 			else if(data.status == 400)
 			{
+				delete localStorage.role;
+				delete localStorage.avatar;
 				delete localStorage.session;
-				delete sessionStorage.role;
-				delete sessionStorage.avatar;
 				delete sessionStorage.session;
 				signedIn = false;
 			}
@@ -106,11 +105,11 @@
 		{
 			let params = query.substring("session=".length).split(",")
 			localStorage.session = params[0];
+			localStorage.role = params[1];
+			localStorage.avatar = params[2];
 			sessionStorage.session = params[0];
-			sessionStorage.role = params[1];
-			sessionStorage.avatar = params[2];
+			
 			avatar = params[2];
-
 			signedIn = true;
 
 			history.replaceState({}, undefined, "/");

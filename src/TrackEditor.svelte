@@ -43,15 +43,10 @@
 	{
 		tabProps = [];
 
-		if(localStorage.session && !sessionStorage.role)
-		{
-			setTimeout(load, 100);
-			return;
-		}
-
 		if(id != "new")
 		{
 			spinner1 = true;
+
 			track = await (await fetch("/api/track/" + id)).json();
 
 			if(track.deleted) // it's been deleted

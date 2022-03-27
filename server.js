@@ -199,7 +199,8 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 {
 	let page = Number(req.query.page) || 0; 
 	let offset = page*PAGE_COUNT;
-	let userID = (await getSession(req)).user_id;
+	let ses = await getSession(req);
+	let userID = ses && ses.user_id;
 
 	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","album","genre","pl","tag","release_date","status","title"]));
 

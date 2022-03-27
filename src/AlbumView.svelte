@@ -49,8 +49,6 @@
 		let filterCopy = JSON.parse(JSON.stringify(filters));
 		filterCopy.album = {include: [albumName]};
 
-		console.log(filterCopy)
-
 		let query = buildFilterQuery(filterCopy, [{asc: "album_no"}], page[0], true);
 		let response = await (await fetch("/api/view/tracks"+ query)).json();
 
