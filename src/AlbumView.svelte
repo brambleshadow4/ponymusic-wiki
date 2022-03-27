@@ -14,11 +14,18 @@
 	let songs = [];
 	let data = [];
 	let page = [0,1];
+	let pageTitle = "";
 
 	let loaded = false;
 
 	async function load(filters)
 	{	
+		
+
+		let albumName = decodeURIComponent(location.pathname.replace("/album/","").trim());
+
+		pageTitle = "Album: " + albumName;
+
 		loaded = false;
 		
 		// handle switching back to page 0 when filters change
@@ -39,38 +46,20 @@
 
 		columnDefs = columnDefs;
 
-		let query = buildFilterQuery(filters, [], page[0], true);
-		let response = await (await fetch("/api/view/tracks" + query)).json();
+		let filterCopy = JSON.parse(JSON.stringify(filters));
+		filterCopy.album = {include: [albumName]};
+
+		console.log(filterCopy)
+
+		let query = buildFilterQuery(filterCopy, [{asc: "album_no"}], page[0], true);
+		let response = await (await fetch("/api/view/tracks"+ query)).json();
+
 		data = response.rows;
-		page = [page[0], response.pages];
 		loaded = true;
-	}
-
-	function onPageChange(e)
-	{
-		if(e.detail > page[0])
-		{
-			page[0]++;
-			load(filters);
-		}
-		else
-		{
-			page[0] = Math.max(page[0]-1, 0);
-			load(filters);
-		}
-
-		page = page;
 	}
 
 	$: loadThisThing = load(filters);
 	
-	
-
-
-	function openFilter(e)
-	{
-
-	}
 
 	function openTrack(e)
 	{
@@ -102,7 +91,6 @@
 
 	async function changeUserFlag(e)
 	{
-
 		let song = e.detail.row;
 		let value = e.detail.button+1;
 
@@ -117,14 +105,13 @@
 
 	let columnDefs = [
 		{name: "", width: "25", property: "status", printFn: statusIcon, icon:true, filtered: false},
+		{name: "", width: "25", property: "album_no", },
 		{name: "Artist", width: "200", property: "artist", filtered: false},
 		{name: "Featured Arist", width: "50", property: "featured_artist", filtered: false},
 		{name: "Title", width: "200", property: "title", printFn: (x) => x, filtered: false},
-		{name: "Album", width: "100", property: "album", filtered: false, linkTo: "/album/*"},
 		{name: "Refs", width: "100", property: "pl", printFn: enumText, filtered: false},
 		{name: "Genre", width: "100", property: "genre",filtered: false},
 		{name: "Tags", width: "100", property: "tag", filtered: false},
-		{name: "Released", width: "100", property: "release_date", printFn: (x) => x.substring(0,10), filtered: false}
 	];
 	let rowButtons = hasPerm(PERM.USER_FLAGS) ? [
 		["Heard it", "/notes.png"],
@@ -146,20 +133,16 @@
 
 <div class='frame'>
 
-	<h1 class='no-margin'>Pony Music Wiki <span class='version'>(alpha build)</span></h1>
-	<div>A community maintained database of pony music.</div>
-			
-	<div><a href="#new" on:click={()=>{openTrack({detail: {id:"new"}})}}>+ Add a track</a></div>
-	
+	<h1 class='no-margin'>{pageTitle}</h1>
+				
 	{#if loaded}
 
 		<Grid 
 			columns={columnDefs}
 			data={data}
-			page={page}
 			selectedId={selectedId}
 			rowButtons = {rowButtons}
-			on:pagechange={onPageChange} on:rowclick={openTrack} on:openFilter
+			on:rowclick={openTrack} on:openFilter
 			on:rowbuttonclick={changeUserFlag}
 		/>
 		
@@ -185,6 +168,10 @@
 	{
 		font-size: 8pt;
 		color: red;
+	}
+
+	h1{
+		padding-top: 20px;
 	}
 
 </style>

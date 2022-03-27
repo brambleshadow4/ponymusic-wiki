@@ -1,5 +1,5 @@
 <script>
-	import {createEventDispatcher} from "svelte";
+	import {onMount, createEventDispatcher} from "svelte";
 	import FilterButton from "./FilterButton.svelte";
 
 	export let columns = [];
@@ -99,21 +99,29 @@
 		}
 	}
 
+	onMount(function()
+	{	
+		// set column's widths
+
+		let root = document.documentElement;
+		let styleElement = document.createElement('style');
+		document.head.appendChild(styleElement);
+
+		let sheet = styleElement.sheet;
+
+		for(let i=0; i < columns.length; i++)
+		{
+			let colWidthVar = '--col'+ i +'-width';
+			root.style.setProperty(colWidthVar, (columns[i].width || "100") + "px");
+
+			sheet.insertRule(`.col${i}{ width: var(--col${i}-width); }`, i);
+		}
+
+	})
+
 
 </script>
 <style>
-
-	:root {
-		--col0-width: 25px;
-		--col1-width: 200px;
-		--col2-width: 50px;
-		--col3-width: 200px;
-		--col4-width: 100px;
-		--col5-width: 100px;
-		--col6-width: 100px;
-		--col7-width: 100px;
-		--col8-width: 100px;
-	}
 
 	table{
 		font-size: 0;
@@ -187,19 +195,18 @@
 		background-color: #66b3ff;
 	}
 
+	td.deleted
+	{
+		color: red;
+	}
+
+	td.deleted a {
+		color: red;
+	}
+
 	.col0{
 		border-left: solid 1px #888;;
 	}
-
-	.col0{ width: var(--col0-width); }
-	.col1{ width: var(--col1-width); }
-	.col2{ width: var(--col2-width); }
-	.col3{ width: var(--col3-width); }
-	.col4{ width: var(--col4-width); }
-	.col5{ width: var(--col5-width); }
-	.col6{ width: var(--col6-width); }
-	.col7{ width: var(--col7-width); }
-	.col8{ width: var(--col8-width); }
 
 	.pager {text-align: center;}
 
@@ -212,7 +219,6 @@
 	.pager .hidden{
 		visibility: hidden;
 	}
-
 
 	.table-container
 	{
@@ -248,6 +254,11 @@
 		vertical-align: middle;
 	}
 
+	.multi-item + .multi-item:before
+	{
+		content:  ", ";
+	}
+
 </style>
 
 
@@ -255,7 +266,7 @@
 	<table>
 		<tr class='pinned-row'>
 			{#each columns as column,i}
-				<th class={"col" + i + (filters[column.property] ? " active" : "")}
+				<th class={"col" + i + (column.filtered ? " active" : "")}
 					on:mousemove={onMouseMove}
 					on:mousedown={onMouseDown}
 				>
@@ -269,11 +280,29 @@
 		{#each data as song}
 			<tr class={song.id == selectedId ? "selected row" : "row"} on:click={(e) => {dispatch("rowclick", song)}}>
 				{#each columns as column,i}
-					<td class={"col" + i}>
+					<td class={"col" + i + " " + ((column.classFn && column.classFn(song)) || "")}>
 						{#if column.icon}
 							{#if song[column.property]}<img class='icon' src={column.printFn(song[column.property])} />{/if}
-						{:else}
+						{:else if column.property == "*"}
+							{#if column.linkFn}
+								<a on:click={()=>column.linkFn(song)}>{column.printFn(song)}</a>
+							{:else}
+								{column.printFn(song)}
+							{/if}
+						{:else if column.printFn}
 							{column.printFn(song[column.property])}
+						{:else}
+							{#each (("" + song[column.property] || "").split("\x1E")) as item}
+								{#if column.linkTo}
+									<a class="multi-item" href={column.linkTo.replace("*",encodeURIComponent(item))}
+										on:click={(e)=>e.stopPropagation()}
+									>
+										{item}
+									</a>
+								{:else}
+									<span class="multi-item">{item}</span>
+								{/if}
+							{/each}
 						{/if}
 					</td>
 				{/each}

@@ -1,6 +1,7 @@
 <script>
 	import TrackEditor from "./TrackEditor.svelte";
 	import TrackList from "./TrackList.svelte";
+	import AlbumView from "./AlbumView.svelte";
 	import FilterPopup from "./FilterPopup.svelte";
 	import EditList from "./EditList.svelte";
 	import PonyRefs from "./PonyRefs.svelte";
@@ -61,7 +62,7 @@
 		}
 		else
 		{
-			history.replaceState({}, undefined, "/" + buildFilterQuery(filters, 0))
+			history.replaceState({}, undefined, "/" + buildFilterQuery(filters, [], 0))
 		}
 		
 	}
@@ -76,7 +77,7 @@
 		loadedFilter = "";
 		filters[event.detail.property] = event.detail;
 
-		history.pushState("", "", buildFilterQuery(filters));
+		history.pushState("", "", buildFilterQuery(filters, []));
 
 		filters = filters;
 	}	
@@ -195,6 +196,9 @@
 	{#if path == "/" || path == "" || path.startsWith("/track/")}
 		<TrackList on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
+	{:else if path.startsWith("/album/")}
+		<AlbumView on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+
 	{:else if path == "/about"}
 		<div class='main'>
 
@@ -250,11 +254,9 @@
 		</div>
 	
 	{:else if path=="/edits"}
-
-		<div class='main'>
-			<EditList on:openTrack={openTrack}/>
-		</div>
-
+	
+		<EditList on:openTrack={openTrack}/>
+	
 	{:else if path=="/pony-refs"}
 		<div class='main'>
 			<PonyRefs />

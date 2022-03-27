@@ -14,7 +14,6 @@ const {PERM, ROLE, auth, reqHasPerm, getSession} = require("./server/auth.js");
 const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
 
 
-
 const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl"];
 
 const app = express();
@@ -166,7 +165,6 @@ app.post("/restoreSession", processJSON, async (req,res) =>
 	}
 
 	res.json({status: 400})
-
 })
 
 
@@ -195,80 +193,31 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 	res.json(strippedRows);
 })
 
+
+
 app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 {
 	let page = Number(req.query.page) || 0; 
-
-	let userID ="";
-
-	if(req.query.session)
-	{
-		userID = (await getSession(req)).user_id;
-	}
-
-	let session = req.query.session;
-
 	let offset = page*PAGE_COUNT;
+	let userID = (await getSession(req)).user_id;
 
-	let tagFilter = '(tag "artist" "vylet pony")';
-	let order = "(desc release_date)";
+	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","album","genre","pl","tag","release_date","status","title"]));
 
-	let whereClause = "";
-	let whereClauses = [];
+	let albumNoSelect = "";
 
+	let orderBy = "ORDER BY release_date DESC";
 
-	let simpleFilters = ["artist","featured_artist","album","genre","pl","tag"]
+	//console.log(req.query.sort);
 	
-	for(let key of simpleFilters)
-	{
-		let negKey = "x_" + key;
-		let prop = key;
 
-		if(key=="featured_artist"){
-			prop = "featured artist";
+	if(req.query.album && req.query.album.length == 1)
+	{
+		albumNoSelect = `(SELECT number from track_tags WHERE track_id=id AND property='album' AND value=${sqlEscapeString(req.query.album[0])}) as album_no,`;
+
+		if(req.query.sort[0] == "^album_no")
+		{
+			orderBy = "ORDER BY album_no ASC";
 		}
-
-		if(req.query[key]){
-			whereClauses.push(buildWhereClause(prop, req.query[key], false))
-		}
-		else if(req.query[negKey]){
-			whereClauses.push(buildWhereClause(prop, req.query[negKey], true))
-		}
-	}
-
-	if(req.query.release_date)
-	{
-		let months = req.query.release_date.filter(x => x).map(sqlEscapeString).join(",");
-		whereClauses.push(`TO_CHAR(release_date, 'YYYY-MM') IN (${months}) `)
-	}
-	else if(req.query.x_release_date)
-	{
-		let months = req.query.x_release_date.filter(x => x).map(sqlEscapeString).join(",");
-		whereClauses.push(`TO_CHAR(release_date, 'YYYY-MM') NOT IN (${months}) `)
-	}
-
-	if(req.query.title){
-		let words = req.query.title
-			.filter(x => x)
-			.map(s => ("%" + sqlEscapeStringNoQuotes(s) + "%").toLowerCase())
-			.join("|");
-		whereClauses.push(`LOWER(title) SIMILAR TO '${words}'`);
-	}
-
-
-	if(req.query.status && userID)
-	{
-		whereClauses.push(buildStatusClause(userID, req.query.status, false))
-	}
-	else if(req.query.x_status && userID)
-	{
-		whereClauses.push(buildStatusClause(userID, req.query.x_status, true))
-	}
-
-
-	if(whereClauses.length)
-	{
-		whereClause = "WHERE " + whereClauses.join(" AND ") + " ";
 	}
 
 	let query = `
@@ -280,13 +229,12 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='album') as album,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='tag') as tag,
 			(SELECT COALESCE(value, '') from track_tags WHERE track_id=id and property='pl') as pl,
+			${albumNoSelect}
 			(SELECT value FROM user_flags WHERE track_id=id AND user_id=$1 AND flag='status') as status
 		FROM tracks 
 		${whereClause}
-		ORDER BY release_date DESC
+		${orderBy}
 		LIMIT ${PAGE_COUNT} OFFSET ${offset}`;
-
-	//console.log(query);
 
 	let {rows} = await db.query(query,[userID]);
 	let countRequest = await db.query(`SELECT COUNT(*) as count FROM tracks ${whereClause}`,[]);
@@ -294,6 +242,30 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	res.json({rows, pages: Math.ceil(countRequest.rows[0].count/PAGE_COUNT)});
 });
 
+/*app.get("/api/album/*", queryProcessing, async(req,res) =>{
+
+	let albumName = req.params[0];
+	req.query.album = albumName;
+
+	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","album","genre","pl","tag","status"]))
+	let query = `
+		SELECT id, title, release_date,
+			(SELECT number from track_tags WHERE track_id=id and property='album') as no,
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='artist') as artist,
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='featured artist') as featured_artist, 
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='hyperlink') as hyperlink,
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='genre') as genre,
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='tag') as tag,
+			(SELECT COALESCE(value, '') from track_tags WHERE track_id=id and property='pl') as pl,
+			(SELECT value FROM user_flags WHERE track_id=id AND user_id=$1 AND flag='status') as status
+		FROM tracks 
+		${whereClause}
+		ORDER BY no ASC`;
+
+	let {rows} = await db.query(query);
+
+	res.json(rows);
+})*/
 
 app.get("/api/history/track/*", async(req,res) =>
 {
@@ -320,8 +292,14 @@ app.get('/api/history', async(req,res) =>
 		LIMIT ${PAGE_COUNT} OFFSET ${offset}`
 	, []);
 
-	let response = rows || {status: 400};
-	res.json(response);
+	let countRequest = await db.query(`SELECT COUNT(*) as count FROM track_history`,[]);
+
+	if(!rows){
+		res.json({status: 400});
+		return;
+	}
+
+	res.json({rows, pages: Math.ceil(countRequest.rows[0].count/PAGE_COUNT), status:200});
 })
 
 
@@ -596,7 +574,99 @@ app.put("/api/setUserFlag", processJSON, auth(PERM.USER_FLAGS), async (req, res)
 
 } )
 
-function buildWhereClause(property, valueList, negate)
+
+async function buildWhereClause(req, allowedFilters)
+{
+	let userID ="";
+
+	if(req.query.session)
+	{
+		userID = (await getSession(req)).user_id;
+	}
+
+	let session = req.query.session;
+
+	let whereClause = "";
+	let whereClauses = [];
+
+	let simpleFilters = ["artist","featured_artist","album","genre","pl","tag"];
+	
+	for(let key of simpleFilters)
+	{
+		let negKey = "x_" + key;
+		let prop = key;
+
+		if(key=="featured_artist")
+		{
+			prop = "featured artist";
+		}
+
+		if(!allowedFilters.has(key))
+		{
+			continue;
+		}
+
+		if(req.query[key])
+		{
+			whereClauses.push(buildWhereClausePart(prop, req.query[key], false))
+		}
+		else if(req.query[negKey])
+		{
+			whereClauses.push(buildWhereClausePart(prop, req.query[negKey], true))
+		}
+	}
+
+
+	if(allowedFilters.has("release_date"))
+	{
+		if(req.query.release_date)
+		{
+			let months = req.query.release_date.filter(x => x).map(sqlEscapeString).join(",");
+			whereClauses.push(`TO_CHAR(release_date, 'YYYY-MM') IN (${months}) `)
+		}
+		else if(req.query.x_release_date)
+		{
+			let months = req.query.x_release_date.filter(x => x).map(sqlEscapeString).join(",");
+			whereClauses.push(`TO_CHAR(release_date, 'YYYY-MM') NOT IN (${months}) `)
+		}
+	}
+
+	if(allowedFilters.has("title"))
+	{
+		if(req.query.title)
+		{
+			let words = req.query.title
+				.filter(x => x)
+				.map(s => ("%" + sqlEscapeStringNoQuotes(s) + "%").toLowerCase())
+				.join("|");
+			whereClauses.push(`LOWER(title) SIMILAR TO '${words}'`);
+		}
+	}
+
+	if(allowedFilters.has("status"))
+	{
+		if(req.query.status && userID)
+		{
+			whereClauses.push(buildStatusClause(userID, req.query.status, false))
+		}
+		else if(req.query.x_status && userID)
+		{
+			whereClauses.push(buildStatusClause(userID, req.query.x_status, true))
+		}
+	}
+	
+
+
+	if(whereClauses.length)
+	{
+		return "WHERE " + whereClauses.join(" AND ") + " ";
+	}
+	else{
+		return "";
+	}
+}
+
+function buildWhereClausePart(property, valueList, negate)
 {
 	let valueListNoNulls = valueList.filter(x => x).map(sqlEscapeString).join(",");
 	let hasBlank = valueList.filter(x => !x).length > 0;
@@ -622,7 +692,6 @@ function buildWhereClause(property, valueList, negate)
 		}
 
 		return clauses[0];
-
 	}
 	else
 	{
