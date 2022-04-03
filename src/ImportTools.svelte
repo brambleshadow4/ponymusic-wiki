@@ -13,19 +13,33 @@
 <h3>Source code</h3>
 <div><textarea  rows="10" bind:this={source}>{
 `url = encodeURIComponent(window.location);
+
 if(url.indexOf("youtube.com") > -1){
-	title = encodeURIComponent(document.getElementsByClassName('title ytd-video-primary-info-renderer')[0].children[0].innerHTML);
-	date = encodeURIComponent(document.getElementById('info-strings').getElementsByTagName('yt-formatted-string')[0].innerHTML);
-	artist = encodeURIComponent(document.getElementById("text-container").getElementsByTagName('a')[0].innerHTML);
-}
-if (url.indexOf("bandcamp.com") > -1){
-	title = encodeURIComponent(document.getElementsByClassName('trackTitle')[0].innerHTML.trim());
-	date = encodeURIComponent(document.getElementsByClassName("tralbum-credits")[0].innerHTML.trim());
-	artistSpanLinks = document.getElementsByClassName("albumTitle")[0].getElementsByTagName('a');
-	artist = encodeURIComponent(artistSpanLinks[artistSpanLinks.length-1].innerHTML);
+	title = document.getElementsByClassName('title ytd-video-primary-info-renderer')[0].children[0].innerHTML;
+	date = document.getElementById('info-strings').getElementsByTagName('yt-formatted-string')[0].innerHTML;
+	artist = document.getElementsByTagName("ytd-video-owner-renderer")[0].getElementsByTagName('a')[1].innerHTML;
 }
 
-x = window.open(\`https://ponymusic.wiki/track/new?title=\${title}&date=\${date}&artist=\${artist}&url=\${url}\`,"_blank");`
+if (url.indexOf("bandcamp.com") > -1){
+	title = document.getElementsByClassName('trackTitle')[0].innerHTML.trim();
+	date = document.getElementsByClassName("tralbum-credits")[0].innerHTML.trim();
+	artistSpanLinks = document.getElementsByClassName("albumTitle")[0].getElementsByTagName('a');
+	artist = artistSpanLinks[artistSpanLinks.length-1].innerHTML;
+}
+if (url.indexOf("soundcloud.com") > -1) {
+	title = document.getElementsByClassName('soundTitle__title')[0].getElementsByTagName('span')[0].innerHTML;
+	date = document.getElementsByClassName('relativeTime')[0].dateTime.substr(0,10);
+	artist = document.getElementsByClassName('soundTitle__username')[0].getElementsByTagName('a')[0].innerHTML.trim();
+}
+
+console.log('got this far');
+
+if(title){
+	title = encodeURIComponent(title);
+	artist = encodeURIComponent(artist);
+	date = encodeURIComponent(date);
+	x = window.open(\`https://ponymusic.wiki/track/new?title=\${title}&date=\${date}&artist=\${artist}&url=\${url}\`,"_blank");
+}`
 }</textarea></div>
 
 
