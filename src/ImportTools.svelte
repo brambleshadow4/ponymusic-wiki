@@ -32,8 +32,6 @@ if (url.indexOf("soundcloud.com") > -1) {
 	artist = document.getElementsByClassName('soundTitle__username')[0].getElementsByTagName('a')[0].innerHTML.trim();
 }
 
-console.log('got this far');
-
 if(title){
 	title = encodeURIComponent(title);
 	artist = encodeURIComponent(artist);

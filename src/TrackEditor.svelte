@@ -23,6 +23,7 @@
 	let errorMessage = "";
 	let duplicates = [];
 	let nameOverrides = {};
+	let scrapedTitle = "";
 
 	export let id = "new";
 	export let mode = 0;
@@ -139,6 +140,12 @@
 	function addTag(tag)
 	{
 		if(!tag.value){ return; }
+
+		// skip if tag is already added
+		if(track.tags.filter(x => x.value == tag.value && x.property == tag.property && x.number == tag.number).length)
+		{
+			return;
+		}
 
 		if(tag.property == "pl")
 		{
@@ -349,6 +356,17 @@
 
 		if(params['url'])
 		{
+
+			if(params.url.indexOf("youtube.com") == -1)
+			{
+				let qmark = params.url.indexOf("?");
+				if(qmark > -1)
+				{
+					params.url = params.url.substring(0,qmark);
+				}
+				
+			}
+
 			addTag({property: "hyperlink", value: params['url']});
 		}
 
@@ -359,6 +377,7 @@
 			{
 				let match = /(?:(.*)?(?:-|–))?(.*)/.exec(params['title']);
 
+				scrapedTitle = params['title'].trim();
 				let artists = (match[1] || "").trim();
 				let parsedTitle = match[2].trim();
 				
@@ -430,6 +449,8 @@
 				addTag(tag);
 			}
 		}
+
+		findDuplicates();
 	}
 
 	/**
@@ -582,10 +603,17 @@
 					<span class="label">Title:</span>
 					<input id='name' type="text" maxlength="255" bind:this={nameInput} on:input={findDuplicates} value={track.title}/>
 				</div>
+				
 				<div class='field'>
 					<span class="label">Released:</span>
 					<input id='release-date' type="date" bind:this={dateInput} value={track.release_date.substring(0,10)}/>
 				</div>
+
+				{#if scrapedTitle}
+					
+					<div><span class="label">Scraped Title:</span></div>
+					<div><input id='name' type="text" readonly maxlength="255" value={scrapedTitle}/></div>
+				{/if}
 			</div>
 		{:else if mode ==2}
 			<TrackHistory id={id} on:reloadtrack={load}/>
