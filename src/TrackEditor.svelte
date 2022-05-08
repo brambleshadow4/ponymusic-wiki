@@ -356,15 +356,30 @@
 
 		if(params['url'])
 		{
+			let qmark = params.url.indexOf("?");
 
-			if(params.url.indexOf("youtube.com") == -1)
+
+			if(params.url.indexOf("youtube.com") > -1)
 			{
-				let qmark = params.url.indexOf("?");
+				let urlParams = params.url.substring(qmark+1).split("&");
+				let urlParamsDic = {};
+				for(let pair of urlParams)
+				{
+					let [key, value] = pair.split("=");
+					urlParamsDic[key] = value;
+				}
+
+				if(urlParamsDic.v)
+				{
+					params.url = params.url.substring(0,qmark+1) + "v=" + urlParamsDic.v;
+				}
+			}
+			else
+			{
 				if(qmark > -1)
 				{
 					params.url = params.url.substring(0,qmark);
 				}
-				
 			}
 
 			addTag({property: "hyperlink", value: params['url']});
@@ -372,12 +387,16 @@
 
 		if(params['title'])
 		{
+			let title = params['title'].replace(/<\/?(span|a)[^>]*>/g,"");
+
 			let parseRule = localStorage.parseRule;
+
 			if(parseRule == "1" || parseRule == undefined)
 			{
-				let match = /(?:(.*)?(?:-|–))?(.*)/.exec(params['title']);
 
-				scrapedTitle = params['title'].trim();
+				let match = /(?:(.*)?(?:-|–))?(.*)/.exec(title);
+
+				scrapedTitle = title.trim();
 				let artists = (match[1] || "").trim();
 				let parsedTitle = match[2].trim();
 				
@@ -396,7 +415,6 @@
 				match = /.*\(fe?a?t?\. (.*)\)/.exec(parsedTitle);
 				if(match && match[1])
 				{
-					console.log(match)
 					artists = match[1].split(/,|&/g).map(x => x.trim()).filter(x => x);
 
 					for(let artist of artists)
@@ -408,7 +426,7 @@
 			}
 			if(parseRule == "0")
 			{
-				track.title = params['title']
+				track.title = title;
 			}
 		}
 

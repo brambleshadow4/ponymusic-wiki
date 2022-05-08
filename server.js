@@ -436,7 +436,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		let value = tag.value;
 
 		if (!tag.property || !tag.value || value.length == 0 || value.length > MAX_STRING_LENGTH || validProperties.indexOf(tag.property) == -1){
-			res.json({status:400, error: "Invalid tag " + JSON.stringinfy(tag) });
+			res.json({status:400, error: "Invalid tag " + JSON.stringify(tag) });
 			return;
 		}
 
@@ -534,7 +534,7 @@ app.post("/api/findDuplicates", processJSON, async (req,res) =>
 		let value = tag.value.trim();
 
 		if (!tag.property || !tag.value || value.length == 0 || value.length > MAX_STRING_LENGTH || validProperties.indexOf(tag.property) == -1){
-			res.json({status:400, error: "Invalid tag " + JSON.stringinfy(tag) });
+			res.json({status:400, error: "Invalid tag " + JSON.stringify(tag) });
 			return;
 		}
 	}
