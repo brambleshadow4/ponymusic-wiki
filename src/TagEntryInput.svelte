@@ -111,8 +111,7 @@
 	{
 		if(e.key == "Enter")
 		{
-
-			let text = e.target.value.trim();
+			let text = ref.value.trim();
 			if(!enumMode)
 			{
 				value = text
