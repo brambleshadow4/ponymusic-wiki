@@ -3,10 +3,18 @@ CREATE TABLE IF NOT EXISTS tracks (
 	title VARCHAR(255) NOT NULL,
 	release_date DATE NOT NULL,
 	locked BOOLEAN NOT NULL,
-	ogcache JSONB
+	ogcache JSONB NOT NULL,
+	titlecache VARCHAR(511) NOT NULL
 );
 
 -- ALTER TABLE tracks ADD COLUMN ogcache JSONB
+
+--
+-- UPDATE tracks
+-- SET titlecache = substring(title || ' - ' || (
+-- 	SELECT COALESCE(string_agg(value, ', '), '') from track_tags WHERE track_id=id and property='artist'
+-- ) from 0 for 512)
+-- WHERE titlecache IS NULL
 
 CREATE TABLE IF NOT EXISTS track_tags(
 	track_id INTEGER NOT NULL,

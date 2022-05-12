@@ -389,12 +389,45 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	var info = {};
 	let deleted = false;
 
+	let titleCache = "";
 
-	// validate tags 
+	let titleCacheArtists = [];
+
+	// validate tags
+
+	for(tag of data.tags)
+	{	
+		let value = tag.value;
+
+		if (!tag.property || !tag.value || value.length == 0 || value.length > MAX_STRING_LENGTH || validProperties.indexOf(tag.property) == -1){
+			res.json({status:400, error: "Invalid tag " + JSON.stringify(tag) });
+			return;
+		}
+
+		if(tag.property == "artist")
+		{
+			titleCacheArtists.push(tag.value);
+		}
+
+		tag.value = trim2(tag.value);
+
+		// Use whatever existing casing is in the database for the tag value.
+		if(tag.property != "hyperlink")
+		{
+			let goodTag = await db.query("SELECT value FROM track_tags WHERE property=$1 and value=LOWER($2)", [tag.property, tag.value]);
+			if(goodTag.rows.length){
+				tag.value = goodTag.rows[0].value;
+			}
+		}
+	}
+
+	titleCache = (title + ' - ' + titleCacheArtists.join(", ")).substring(0,512);
+
+	// insert the track
 
 	if(id == "new")
 	{
-		let x = await db.query("INSERT INTO tracks (title, release_date, locked, ogcache) VALUES ($1, $2, false, $3) RETURNING id", [title, release_date, ogcache]);
+		let x = await db.query("INSERT INTO tracks (title, release_date, locked, ogcache, titlecache) VALUES ($1, $2, false, $3, $4) RETURNING id", [title, release_date, ogcache, titleCache]);
 
 		if(x.err)
 		{
@@ -417,7 +450,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		let {rows} = await db.query("SELECT * FROM tracks WHERE id=$1", [id]);
 		if(rows.length)
 		{
-			info = await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3 WHERE id=$4", [title, release_date, ogcache, id]);	
+			info = await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3, titlecache=$5 WHERE id=$4", [title, release_date, ogcache, id, titleCache]);	
 			if(info.err)
 			{ 
 				res.json({status:400, error: "Error code 2"});
@@ -427,30 +460,14 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		else
 		{
 			// restoring a deleted track
-			await db.query("INSERT INTO tracks (id, title, release_date, locked, ogcache) VALUES ($1, $2, $3, false, $4)", [id, title, release_date, ogcache]);
+			await db.query("INSERT INTO tracks (id, title, release_date, locked, ogcache, titlecache) VALUES ($1, $2, $3, false, $4, $5)", [id, title, release_date, ogcache, titleCache]);
 		}
 	}
 
-	for(tag of data.tags)
-	{	
-		let value = tag.value;
 
-		if (!tag.property || !tag.value || value.length == 0 || value.length > MAX_STRING_LENGTH || validProperties.indexOf(tag.property) == -1){
-			res.json({status:400, error: "Invalid tag " + JSON.stringify(tag) });
-			return;
-		}
+	
 
-		tag.value = trim2(tag.value);
-
-		// Use whatever existing casing is in the database for the tag value.
-		if(tag.property != "hyperlink")
-		{
-			let goodTag = await db.query("SELECT value FROM track_tags WHERE property=$1 and value=LOWER($2)", [tag.property, tag.value]);
-			if(goodTag.rows.length){
-				tag.value = goodTag.rows[0].value;
-			}
-		}
-	}
+	// update tags
 
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
 
@@ -520,11 +537,12 @@ app.post("/api/findDuplicates", processJSON, async (req,res) =>
 	}
 
 
-	let info = await db.query("SELECT id FROM tracks WHERE LOWER(title)=LOWER($2) AND id !=$1", [data.id, title]);
+	let info = await db.query("SELECT id, titlecache FROM tracks WHERE LOWER(title)=LOWER($2) AND id !=$1", [data.id, title]);
 
-	if(info.rows.length)
+
+	for(row of info.rows)
 	{
-		duplicates.push({value: title, duplicates: info.rows.map(x => x.id)});
+		duplicates.push({value: title, id: row.id, name: row.titlecache});
 	}
 
 	// hyperlink tag
@@ -541,11 +559,11 @@ app.post("/api/findDuplicates", processJSON, async (req,res) =>
 
 	for(tag of data.tags)
 	{
-		info = await db.query("SELECT track_id FROM track_tags WHERE property='hyperlink' AND value=$1 AND track_id !=$2", [tag.value, data.id]);
+		info = await db.query("SELECT a.track_id as id, b.titlecache as name FROM track_tags as a LEFT JOIN tracks as b ON a.track_id=b.id WHERE property='hyperlink' AND value=$1 AND track_id !=$2", [tag.value, data.id]);
 
-		if(info.rows.length)
+		for(row of info.rows)
 		{
-			duplicates.push({value: tag.value, duplicates: info.rows.map(x => x.track_id)});
+			duplicates.push({value: tag.value, id: row.id, name: row.name});
 		}
 	}
 

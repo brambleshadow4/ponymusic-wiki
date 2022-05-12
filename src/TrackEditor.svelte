@@ -695,9 +695,9 @@
 				
 				{#if duplicates.length}
 					<div class="tag-warnings">
-						<div>This track has the same title/hyperlink as other tracks. Please make sure it is not a duplicate of the following:<br><br></div>
+						<div>This track has the same title/hyperlink as other tracks. Please make sure it is not a duplicate of the following:</div>
 						{#each duplicates as item}
-							<div>{item.value}: {#each item.duplicates as num}<a target="_blank" href={"/track/" + num}>{num}</a> {/each}</div>
+							<div><a target="_blank" href={"/track/" + item.id}>{item.name}</a></div>
 						{/each}
 					</div>
 				{/if}

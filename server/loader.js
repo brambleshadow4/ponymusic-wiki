@@ -90,7 +90,7 @@ async function doExport()
 	let textArr = [];
 
 	textArr.push(await exportTable("users", {id: "string", name: "string", role: "number", avatar: "string"}));
-	textArr.push(await exportTable("tracks", {id: "number", title: "string", release_date: "date", locked: "bool", ogcache: "json"}));
+	textArr.push(await exportTable("tracks", {id: "number", title: "string", release_date: "date", locked: "bool", ogcache: "json", titlecache:"string"}));
 	textArr.push(await exportTable("track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"}));
 	textArr.push(await exportTable("track_history", {track_id: "number", user_id: "string", value:"json", timestamp: "date"}));
 	textArr.push(await exportTable("user_flags", {track_id: "number", user_id: "string", flag:"string", value:"number"}));
