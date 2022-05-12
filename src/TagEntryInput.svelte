@@ -29,21 +29,22 @@
 		{/each}
 		</div>
 	{/if}
-
 	
 </div>
-
-
 
 <script>
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
 	export let property = "";
-	export let value = "";
+	export let value = ""; //string or obj
+	export let displayText = "";
+
 	export let number = undefined;
 	export let ref = null;
 	let numberInput = null;
+
+	$: enumMode = ["cover","remix"].indexOf(property) != -1;
 
 
 	let cool = false; // can open option list
@@ -57,25 +58,35 @@
 	{
 		canOpenOptionList();
 
-		value = e.target.value; 
+		displayText = e.target.value;
 
-		if(value == "" || property == "hyperlink"){
+		if(!enumMode){
+			value = displayText;
+		}
+
+		if(displayText == "" || property == "hyperlink"){
 			options = [];
 			return;
-		}
+		};
+
+		console.log({
+			property,
+			value,
+		})
 
 		let data = await fetch("/api/tagAutofill", {
 			method: "POST",
 			headers: {"Content-Type": "text/json"},
 			body: JSON.stringify({
 				property,
-				value,
+				value: displayText,
 			})	
 		});
 
 		let matches = await data.json();
 		options = matches;
 
+		console.log(matches);
 	}
 
 	async function onNumberInput(e)
@@ -100,8 +111,14 @@
 	{
 		if(e.key == "Enter")
 		{
-			value = value.trim();
-			let tag = {property, value};
+
+			let text = e.target.value.trim();
+			if(!enumMode)
+			{
+				value = text
+			}
+
+			let tag = {property, value, text};
 
 			if(!isNaN(number))
 			{
@@ -122,7 +139,7 @@
 	{
 		inOptionList = false; 
 
-		value = tag.text;
+		value = tag.value;
 
 		if(tag.property == "album")
 		{
@@ -149,6 +166,7 @@
 	{
 		position: relative;
 		display: inline-block;
+		vertical-align: middle;
 	}
 
 	.auto-complete

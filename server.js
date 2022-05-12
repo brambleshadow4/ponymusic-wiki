@@ -184,6 +184,29 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 		var {rows, err} = await db.query("SELECT DISTINCT value FROM track_tags WHERE (property = 'artist' OR property = 'featured artist') and LOWER(value) LIKE $1 ORDER BY value ASC", [pattern]);
 		
 	}
+	else if(property == "cover" || property == "remix")
+	{
+		console.log("here");
+
+		console.log(req.body.value);
+
+		var words = req.body.value.toLowerCase().split(/\s/g).filter(x => x)
+			.map(x => "LOWER(titlecache) LIKE '%" + sqlEscapeStringNoQuotes(x) + "%'");
+		let queryText = words.join(" AND ");
+
+		console.log("SELECT id, titlecache FROM tracks WHERE titlecache LIKE " + queryText);
+
+		var {rows} = await db.query("SELECT id, titlecache FROM tracks WHERE " + queryText);
+
+		let strippedRows = rows.map(x => {return {text: x.titlecache, value: x.id, property}});
+
+		
+		console.log(strippedRows);
+
+		res.json(strippedRows);
+
+		return; 
+	}
 	else {
 		var {rows} = await db.query("SELECT DISTINCT value FROM track_tags WHERE property = $1 and LOWER(value) LIKE $2 ORDER BY value ASC", [property, pattern]);
 	}
@@ -549,9 +572,14 @@ app.post("/api/findDuplicates", processJSON, async (req,res) =>
 
 	for(tag of data.tags)
 	{
-		let value = tag.value.trim();
+		if (!tag.value || typeof(tag.value) != "string") {
+			res.json({status:400, error: "Invalid tag " + JSON.stringify(tag) });
+			return;
+		}
 
-		if (!tag.property || !tag.value || value.length == 0 || value.length > MAX_STRING_LENGTH || validProperties.indexOf(tag.property) == -1){
+		value = tag.value.trim();
+
+		if (!tag.property || value.length == 0 || value.length > MAX_STRING_LENGTH || validProperties.indexOf(tag.property) == -1){
 			res.json({status:400, error: "Invalid tag " + JSON.stringify(tag) });
 			return;
 		}

@@ -26,10 +26,10 @@
 			return text;
 		}
 		if(tag.property == "tag"){
-			return tag.value;
+			return tag.text;
 		}
 
-		return tag.property + ":" + tag.value;
+		return tag.property + ":" + tag.text;
 		
 	}	
 
@@ -69,12 +69,26 @@
 
 		white-space:nowrap;
 		display: inline-block;
+		font-size: 0;
+
+		vertical-align: middle;
+	}
+
+	.tagtext{
+		max-width: 500px;
+		display: inline-block;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		font-size: 16px;
+		vertical-align: middle;
 	}
 
 	a{line-height: 35px;}
 
 	.remove-button{
 		cursor: pointer;
+		font-size: 16px;
+		vertical-align: middle;
 	}
 
 	.blue{
@@ -110,5 +124,5 @@
 {#if tag.property == "hyperlink"}
 	<a href={tag.value}>{tag.value.length > 30 ? tag.value.substring(0,27) + "..." : tag.value}</a> {#if canRemove}<span class='remove-button' on:click={remove}>❌</span>{/if}
 {:else}
-	<span class={tagClass}>{text}{#if tag.number}({tag.number}){/if}{#if canRemove}<span class='remove-button' on:click={remove}>❌</span>{/if}</span>
+	<span class={tagClass}><span class="tagtext" title={text}>{text}</span>{#if tag.number}({tag.number}){/if}{#if canRemove}<span class='remove-button' on:click={remove}>❌</span>{/if}</span>
 {/if}

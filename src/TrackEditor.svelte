@@ -162,6 +162,9 @@
 		track.tags.push(tag);
 		track.tags.sort(tagComp);
 		track.tags = track.tags;
+
+		console.log(track.tags);
+
 		updateHasProperty();
 
 		if(tag.property == "hyperlink")
@@ -679,7 +682,14 @@
 					<button class={btnClass(hasProp, "artist")} on:click={addTagEntryField("artist")}>+ Artist</button>
 					<button
 						class={btnClass(hasProp, "featured artist")}
-						on:click={addTagEntryField("featured artist")}>+ Featured Artist</button></div>
+						on:click={addTagEntryField("featured artist")}>+ Featured Artist</button>
+					<button
+						class=""
+						on:click={addTagEntryField("cover")}>+ Cover</button>
+					<button
+						class=""
+						on:click={addTagEntryField("remix")}>+ Remix</button>
+				</div>
 				<div>
 					<button class={btnClass(hasProp, "pl","2")} on:click={()=>{addTag({property:"pl",value:"2"})}}>Obvious Refs</button>
 					<button class={btnClass(hasProp, "pl","1")} on:click={()=>{addTag({property:"pl",value:"1"})}}>Subtle Refs</button>
