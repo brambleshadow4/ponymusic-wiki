@@ -237,7 +237,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 
 	let query = `
 		SELECT id, title, release_date,
-			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='artist') as artist,
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and (property='artist' or property='original artist')) as artist,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='featured artist') as featured_artist, 
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='hyperlink') as hyperlink,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='genre') as genre,
@@ -250,6 +250,8 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 		${whereClause}
 		${orderBy}
 		LIMIT ${PAGE_COUNT} OFFSET ${offset}`;
+
+	//console.log(query);
 
 	let {rows} = await db.query(query,[userID]);
 	let countRequest = await db.query(`SELECT COUNT(*) as count FROM tracks ${whereClause}`,[]);
@@ -769,11 +771,17 @@ function buildWhereClausePart(property, valueList, negate)
 
 	let clauses = [];
 
+	let propertyClause = `property='${property}'`;
+	if(property == "artist")
+	{
+		propertyClause = `(property='artist' OR property='original artist')`;
+	}
+
 	if(negate)
 	{
 		if(valueListNoNulls.length)
 		{
-			clauses.push(`id NOT IN (SELECT track_id FROM track_tags WHERE value IN (${valueListNoNulls}) AND property='${property}')`)
+			clauses.push(`id NOT IN (SELECT track_id FROM track_tags WHERE value IN (${valueListNoNulls}) AND ${propertyClause})`)
 		}
 
 		if(hasBlank)
@@ -793,7 +801,7 @@ function buildWhereClausePart(property, valueList, negate)
 	{
 		if(valueListNoNulls.length)
 		{
-			clauses.push(`id IN (SELECT track_id FROM track_tags WHERE value IN (${valueListNoNulls}) AND property='${property}')`)
+			clauses.push(`id IN (SELECT track_id FROM track_tags WHERE value IN (${valueListNoNulls}) AND ${propertyClause})`)
 		}
 
 		if(hasBlank)
