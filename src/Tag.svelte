@@ -4,6 +4,8 @@
 
 	export let canRemove = false;
 
+	$: canRemoveCalc = canRemove && (tag.property != "original artist");
+
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
@@ -41,6 +43,7 @@
 				return "blue";
 			case "artist":
 			case "featured artist":
+			case "original artist":
 				return "indigo";
 			case "genre":
 				return "tan";
@@ -48,6 +51,9 @@
 				return "pink";
 			case "tag":
 				return "green";
+			case "remix":
+			case "cover":
+				return "yellow";
 
 		}
 		return "";
@@ -121,10 +127,15 @@
 		background-color: #d0e29c;
 		border-color: #b3cf5d;
 	}
+	.yellow{
+		color: #998e1a;
+		background-color: #ede697;
+		border-color: #dcce33;
+	}
 </style>
 
 {#if tag.property == "hyperlink"}
-	<a href={tag.value}>{tag.value.length > 30 ? tag.value.substring(0,27) + "..." : tag.value}</a> {#if canRemove}<span class='remove-button' on:click={remove}>❌</span>{/if}
+	<a href={tag.value}>{tag.value.length > 30 ? tag.value.substring(0,27) + "..." : tag.value}</a> {#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}
 {:else}
-	<span class={tagClass}><span class="tagtext" title={text + (tag.number != undefined ? "(" + tag.number + ")" : "")}>{text}{#if tag.number}({tag.number}){/if}</span>{#if canRemove}<span class='remove-button' on:click={remove}>❌</span>{/if}</span>
+	<span class={tagClass}><span class="tagtext" title={text + (tag.number != undefined ? "(" + tag.number + ")" : "")}>{text}{#if tag.number}({tag.number}){/if}</span>{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}</span>
 {/if}

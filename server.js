@@ -14,7 +14,7 @@ const {PERM, ROLE, auth, reqHasPerm, getSession} = require("./server/auth.js");
 const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
 
 
-const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl"];
+const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl","cover","remix","original artist"];
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -186,22 +186,13 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 	}
 	else if(property == "cover" || property == "remix")
 	{
-		console.log("here");
-
-		console.log(req.body.value);
-
 		var words = req.body.value.toLowerCase().split(/\s/g).filter(x => x)
 			.map(x => "LOWER(titlecache) LIKE '%" + sqlEscapeStringNoQuotes(x) + "%'");
 		let queryText = words.join(" AND ");
 
-		console.log("SELECT id, titlecache FROM tracks WHERE titlecache LIKE " + queryText);
-
 		var {rows} = await db.query("SELECT id, titlecache FROM tracks WHERE " + queryText);
 
-		let strippedRows = rows.map(x => {return {text: x.titlecache, value: x.id, property}});
-
-		
-		console.log(strippedRows);
+		let strippedRows = rows.map(x => {return {text: x.titlecache, value: "" + x.id, property}});
 
 		res.json(strippedRows);
 
@@ -299,6 +290,22 @@ app.get("/api/history/track/*", async(req,res) =>
 		`SELECT track_history.*, users.name FROM track_history LEFT JOIN users ON user_id = id WHERE track_id=$1 ORDER BY timestamp DESC LIMIT ${PAGE_COUNT}`
 	, [id]);
 
+	for(let row of rows)
+	{
+		for(let tag of row.value.tags)
+		{
+			if(tag.property == "remix" || tag.property == "cover")
+			{
+				let remixRows = (await db.query("SELECT titlecache FROM tracks WHERE id=$1", [tag.value])).rows;
+				tag.text = remixRows.length ? remixRows[0].titlecache : "Deleted track";
+			}
+			else
+			{
+				tag.text = tag.value;
+			}
+		}
+	}
+
 	let response = rows || {status: 400};
 	res.json(response);
 
@@ -317,6 +324,7 @@ app.get('/api/history', async(req,res) =>
 	, []);
 
 	let countRequest = await db.query(`SELECT COUNT(*) as count FROM track_history`,[]);
+
 
 	if(!rows){
 		res.json({status: 400});
@@ -352,12 +360,26 @@ app.get("/api/track/*", async(req,res) =>
 
 	for(tag of tagRows)
 	{
-		if(!isNaN(tag.number)) {
-			response.tags.push({property: tag.property, value: tag.value, number: tag.number});
+		let newTag = {property: tag.property, value: tag.value};
+
+		if(!isNaN(tag.number))
+		{
+			newTag.number = tag.number;
 		}
-		else {
-			response.tags.push({property: tag.property, value: tag.value});
+
+
+		if(tag.property == "cover" || tag.property == "remix")
+		{
+			let remixRows = (await db.query("SELECT titlecache FROM tracks WHERE id=$1", [tag.value])).rows;
+			newTag.text = remixRows.length ? remixRows[0].titlecache : "Deleted track";
 		}
+		else
+		{
+			newTag.text = tag.value;
+		}
+		
+
+		response.tags.push(newTag);
 	}
 
 	if(!response.status){
@@ -418,6 +440,8 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 	// validate tags
 
+	data.tags = data.tags.filter(x => x && x.property && x.value && !(x.property == "original artist"));
+
 	for(tag of data.tags)
 	{	
 		let value = tag.value;
@@ -426,6 +450,8 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 			res.json({status:400, error: "Invalid tag " + JSON.stringify(tag) });
 			return;
 		}
+
+		
 
 		if(tag.property == "artist")
 		{
@@ -485,19 +511,19 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 			// restoring a deleted track
 			await db.query("INSERT INTO tracks (id, title, release_date, locked, ogcache, titlecache) VALUES ($1, $2, $3, false, $4, $5)", [id, title, release_date, ogcache, titleCache]);
 		}
-	}
-
-
-	
+	}	
 
 	// update tags
 
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
 
-	for(tag of data.tags)
+	let originalArtists = new Set();
+
+	for(let tag of data.tags)
 	{
-		if(!isNaN(tag.number))
+		if(typeof tag.number == "number")
 		{
+
 			info = await db.query("INSERT INTO track_tags (track_id, property, value, number) VALUES ($1, $2, $3, $4)", [id, tag.property, tag.value, tag.number]);
 			if(info.err){ 
 				res.json({status:400, error: "Error code 3"});
@@ -506,11 +532,36 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		}
 		else
 		{
-			info = await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, $2, $3)", [id, tag.property, tag.value,]);
+			info = await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, $2, $3)", [id, tag.property, tag.value]);
+
+
 			if(info.err){ 
 				res.json({status:400, error: "Error code 4"});
 				return;
 			}	
+
+			if(tag.property == "cover" || tag.property == "remix")
+			{
+				let originalArtistRows = (await db.query("SELECT value FROM track_tags WHERE track_id=$1 AND property='artist'", [tag.value])).rows
+
+				if(originalArtistRows && originalArtistRows.length)
+				{
+					for(let row of originalArtistRows)
+					{
+						if(!originalArtists.has(row.value))
+						{
+							originalArtists.add(row.value);
+
+							info = await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, 'original artist', $2)", [id, row.value]);
+
+							if(info.err){ 
+								res.json({status:400, error: "Error 6"});
+								return;
+							}	
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -559,9 +610,7 @@ app.post("/api/findDuplicates", processJSON, async (req,res) =>
 		data.id = -1;
 	}
 
-
 	let info = await db.query("SELECT id, titlecache FROM tracks WHERE LOWER(title)=LOWER($2) AND id !=$1", [data.id, title]);
-
 
 	for(row of info.rows)
 	{

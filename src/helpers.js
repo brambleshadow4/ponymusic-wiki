@@ -20,8 +20,12 @@ function propertyOrder(prop){
 		case "hyperlink": return 0;
 		case "artist": return 1;
 		case "featured artist": return 2;
-		case "pl": return 3;
-		default: return 4;
+		case "original artist": return 3;
+		case "pl": return 4;
+		// default
+		case "cover": return 6;
+		case "remix": return 7;
+		default: return 5;
 	}
 }
 
