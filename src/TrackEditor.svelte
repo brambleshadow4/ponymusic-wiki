@@ -385,7 +385,7 @@
 				}
 			}
 
-			addTag({property: "hyperlink", value: params['url']});
+			addTag({property: "hyperlink", value: params['url'], text: params['url']});
 		}
 
 		if(params['title'])
@@ -482,7 +482,7 @@
 		let trueName = nameOverrides[artistName] != undefined ? nameOverrides[artistName] : artistName;
 		if(trueName)
 		{
-			addTag({property, value: trueName});
+			addTag({property, value: trueName, text: trueName});
 		}
 	}
 </script>
