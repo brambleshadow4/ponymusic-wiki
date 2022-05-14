@@ -236,7 +236,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 
 	if(req.query.album && req.query.album.length == 1)
 	{
-		albumNoSelect = `(SELECT number from track_tags WHERE track_id=id AND property='album' AND value=${sqlEscapeString(req.query.album[0])}) as album_no,`;
+		albumNoSelect = `(SELECT number from track_tags WHERE track_id=id AND property='album' AND value=${sqlEscapeString(req.query.album[0])} LIMIT 1) as album_no,`;
 
 		if(req.query.sort && req.query.sort[0] == "^album_no")
 		{
