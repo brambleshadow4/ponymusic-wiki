@@ -7,6 +7,8 @@
 	export let page = [0,1];
 	export let selectedId = -1;
 
+	export let total = 0;
+
 	export let rowButtons = [];
 
 	const RESIZE_MARGIN = 10;
@@ -323,6 +325,6 @@
 
 <div class='pager'>
 	<a href="#next" class={'decPage' + (page[0]>0 ? "" : " hidden")} on:click={() => dispatch("pagechange", page[0]-1)}>&lt;- Previous</a>
-	<span>Page {page[0]+1}/{page[1]}</span>
+	<span>{#if total}{total} Results • {/if}Page {page[0]+1}/{page[1]}</span>
 	<a href="#previous" class={'incPage' + (page[0]+1<page[1] ? "" : ' hidden')} on:click={() => dispatch("pagechange", page[0]+1)}>Next -></a>
 </div>

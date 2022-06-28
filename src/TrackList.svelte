@@ -14,6 +14,7 @@
 	let songs = [];
 	let data = [];
 	let page = [0,1];
+	let total = 0;
 
 	let loaded = false;
 
@@ -43,6 +44,7 @@
 		let response = await (await fetch("/api/view/tracks" + query)).json();
 		data = response.rows;
 		page = [page[0], response.pages];
+		total = response.total;
 		loaded = true;
 	}
 
@@ -157,6 +159,7 @@
 			columns={columnDefs}
 			data={data}
 			page={page}
+			total={total}
 			selectedId={selectedId}
 			rowButtons = {rowButtons}
 			on:pagechange={onPageChange} on:rowclick={openTrack} on:openFilter

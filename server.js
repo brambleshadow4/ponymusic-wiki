@@ -255,34 +255,10 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 
 	let {rows} = await db.query(query,[userID]);
 	let countRequest = await db.query(`SELECT COUNT(*) as count FROM tracks ${whereClause}`,[]);
+	let total = countRequest.rows[0].count;
 
-	res.json({rows, pages: Math.ceil(countRequest.rows[0].count/PAGE_COUNT)});
+	res.json({rows, pages: Math.ceil(total/PAGE_COUNT), total});
 });
-
-/*app.get("/api/album/*", queryProcessing, async(req,res) =>{
-
-	let albumName = req.params[0];
-	req.query.album = albumName;
-
-	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","album","genre","pl","tag","status"]))
-	let query = `
-		SELECT id, title, release_date,
-			(SELECT number from track_tags WHERE track_id=id and property='album') as no,
-			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='artist') as artist,
-			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='featured artist') as featured_artist, 
-			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='hyperlink') as hyperlink,
-			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='genre') as genre,
-			(SELECT COALESCE(string_agg(value, CHR(30)), '') from track_tags WHERE track_id=id and property='tag') as tag,
-			(SELECT COALESCE(value, '') from track_tags WHERE track_id=id and property='pl') as pl,
-			(SELECT value FROM user_flags WHERE track_id=id AND user_id=$1 AND flag='status') as status
-		FROM tracks 
-		${whereClause}
-		ORDER BY no ASC`;
-
-	let {rows} = await db.query(query);
-
-	res.json(rows);
-})*/
 
 app.get("/api/history/track/*", async(req,res) =>
 {
