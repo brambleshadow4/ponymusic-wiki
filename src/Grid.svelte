@@ -101,6 +101,30 @@
 		}
 	}
 
+	function getColVals(row, columnDef)
+	{
+		if(columnDef.transform)
+		{
+			if(columnDef.property)
+			{
+				return columnDef.transform(row[columnDef.property]);
+			}
+			else
+			{
+				return columnDef.transform(row);
+			}
+		}
+
+		if(columnDef.property)
+		{
+			return ("" + row[columnDef.property] || "").split("\x1E");
+		}
+		else
+		{
+			return "";
+		}
+	}
+
 	onMount(function()
 	{	
 		// set column's widths
@@ -285,18 +309,10 @@
 					<td class={"col" + i + " " + ((column.classFn && column.classFn(song)) || "")}>
 						{#if column.icon}
 							{#if song[column.property]}<img class='icon' src={column.printFn(song[column.property])} />{/if}
-						{:else if column.property == "*"}
-							{#if column.linkFn}
-								<a on:click={()=>column.linkFn(song)}>{column.printFn(song)}</a>
-							{:else}
-								{column.printFn(song)}
-							{/if}
-						{:else if column.printFn}
-							{column.printFn(song[column.property])}
 						{:else}
-							{#each (("" + song[column.property] || "").split("\x1E")) as item}
+							{#each getColVals(song, column) as item}
 								{#if column.linkTo}
-									<a class="multi-item" href={column.linkTo.replace("*",encodeURIComponent(item))}
+									<a class="multi-item" href={column.linkTo.replace("*", encodeURIComponent(item))}
 										on:click={(e)=>e.stopPropagation()}
 									>
 										{item}

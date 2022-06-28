@@ -113,3 +113,15 @@ export async function setUserFlag(trackId, flag, value)
 
 	return response.status;
 }
+
+
+export function plEnumText(s)
+{
+	switch(s)
+	{
+		case "2": return ["Obvious"];
+		case "1": return ["Subtle"];
+		case "0": return ["None"];
+		default: return [""];
+	}
+}

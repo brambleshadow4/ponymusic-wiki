@@ -15,16 +15,21 @@
 	let data = [];
 	let page = [0,1];
 	let pageTitle = "";
+	let total = 0;
+
+	let tab=0;
+
+	let artistName = "";
 
 	let loaded = false;
 
 	async function load(filters)
 	{	
-		console.log("loading album view")
+		console.log("loading artist view")
 
-		let albumName = decodeURIComponent(location.pathname.replace("/album/","").trim());
+		artistName = decodeURIComponent(location.pathname.replace("/artist/","").trim());
 
-		pageTitle = "Album: " + albumName;
+		pageTitle = "Artist: " + artistName;
 
 		loaded = false;
 		
@@ -47,12 +52,20 @@
 		columnDefs = columnDefs;
 
 		let filterCopy = JSON.parse(JSON.stringify(filters));
-		filterCopy.album = {include: [albumName]};
 
-		let query = buildFilterQuery(filterCopy, [{asc: "album_no"}], page[0], true);
+		if(tab == 0){
+			filterCopy.artist = {include: [artistName]};
+		}
+		else if(tab == 1){
+			filterCopy.featured_artist = {include: [artistName]};
+		}
+		
+
+		let query = buildFilterQuery(filterCopy, [], page[0], true);
 		let response = await (await fetch("/api/view/tracks"+ query)).json();
 
 		data = response.rows;
+		total = response.total;
 		loaded = true;
 	}
 
@@ -65,6 +78,8 @@
 		dispatch("openTrack", e.detail.id);
 	}
 
+
+
 	function statusIcon(s)
 	{
 		switch(s)
@@ -73,6 +88,15 @@
 			case 2: return "/later.png";
 			case 1: return "/notes.png";
 			default: return "";
+		}
+	}
+
+	function setTab(no)
+	{
+		if(tab != no)
+		{
+			tab = no;
+			load({});
 		}
 	}
 
@@ -90,15 +114,21 @@
 		data = data;
 	}
 
+	function filterArtist(row)
+	{
+		let allArtists = (row.artist && row.featured_artist ? row.artist + "\x1E" + row.featured_artist : row.artist + row.featured_artist)
+		return allArtists.split("\x1E").filter(x => x != artistName);
+	}
+
 	let columnDefs = [
 		{name: "", width: "25", property: "status", printFn: statusIcon, icon:true, filtered: false},
-		{name: "", width: "25", property: "album_no"},
-		{name: "Artist", width: "200", property: "artist", filtered: false, linkTo:"/artist/*"},
-		{name: "Featured Arist", width: "50", property: "featured_artist", filtered: false, linkTo:"/artist/*"},
+		{name: "Collaborators", width: "100", transform: filterArtist, linkTo:"/artist/*"},
 		{name: "Title", width: "200", property: "title", filtered: false},
+		{name: "Album", width: "100", property: "album", linkTo: "/album/*", filtered: false, },
 		{name: "Refs", width: "100", property: "pl", transform: plEnumText, filtered: false},
-		{name: "Genre", width: "100", property: "genre", filtered: false},
+		{name: "Genre", width: "100", property: "genre",filtered: false},
 		{name: "Tags", width: "100", property: "tag", filtered: false},
+		{name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)], filtered: false}
 	];
 	let rowButtons = hasPerm(PERM.USER_FLAGS) ? [
 		["Heard it", "/notes.png"],
@@ -110,23 +140,22 @@
 
 </script>
 
-<!--div class='tabs'>
-	<span>Everything</span>
-	<span>My Feed</span>
-	<span>For Later</span>
-	<span>Viewed</span>
-	<span>Not Interested</span>
-</div-->
+
 
 <div class='frame'>
 
 	<h1 class='no-margin'>{pageTitle}</h1>
 				
+	<div class='tabs'>
+		<span class={tab==0 ? "selected": ""} on:click={()=>setTab(0)}>Releases</span>
+		<span class={tab==1 ? "selected": ""} on:click={()=>setTab(1)}>Features</span>
+	</div>
 	{#if loaded}
 
 		<Grid 
 			columns={columnDefs}
 			data={data}
+			total={total}
 			selectedId={selectedId}
 			rowButtons = {rowButtons}
 			on:rowclick={openTrack} on:openFilter
@@ -155,6 +184,32 @@
 	{
 		font-size: 8pt;
 		color: red;
+	}
+
+	.tabs{
+		margin-top: 10px;
+		margin-left: 10px;
+	}
+
+	.tabs span.selected
+	{
+		background-color: white;
+		padding-top: 9px;
+		padding-left: 15px;
+		padding-right: 15px;
+	}
+
+	.tabs span
+	{
+		cursor: pointer;
+		padding: 5px;
+		border: solid 1px #888;
+		border-bottom: none;
+		background-color: #E8E8E8;
+	}
+
+	h1{
+		padding-top: 0px;
 	}
 
 </style>

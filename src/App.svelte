@@ -2,6 +2,7 @@
 	import TrackEditor from "./TrackEditor.svelte";
 	import TrackList from "./TrackList.svelte";
 	import AlbumView from "./AlbumView.svelte";
+	import ArtistView from "./ArtistView.svelte";
 	import FilterPopup from "./FilterPopup.svelte";
 	import EditList from "./EditList.svelte";
 	import PonyRefs from "./PonyRefs.svelte";
@@ -53,16 +54,20 @@
 		}
 	}
 
+	let previousURL = "/";
+
+
 	function openTrack(event)
 	{
 		loadedTrackID = event.detail;
 
 		if(loadedTrackID){
+			previousURL = window.location.toString();
 			history.replaceState({}, undefined, "/track/" + loadedTrackID);
 		}
 		else
 		{
-			history.replaceState({}, undefined, "/" + buildFilterQuery(filters, [], 0))
+			history.replaceState({}, undefined, previousURL)
 		}
 		
 	}
@@ -199,6 +204,9 @@
 	{:else if path.startsWith("/album/")}
 		<AlbumView on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
+	{:else if path.startsWith("/artist/")}
+		<ArtistView on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+
 	{:else if path == "/about"}
 		<div class='main'>
 
@@ -280,7 +288,6 @@
 
 {#if loadedFilter}
 	<div class='shield'>
-		
 		<FilterPopup property={loadedFilter} value={filters[loadedFilter]} on:change={changeFilter}/>
 	</div>
 

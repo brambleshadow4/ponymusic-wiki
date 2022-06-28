@@ -1,6 +1,6 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import {buildFilterQuery, setUserFlag} from "./helpers.js";
+	import {buildFilterQuery, setUserFlag, plEnumText} from "./helpers.js";
 	import Spinner from "./Spinner.svelte";
 	import {PERM, hasPerm} from "./authClient.js";
 	import Grid from "./Grid.svelte";
@@ -84,10 +84,10 @@
 	{
 		switch(s)
 		{
-			case "2": return "Obvious";
-			case "1": return "Subtle";
-			case "0": return "None";
-			default: return "";
+			case "2": return ["Obvious"];
+			case "1": return ["Subtle"];
+			case "0": return ["None"];
+			default: return [""];
 		}
 	}
 
@@ -119,14 +119,14 @@
 
 	let columnDefs = [
 		{name: "", width: "25", property: "status", printFn: statusIcon, icon:true, filtered: false},
-		{name: "Artist", width: "200", property: "artist", filtered: false},
-		{name: "Featured Arist", width: "50", property: "featured_artist", filtered: false},
-		{name: "Title", width: "200", property: "title", printFn: (x) => x, filtered: false},
-		{name: "Album", width: "100", property: "album", filtered: false, linkTo: "/album/*"},
-		{name: "Refs", width: "100", property: "pl", printFn: enumText, filtered: false},
-		{name: "Genre", width: "100", property: "genre",filtered: false},
+		{name: "Artist", width: "200", property: "artist", linkTo:"/artist/*",  filtered: false,},
+		{name: "Featured Arist", width: "50", property: "featured_artist", linkTo:"/artist/*", filtered: false},
+		{name: "Title", width: "200", property: "title", filtered: false},
+		{name: "Album", width: "100", property: "album", linkTo: "/album/*", filtered: false},
+		{name: "Refs", width: "100", property: "pl", transform: plEnumText, filtered: false},
+		{name: "Genre", width: "100", property: "genre", filtered: false},
 		{name: "Tags", width: "100", property: "tag", filtered: false},
-		{name: "Released", width: "100", property: "release_date", printFn: (x) => x.substring(0,10), filtered: false}
+		{name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)], filtered: false}
 	];
 	let rowButtons = hasPerm(PERM.USER_FLAGS) ? [
 		["Heard it", "/notes.png"],
