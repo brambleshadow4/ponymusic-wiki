@@ -5,7 +5,7 @@
 	import Tag from "./Tag.svelte";
 	import Spinner from "./Spinner.svelte";
 	import { createEventDispatcher } from 'svelte';
-	import {tagComp} from "./helpers.js";
+	import {tagComp, setUserFlag} from "./helpers.js";
 	import {PERM, hasPerm} from "./authClient.js";
 	import { onMount } from 'svelte';
 
@@ -24,6 +24,8 @@
 	let duplicates = [];
 	let nameOverrides = {};
 	let scrapedTitle = "";
+
+	let activeUserFlag = 0;
 
 	export let id = "new";
 	export let mode = 0;
@@ -48,7 +50,10 @@
 		{
 			spinner1 = true;
 
-			track = await (await fetch("/api/track/" + id)).json();
+			track = await (await fetch("/api/track/" + id + "?session=" + localStorage.session)).json();
+
+			console.log('got track');
+			console.log(track);
 
 			if(track.deleted) // it's been deleted
 			{
@@ -70,6 +75,11 @@
 			track.tags.sort(tagComp);
 			track.tags = track.tags;
 			updateHasProperty();
+
+			if(track.userFlags)
+			{
+				activeUserFlag = track.userFlags.status;
+			}
 			
 			mode = 0;
 			enteringTag = false;
@@ -485,6 +495,23 @@
 			addTag({property, value: trueName, text: trueName});
 		}
 	}
+
+
+	function changeUserFlag(button)
+	{
+		//let song = e.detail.row;
+		console.log(button);
+
+		if(activeUserFlag == button){
+			activeUserFlag = 0;
+		}
+		else
+		{
+			activeUserFlag = button;
+		}
+
+		setUserFlag(id, "status", activeUserFlag || null);
+	}
 </script>
 
 <style>
@@ -595,6 +622,38 @@
 		width: calc(100% - 1.5in);
 	}
 
+
+	.userFlagButtons{
+		margin-bottom: 10px;
+	}
+
+	.userFlagButton
+	{
+		margin-right: 10px;
+		border: solid 1px #888;
+		padding: 3px;
+		padding-bottom: 6px;
+		cursor: pointer;
+	}
+
+	.userFlagButton.selected
+	{
+		background-color: #b3d9ff;
+	}
+
+	.userFlagButton span
+	{
+		padding-left: 4px;
+		vertical-align: middle;
+		display: inline-block;
+	}
+
+	.userFlagButton img
+	{
+		vertical-align: middle;
+		width: 20px;
+	}
+
 </style>
 
 
@@ -650,6 +709,17 @@
 					<source src={track.ogcache.audio} />
 				</audio> 
 			{/if}
+
+			{#if hasPerm(PERM.USER_FLAGS)}
+				<div class="userFlagButtons">
+					{#each [["Heard it","/notes.png"],["Listen Later","/later.png"],["Skip","/rest.png"]] as pair,i}
+						<span class={"userFlagButton" + (i+1 == activeUserFlag ? " selected" : "")} on:click={() => changeUserFlag(i+1)}>
+							<img class='icon' src={pair[1]}/>
+							<span>{pair[0]}</span>
+						</span>
+					{/each}
+				</div>
+			{/if}
 		{/if}
 
 
@@ -684,10 +754,10 @@
 						class={btnClass(hasProp, "featured artist")}
 						on:click={addTagEntryField("featured artist")}>+ Featured Artist</button>
 					<button
-						class=""
+						class={btnClass(hasProp, "cover")}
 						on:click={addTagEntryField("cover")}>+ Cover</button>
 					<button
-						class=""
+						class={btnClass(hasProp, "remix")}
 						on:click={addTagEntryField("remix")}>+ Remix</button>
 				</div>
 				<div>

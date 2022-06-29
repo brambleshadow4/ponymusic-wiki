@@ -92,6 +92,14 @@ export async function getAutofill(propName, count, searchString)
 	return matches;
 }
 
+
+/*
+ * FLAGs:
+ *  1 - Heard it
+ *  2 - Listen Later
+ *  3 - Skip
+ */
+
 export async function setUserFlag(trackId, flag, value)
 {
 	let data = {

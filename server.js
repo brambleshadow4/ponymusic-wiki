@@ -321,6 +321,9 @@ app.get("/api/track/*", async(req,res) =>
 {
 	let id = req.params[0];
 
+	let ses = await getSession(req);
+	let userID = (ses && ses.user_id) || -1;
+
 	if(isNaN(id))
 	{
 		res.json({status: 400});
@@ -329,6 +332,8 @@ app.get("/api/track/*", async(req,res) =>
 
 	let trackRows = (await db.query("SELECT * FROM tracks WHERE id=$1", [id])).rows;
 	let tagRows = (await db.query("SELECT * FROM track_tags WHERE track_id=$1", [id])).rows;
+
+	let userFlags = (await db.query("SELECT value as status FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag='status'",[id,userID])).rows;
 
 	let response = trackRows[0];
 
@@ -366,6 +371,11 @@ app.get("/api/track/*", async(req,res) =>
 
 	if(!response.status){
 		response.status = 200;
+	}
+
+	if(userFlags[0])
+	{
+		response.userFlags = {status: userFlags[0].status}; 
 	}
 
 	res.json(response);
@@ -558,8 +568,6 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	res.json({status: 200, id});
 	
 });
-
-
 
 app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =>
 {
