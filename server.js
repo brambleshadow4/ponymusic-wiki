@@ -270,6 +270,10 @@ app.get("/api/history/track/*", async(req,res) =>
 
 	for(let row of rows)
 	{
+		if(row.value.deleted){
+			continue;
+		}
+
 		for(let tag of row.value.tags)
 		{
 			if(tag.property == "remix" || tag.property == "cover")

@@ -25,6 +25,7 @@
 
 	function openTrack(editEntry)
 	{
+		console.log(editEntry);
 		dispatch("openTrack", editEntry.track_id);
 	}
 
@@ -59,10 +60,10 @@
 	function trackTitle(item)
 	{
 		if(item.track_title){
-			return item.track_title
+			return [item.track_title]
 		}
 		else {
-			return "deleted(" + item.track_id + ")";
+			return ["deleted(" + item.track_id + ")"];
 		}
 	}
 
@@ -90,9 +91,9 @@
 		<Grid 
 			data={edits}
 			columns={[
-				{width: "200", name: "Timestamp", property: "timestamp", printFn: (x) => new Date(x).toLocaleString()},
-				{width: "200", name: "Edited by", property: "user_name", printFn: x=> x},
-				{width: "200", name: "Track", property: "*", printFn: trackTitle, classFn: deletedClass, linkFn: openTrack}
+				{width: "200", name: "Timestamp", property: "timestamp", transform: (x) => [new Date(x).toLocaleString()]},
+				{width: "200", name: "Edited by", property: "user_name"},
+				{width: "200", name: "Track", transform: trackTitle, classFn: deletedClass, linkFun: openTrack}
 			]}
 			page={page}
 			on:pagechange={onPageChange}

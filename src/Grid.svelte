@@ -317,6 +317,8 @@
 									>
 										{item}
 									</a>
+								{:else if column.linkFun}
+									<a class="multi-item" on:click={()=>column.linkFun(song)}>{item}</a>
 								{:else}
 									<span class="multi-item">{item}</span>
 								{/if}
