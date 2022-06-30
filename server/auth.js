@@ -88,7 +88,12 @@ async function buildSession(req)
 async function getSession(req)
 {
 	await buildSession(req);
-	let ses = (req.body && req.body.session) || (req.query && req.query.session && req.query.session[0]);
+	
+	let ses = (req.body && req.body.session) || (req.query && req.query.session);
+	if(typeof ses == "object"){
+		ses = ses[0];
+	}
+
 	return sessions[ses];
 }
 
