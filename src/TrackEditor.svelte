@@ -563,6 +563,10 @@
 		position: relative;
 	}
 
+	@media only screen and (max-width: 800px){
+		.main {padding-left: 5px}
+	}
+
 	button.added {
 		background-color: #D4F9D4;
 	}
@@ -633,6 +637,10 @@
 		padding: 3px;
 		padding-bottom: 6px;
 		cursor: pointer;
+
+		display: inline-block;
+
+		white-space: nowrap;
 	}
 
 	.userFlagButton.selected
@@ -699,7 +707,7 @@
 			
 		{:else}
 			{#if track.ogcache && track.ogcache.embed}
-				<iframe title="Embeded track" src={track.ogcache.embed} width={Math.min(track.ogcache.width,window.innerWidth-96)} height={track.ogcache.height} 
+				<iframe title="Embeded track" src={track.ogcache.embed} width={Math.min(track.ogcache.width, window.innerWidth-63)} height={track.ogcache.height} 
 					frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
 
 				></iframe>

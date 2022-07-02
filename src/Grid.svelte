@@ -343,6 +343,8 @@
 
 <div class='pager'>
 	<a href="#next" class={'decPage' + (page[0]>0 ? "" : " hidden")} on:click={() => dispatch("pagechange", page[0]-1)}>&lt;- Previous</a>
-	<span>{#if total}{total} Results • {/if}Page {page[0]+1}/{page[1]}</span>
+	<span>
+		{#if total && window.innerWidth>800}{total} Results • {/if}Page {page[0]+1}/{page[1]}
+	</span>
 	<a href="#previous" class={'incPage' + (page[0]+1<page[1] ? "" : ' hidden')} on:click={() => dispatch("pagechange", page[0]+1)}>Next -></a>
 </div>

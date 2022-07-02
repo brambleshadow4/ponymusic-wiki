@@ -133,6 +133,9 @@
 		flex-direction: column;
 		padding-left: .5in;
 	}
+	@media only screen and (max-width: 800px){
+		.frame {padding-left: 5px}
+	}
 
 	.no-margin{
 		margin: 0;
