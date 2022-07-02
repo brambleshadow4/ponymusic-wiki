@@ -518,7 +518,6 @@
 	.label 
 	{
 		display: inline-block;
-
 		line-height: 35px;
 	}
 
@@ -700,7 +699,7 @@
 			
 		{:else}
 			{#if track.ogcache && track.ogcache.embed}
-				<iframe title="Embeded track" src={track.ogcache.embed} width={track.ogcache.width} height={track.ogcache.height} 
+				<iframe title="Embeded track" src={track.ogcache.embed} width={Math.min(track.ogcache.width,window.innerWidth-96)} height={track.ogcache.height} 
 					frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
 
 				></iframe>

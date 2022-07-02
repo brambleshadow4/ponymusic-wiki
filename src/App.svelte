@@ -12,6 +12,11 @@
 	
 	$: path = window.location.pathname;
 
+	let mobileLayout = (window.innerWidth < 800);
+
+	let mobileNavOpen = false;
+
+
 	let tab = 0;
 	let loadedTrackID = "";
 	let loadedFilter = "";
@@ -87,6 +92,11 @@
 		filters = filters;
 	}	
 
+	window.addEventListener("resize", ()=>{
+
+		mobileLayout = (window.innerWidth < 800);
+	});	
+
 </script>
 
 <style>
@@ -96,11 +106,24 @@
 		top: 0;
 		bottom: 0;
 		left: 0;
-		width: 300px;
+		width: 200px;
 		background-color: #101010;
 	}
 
-	nav a
+	.navopen {
+		background-color: #202020;
+
+		position: fixed;
+		top: 40px;
+		bottom: 0px;
+		left: 0px;
+		right: 0px;
+
+		z-index: 2;
+
+	}
+
+	nav a, .navopen a
 	{
 		display: block;
 		font-size: 30pt;
@@ -108,20 +131,20 @@
 		color: white;
 	}
 
-	nav a:hover
+	nav a:hover, .navopen a:hover
 	{
 		background-color: #AAAAAA;
 		text-decoration: none;
 	}
 
-	nav a.smalllink
+	nav a.smalllink, .navopen a.smalllink
 	{
 		font-size: initial;
 		color: rgb(0,100,200);;
 		text-decoration: underline;
 	}
 
-	nav a.smalllink:hover
+	nav a.smalllink:hover, .navopen nav a.smalllink:hover
 	{
 		background-color: transparent;
 	}
@@ -131,7 +154,7 @@
 		position: fixed;
 		top: 0;
 		bottom: 0;
-		left: 300px;
+		left: 200px;
 		right: 0;
 	}
 
@@ -167,8 +190,8 @@
 		top: 0px;
 		bottom: 0px;
 
-		max-width: calc(100% - .5in);
-		width: 800px;		
+		width: calc(100% - .5in);
+		max-width: 800px;		
 	}
 
 	.no-margin{
@@ -184,19 +207,84 @@
 		padding-top: 10px;
 		margin-top: .5in;
 	}
+
+	@media only screen and (max-width: 800px)
+	{
+		.main-container
+		{
+			left: 0px;
+			top: 40px;
+		}
+
+		nav 
+		{
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			width: 100%;
+			height: 40px;
+			color: white;
+		}
+
+		nav span {
+			line-height: 40px;
+			display: inline-block;
+			
+		}
+		nav span {
+
+		}
+
+		.navbar{
+			display: flex;
+			flex-direction: row;
+		}
+
+		.navbar > * {
+			flex-grow: 0;
+		}
+
+		.navbar .flex-main {
+			flex-grow: 1;
+		}
+	}
 </style>
 
 
-<nav>
-	<a href="/about">About</a>
-	<a href="/">Tracks</a>
-	<a class='smalllink' href="/edits">Recent Edits</a>
-	<a class='smalllink' href="/import-tools">Import Tools</a>
-</nav>
 
-<LoginButton />
+{#if !mobileLayout}
+	<nav>
+		<a href="/about">About</a>
+		<a href="/">Tracks</a>
+		<a class='smalllink' href="/edits">Recent Edits</a>
+		<a class='smalllink' href="/import-tools">Import Tools</a>
+	</nav>
+
+	<LoginButton display="fixed"/>
+{/if}
+
+{#if mobileLayout}
+	<nav>
+		<div class='navbar'>
+			<img on:click={()=>{mobileNavOpen = !mobileNavOpen}} src="/menu.png" />
+			<span class='flex-main'>Ponymusic.wiki</span>
+			<LoginButton display="inline"/>
+		</div>
+	</nav>
+
+	{#if mobileNavOpen}
+	<div class='navopen'>
+		<a href="/about">About</a>
+		<a href="/">Tracks</a>
+		<a class='smalllink' href="/edits">Recent Edits</a>
+		<a class='smalllink' href="/import-tools">Import Tools</a>
+	</div>
+	{/if}
+{/if}
 
 <div class='main-container'>
+	
 
 	{#if path == "/" || path == "" || path.startsWith("/track/")}
 		<TrackList on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />

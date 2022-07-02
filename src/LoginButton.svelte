@@ -1,5 +1,7 @@
 <script>
 	import CircleSpinner from "./CircleSpinner.svelte";
+	export let display = "fixed";
+
 	let signedIn = !!localStorage.role;
 	let avatar = localStorage.avatar || "/avatar.svg";
 	let loading = false;
@@ -122,7 +124,7 @@
 
 </script>
 <style>
-	.login{
+	.login.fixed{
 		position: fixed;
 		top: 20px;
 		right: 20px;
@@ -136,13 +138,13 @@
 		cursor: pointer;
 	}
 
-	.login img{
+	.login.fixed img{
 		width: 50px;
 		height: 50px;
 		border-radius: 25px;
 	}
 
-	.login span
+	.login.fixed span
 	{
 		line-height: 50px;
 		color: white;
@@ -150,8 +152,30 @@
 		vertical-align: top;
 		padding: 0px 20px;
 	}
+
+	.login.inline img {
+		width: 36px;
+		height: 36px;
+		padding: 2px;
+		border-radius: 20px;
+		vertical-align: middle;
+	}
+
+	.login.inline span {
+		vertical-align: middle;
+	}
+
+	.login.inline{
+		
+		display: inline-block;
+		height:  40px;
+		cursor: pointer;
+
+		vertical-align: middle;
+	}
+
 </style>
-<div class='login' on:click={handleClick} on:contextmenu={handleContextMenu}>
+<div class={'login '+ display} on:click={handleClick} on:contextmenu={handleContextMenu}>
 	{#if loading}
 		<div style="width: 50px"><CircleSpinner/></div>
 	{:else}
