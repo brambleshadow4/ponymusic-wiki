@@ -1,10 +1,28 @@
 
 <script>
-	export let tag = "";
+	export let tag = {};
 
 	export let canRemove = false;
 
 	$: canRemoveCalc = canRemove && (tag.property != "original artist");
+
+	$: pageLink = getPageLink(tag)
+
+
+
+	function getPageLink(tag)
+	{
+		switch(tag.property)
+		{
+			case "artist":
+			case "featured_artist":
+				return "/artist/" + tag.value;
+			case "album":
+				return "/album/" + tag.value;
+			default:
+				return "";
+		}
+	}
 
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -91,7 +109,7 @@
 		vertical-align: middle;
 	}
 
-	a{line-height: 35px;}
+	.hyperlinkTag {line-height: 35px;}
 
 	.remove-button{
 		cursor: pointer;
@@ -135,7 +153,9 @@
 </style>
 
 {#if tag.property == "hyperlink"}
-	<a href={tag.value}>{tag.value.length > 30 ? tag.value.substring(0,27) + "..." : tag.value}</a> {#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}
+	<a class="hyperlinkTag" href={tag.value}>{tag.value.length > 30 ? tag.value.substring(0,27) + "..." : tag.value}</a> {#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}
+{:else if pageLink}
+	<a href={pageLink} class={tagClass}><span class="tagtext" title={text + (tag.number != undefined ? "(" + tag.number + ")" : "")}>{text}{#if tag.number}({tag.number}){/if}</span>{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}</a>
 {:else}
 	<span class={tagClass}><span class="tagtext" title={text + (tag.number != undefined ? "(" + tag.number + ")" : "")}>{text}{#if tag.number}({tag.number}){/if}</span>{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}</span>
 {/if}

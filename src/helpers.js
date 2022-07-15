@@ -1,3 +1,5 @@
+import {PERM, hasPerm} from "./authClient.js";
+
 export function tagComp(tag1, tag2){
 
 	if(tag1.property == tag2.property){
@@ -133,3 +135,33 @@ export function plEnumText(s)
 		default: return [""];
 	}
 }
+
+
+function statusIcon(s)
+{
+	switch(s)
+	{
+		case 3: return "/rest.png";
+		case 2: return "/later.png";
+		case 1: return "/notes.png";
+		default: return "";
+	}
+}
+
+let HeardButtons = hasPerm(PERM.USER_FLAGS) ? [
+	["Heard it", "/notes.png"],
+	["Listen Later","/later.png"],
+	["Skip","/rest.png"]
+] : [];
+
+let Columns = {}
+
+Columns.Status = {name: "", width: "25", property: "status", printFn: statusIcon, icon:true, filtered: false};
+Columns.Title = {name: "Title", width: "200", property: "title", filtered: false};
+Columns.Album = {name: "Album", width: "100", property: "album", linkTo: "/album/*", filtered: false};
+Columns.Refs = {name: "Refs", width: "100", property: "pl", transform: plEnumText, filtered: false};
+Columns.Genre = {name: "Genre", width: "100", property: "genre",filtered: false};
+Columns.Tags = {name: "Tags", width: "100", property: "tag", filtered: false};
+Columns.Released = {name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)], filtered: false};
+
+export {Columns, HeardButtons}

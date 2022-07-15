@@ -1,6 +1,6 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import {buildFilterQuery, setUserFlag, plEnumText} from "./helpers.js";
+	import {buildFilterQuery, setUserFlag, plEnumText, Columns, HeardButtons} from "./helpers.js";
 	import Spinner from "./Spinner.svelte";
 	import {PERM, hasPerm} from "./authClient.js";
 	import Grid from "./Grid.svelte";
@@ -78,19 +78,6 @@
 		dispatch("openTrack", e.detail.id);
 	}
 
-
-
-	function statusIcon(s)
-	{
-		switch(s)
-		{
-			case 3: return "/rest.png";
-			case 2: return "/later.png";
-			case 1: return "/notes.png";
-			default: return "";
-		}
-	}
-
 	function setTab(no)
 	{
 		if(tab != no)
@@ -121,20 +108,16 @@
 	}
 
 	let columnDefs = [
-		{name: "", width: "25", property: "status", printFn: statusIcon, icon:true, filtered: false},
+		Columns.Status,
 		{name: "Collaborators", width: "100", transform: filterArtist, linkTo:"/artist/*"},
-		{name: "Title", width: "200", property: "title", filtered: false},
-		{name: "Album", width: "100", property: "album", linkTo: "/album/*", filtered: false, },
-		{name: "Refs", width: "100", property: "pl", transform: plEnumText, filtered: false},
-		{name: "Genre", width: "100", property: "genre",filtered: false},
-		{name: "Tags", width: "100", property: "tag", filtered: false},
-		{name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)], filtered: false}
+		Columns.Title,
+		Columns.Album,
+		Columns.Refs,
+		Columns.Genre,
+		Columsn.Tags,
+		Columns.Released
 	];
-	let rowButtons = hasPerm(PERM.USER_FLAGS) ? [
-		["Heard it", "/notes.png"],
-		["Listen Later","/later.png"],
-		["Skip","/rest.png"]
-	] : [];
+	
 
 	// on:click={()=>{openTrack(song.id)}}
 
@@ -157,7 +140,7 @@
 			data={data}
 			total={total}
 			selectedId={selectedId}
-			rowButtons = {rowButtons}
+			rowButtons = {HeardButtons}
 			on:rowclick={openTrack} on:openFilter
 			on:rowbuttonclick={changeUserFlag}
 		/>
