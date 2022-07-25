@@ -164,4 +164,4 @@ Columns.Genre = {name: "Genre", width: "100", property: "genre",filtered: false}
 Columns.Tags = {name: "Tags", width: "100", property: "tag", filtered: false};
 Columns.Released = {name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)], filtered: false};
 
-export {Columns, HeardButtons}
+export {Columns, HeardButtons, statusIcon}

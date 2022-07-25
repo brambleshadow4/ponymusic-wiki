@@ -70,3 +70,16 @@ textarea
       -o-tab-size : 4;
          tab-size : 4;
 }
+
+
+/** */
+
+.no-margin{
+	margin: 0;
+}
+
+.version
+{
+	font-size: 8pt;
+	color: red;
+}

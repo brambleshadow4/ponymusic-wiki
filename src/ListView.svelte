@@ -1,12 +1,13 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import {buildFilterQuery, setUserFlag, plEnumText, Columns, HeardButtons} from "./helpers.js";
+	import {buildFilterQuery, setUserFlag, plEnumText} from "./helpers.js";
 	import Spinner from "./Spinner.svelte";
 	import {PERM, hasPerm} from "./authClient.js";
 	import Grid from "./Grid.svelte";
 
 	export let selectedId = "";
 	export let filters = {};
+	export let view = {};
 
 	const dispatch = createEventDispatcher();
 
@@ -14,23 +15,13 @@
 	let songs = [];
 	let data = [];
 	let page = [0,1];
-	let pageTitle = "";
 	let total = 0;
-
-	let tab=0;
-
-	let artistName = "";
+	let tab = 0;
 
 	let loaded = false;
 
 	async function load(filters)
 	{	
-		console.log("loading artist view")
-
-		artistName = decodeURIComponent(location.pathname.replace("/artist/","").trim());
-
-		pageTitle = "Artist: " + artistName;
-
 		loaded = false;
 		
 		// handle switching back to page 0 when filters change
@@ -45,37 +36,23 @@
 			if(col.filtered != undefined)
 			{
 				col.filtered = !!filters[col.property];
-			}
-			
+			}	
+		}
+
+
+		if(view.tabs[tab].filter)
+		{
+			filters = view.tabs[tab].filter(filters);
 		}
 
 		columnDefs = columnDefs;
 
-		let filterCopy = JSON.parse(JSON.stringify(filters));
-
-		if(tab == 0){
-			filterCopy.artist = {include: [artistName]};
-		}
-		else if(tab == 1){
-			filterCopy.featured_artist = {include: [artistName]};
-		}
-		
-
-		let query = buildFilterQuery(filterCopy, [], page[0], true);
-		let response = await (await fetch("/api/view/tracks"+ query)).json();
-
+		let query = buildFilterQuery(filters, [], page[0], true);
+		let response = await (await fetch("/api/view/tracks" + query)).json();
 		data = response.rows;
+		page = [page[0], response.pages];
 		total = response.total;
 		loaded = true;
-	}
-
-	$: loadThisThing = load(filters);
-	
-
-	function openTrack(e)
-	{
-		selectedId = e.detail.id;
-		dispatch("openTrack", e.detail.id);
 	}
 
 	function setTab(no)
@@ -85,6 +62,30 @@
 			tab = no;
 			load({});
 		}
+	}
+
+	function onPageChange(e)
+	{
+		if(e.detail > page[0])
+		{
+			page[0]++;
+			load(filters);
+		}
+		else
+		{
+			page[0] = Math.max(page[0]-1, 0);
+			load(filters);
+		}
+
+		page = page;
+	}
+
+	$: loadThisThing = load(filters);
+
+	function openTrack(e)
+	{
+		selectedId = e.detail.id;
+		dispatch("openTrack", e.detail.id);
 	}
 
 	async function changeUserFlag(e)
@@ -101,39 +102,56 @@
 		data = data;
 	}
 
-	
+	let columnDefs = view.tabs[0].columns;
 
-	let columnDefs = [
-		Columns.Status,
-		{name: "Collaborators", width: "100", transform: filterArtist, linkTo:"/artist/*"},
-		Columns.Title,
-		Columns.Album,
-		Columns.Refs,
-		Columns.Genre,
-		Columsn.Tags,
-		Columns.Released
-	];
-	
+	let rowButtons = hasPerm(PERM.USER_FLAGS) ? [
+		["Heard it", "/notes.png"],
+		["Listen Later","/later.png"],
+		["Skip","/rest.png"]
+	] : [];
 
 	// on:click={()=>{openTrack(song.id)}}
 
 </script>
 
-
+<!--div class='tabs'>
+	<span>Everything</span>
+	<span>My Feed</span>
+	<span>For Later</span>
+	<span>Viewed</span>
+	<span>Not Interested</span>
+</div-->
 
 <div class='frame'>
 
-	<h1 class='no-margin'>{pageTitle}</h1>
-				
+	{#if view.makeTitle}
+		<h1>{view.makeTitle()}</h1>
+	{:else if view.htmlTitle}
+		{@html view.htmlTitle}
+	{/if}
+
+	<div>
+		<a href="#new" on:click={()=>{openTrack({detail: {id:"new"}})}}>+ Add a track</a>
+	</div>
+
+	{#if view.tabs.length > 1}
+		<div class='tabs'>
+			{#each view.tabs as thisTab,i}
+				<span class={tab == i ? "selected": ""} on:click={()=>setTab(i)}>{thisTab.name}</span>
+			{/each}
+		</div>
+	{/if}
+	
 	{#if loaded}
 
 		<Grid 
 			columns={columnDefs}
 			data={data}
+			page={page}
 			total={total}
 			selectedId={selectedId}
-			rowButtons = {HeardButtons}
-			on:rowclick={openTrack} on:openFilter
+			rowButtons = {rowButtons}
+			on:pagechange={onPageChange} on:rowclick={openTrack} on:openFilter
 			on:rowbuttonclick={changeUserFlag}
 		/>
 		
@@ -149,19 +167,6 @@
 		display: flex;
 		flex-direction: column;
 		padding-left: .5in;
-	}
-	@media only screen and (max-width: 800px){
-		.frame {padding-left: 5px}
-	}
-
-	.no-margin{
-		margin: 0;
-	}
-
-	.version
-	{
-		font-size: 8pt;
-		color: red;
 	}
 
 	.tabs{
@@ -179,6 +184,7 @@
 
 	.tabs span
 	{
+		margin-left: 3px;
 		cursor: pointer;
 		padding: 5px;
 		border: solid 1px #888;
@@ -186,8 +192,13 @@
 		background-color: #E8E8E8;
 	}
 
+	@media only screen and (max-width: 800px){
+		.frame {padding-left: 5px}
+	}
+
 	h1{
 		padding-top: 0px;
+		margin: 0px;
 	}
 
 </style>

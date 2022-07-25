@@ -2,13 +2,14 @@
 	import TrackEditor from "./TrackEditor.svelte";
 	import TrackList from "./TrackList.svelte";
 	import AlbumView from "./AlbumView.svelte";
-	import ArtistView from "./ArtistView.svelte";
+	import ListView from "./ListView.svelte";
 	import FilterPopup from "./FilterPopup.svelte";
 	import EditList from "./EditList.svelte";
 	import PonyRefs from "./PonyRefs.svelte";
 	import LoginButton from "./LoginButton.svelte";
 	import ImportTools from "./ImportTools.svelte";
 	import {buildFilterQuery} from "./helpers.js";
+	import {DefaultView, ArtistView} from "./Views.js";
 	
 	$: path = window.location.pathname;
 
@@ -60,7 +61,6 @@
 	}
 
 	let previousURL = "/";
-
 
 	function openTrack(event)
 	{
@@ -287,13 +287,14 @@
 	
 
 	{#if path == "/" || path == "" || path.startsWith("/track/")}
-		<TrackList on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+		<ListView view={DefaultView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
 	{:else if path.startsWith("/album/")}
 		<AlbumView on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
 	{:else if path.startsWith("/artist/")}
-		<ArtistView on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+		<!--<ArtistView on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} /> -->
+		<ListView view={ArtistView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
 	{:else if path == "/about"}
 		<div class='main'>
