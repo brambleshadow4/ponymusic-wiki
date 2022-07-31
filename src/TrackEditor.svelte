@@ -52,9 +52,6 @@
 
 			track = await (await fetch("/api/track/" + id + "?session=" + localStorage.session)).json();
 
-			console.log('got track');
-			console.log(track);
-
 			if(track.deleted) // it's been deleted
 			{
 				tabProps = [[2,"History"]];
@@ -172,8 +169,6 @@
 		track.tags.push(tag);
 		track.tags.sort(tagComp);
 		track.tags = track.tags;
-
-		console.log(track.tags);
 
 		updateHasProperty();
 
@@ -491,24 +486,15 @@
 	{
 		let trueName = nameOverrides[artistName] != undefined ? nameOverrides[artistName] : artistName;
 		if(trueName)
-		{
 			addTag({property, value: trueName, text: trueName});
-		}
 	}
-
 
 	function changeUserFlag(button)
 	{
-		//let song = e.detail.row;
-		console.log(button);
-
-		if(activeUserFlag == button){
+		if(activeUserFlag == button)
 			activeUserFlag = 0;
-		}
 		else
-		{
 			activeUserFlag = button;
-		}
 
 		setUserFlag(id, "status", activeUserFlag || null);
 	}

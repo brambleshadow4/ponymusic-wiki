@@ -91,11 +91,9 @@ let AlbumView = {
 			],
 			sort: [{asc: "album_no"}],
 			filter: function(filters) {
-				console.log(filters);
 				let albumName = decodeURIComponent(location.pathname.replace("/album/","").trim());
 				let filterCopy = JSON.parse(JSON.stringify(filters));
 				filterCopy.album = {include: [albumName]};
-				console.log(filterCopy);
 				return filterCopy;
 			}
 		}

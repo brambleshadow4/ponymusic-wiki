@@ -25,7 +25,6 @@
 
 	function openTrack(editEntry)
 	{
-		console.log(editEntry);
 		dispatch("openTrack", editEntry.track_id);
 	}
 
@@ -59,22 +58,20 @@
 
 	function trackTitle(item)
 	{
-		if(item.track_title){
+		if(item.track_title)
 			return [item.track_title]
-		}
-		else {
+		else 
 			return ["deleted(" + item.track_id + ")"];
-		}
 	}
 
 	function deletedClass(item)
 	{
-		if(item.track_title){
+		if(item.track_title)
 			return ""
-		}
-		else {
+		
+		else 
 			return "deleted"
-		}
+		
 	}
 
 </script>

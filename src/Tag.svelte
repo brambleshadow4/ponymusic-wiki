@@ -1,21 +1,17 @@
 
 <script>
 	export let tag = {};
-
 	export let canRemove = false;
 
 	$: canRemoveCalc = canRemove && (tag.property != "original artist");
-
 	$: pageLink = getPageLink(tag)
-
-
 
 	function getPageLink(tag)
 	{
 		switch(tag.property)
 		{
 			case "artist":
-			case "featured_artist":
+			case "featured artist":
 				return "/artist/" + tag.value;
 			case "album":
 				return "/album/" + tag.value;
@@ -72,16 +68,12 @@
 			case "remix":
 			case "cover":
 				return "yellow";
-
 		}
 		return "";
 	}
 
 	$:text = lookupTagText(tag);
 	$:tagClass = "tag " + lookupTagStyle(tag);
-
-	console.log(tag);
-
 </script>
 
 <style>
