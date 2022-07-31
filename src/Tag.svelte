@@ -4,10 +4,13 @@
 	export let canRemove = false;
 
 	$: canRemoveCalc = canRemove && (tag.property != "original artist");
-	$: pageLink = getPageLink(tag)
+	$: pageLink = getPageLink(tag, canRemoveCalc)
 
-	function getPageLink(tag)
+	function getPageLink(tag, canRemove)
 	{
+		if(canRemoveCalc, canRemove)
+			return "";
+
 		switch(tag.property)
 		{
 			case "artist":
@@ -147,7 +150,9 @@
 {#if tag.property == "hyperlink"}
 	<a class="hyperlinkTag" href={tag.value}>{tag.value.length > 30 ? tag.value.substring(0,27) + "..." : tag.value}</a> {#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}
 {:else if pageLink}
-	<a href={pageLink} class={tagClass}><span class="tagtext" title={text + (tag.number != undefined ? "(" + tag.number + ")" : "")}>{text}{#if tag.number}({tag.number}){/if}</span>{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}</a>
+	<a href={pageLink} class={tagClass}>
+		<span class="tagtext" title={text + (tag.number != undefined ? "(" + tag.number + ")" : "")}>{text}{#if tag.number}({tag.number}){/if}</span>
+		{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}</a>
 {:else}
 	<span class={tagClass}><span class="tagtext" title={text + (tag.number != undefined ? "(" + tag.number + ")" : "")}>{text}{#if tag.number}({tag.number}){/if}</span>{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}</span>
 {/if}
