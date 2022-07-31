@@ -3,20 +3,20 @@ import {plEnumText, statusIcon, Columns} from "./helpers.js";
 
 let DefaultView = {
 	htmlTitle: "<h1 class='no-margin'>Pony Music Wiki <span class='version'>(alpha build)</span></h1><div>A community maintained database of pony music.</div>",
+	hasButtonNewTrack: true,
 	tabs: [
 		{
 			name: "(default)",
 			columns: [
-
-				{name: "", width: "25", property: "status", printFn: statusIcon, icon:true, filtered: false},
+				Columns.Status,
 				{name: "Artist", width: "200", property: "artist", linkTo:"/artist/*",  filtered: false,},
 				{name: "Featured Arist", width: "50", property: "featured_artist", linkTo:"/artist/*", filtered: false},
-				{name: "Title", width: "200", property: "title", filtered: false},
-				{name: "Album", width: "100", property: "album", linkTo: "/album/*", filtered: false},
-				{name: "Refs", width: "100", property: "pl", transform: plEnumText, filtered: false},
-				{name: "Genre", width: "100", property: "genre", filtered: false},
-				{name: "Tags", width: "100", property: "tag", filtered: false},
-				{name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)], filtered: false}
+				Columns.Title,
+				Columns.Album,
+				Columns.Refs,
+				Columns.Genre,
+				Columns.Tags,
+				Columns.Released
 			]
 		}
 	]
@@ -71,6 +71,37 @@ let ArtistView = {
 	],
 }
 
+let AlbumView = {
+	makeTitle: function(){
+		let albumName = decodeURIComponent(location.pathname.replace("/album/","").trim());
+		return "Album: " + albumName;
+	},
+	tabs: [
+		{
+			name: "(default)",
+			columns: [
+				Columns.Status,
+				{name: "", width: "25", property: "album_no"},
+				{name: "Artist", width: "200", property: "artist", filtered: false, linkTo:"/artist/*"},
+				{name: "Featured Arist", width: "50", property: "featured_artist", filtered: false, linkTo:"/artist/*"},
+				Columns.Title,
+				Columns.Refs,
+				Columns.Genre,
+				Columns.Tags,
+			],
+			sort: [{asc: "album_no"}],
+			filter: function(filters) {
+				console.log(filters);
+				let albumName = decodeURIComponent(location.pathname.replace("/album/","").trim());
+				let filterCopy = JSON.parse(JSON.stringify(filters));
+				filterCopy.album = {include: [albumName]};
+				console.log(filterCopy);
+				return filterCopy;
+			}
+		}
+	]
+}
+
 
 function filterArtist(row)
 {
@@ -79,4 +110,4 @@ function filterArtist(row)
 	return allArtists.split("\x1E").filter(x => x != artistName);
 }
 
-export {DefaultView, ArtistView}
+export {DefaultView, ArtistView, AlbumView}

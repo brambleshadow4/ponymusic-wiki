@@ -47,7 +47,7 @@
 
 		columnDefs = columnDefs;
 
-		let query = buildFilterQuery(filters, [], page[0], true);
+		let query = buildFilterQuery(filters, view.tabs[tab].sort || [], page[0], true);
 		let response = await (await fetch("/api/view/tracks" + query)).json();
 		data = response.rows;
 		page = [page[0], response.pages];
@@ -131,7 +131,7 @@
 	{/if}
 
 	<div>
-		<a href="#new" on:click={()=>{openTrack({detail: {id:"new"}})}}>+ Add a track</a>
+		{#if view.hasButtonNewTrack}<a href="#new" on:click={()=>{openTrack({detail: {id:"new"}})}}>+ Add a track</a>{/if}
 	</div>
 
 	{#if view.tabs.length > 1}

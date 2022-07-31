@@ -1,7 +1,6 @@
 <script>
 	import TrackEditor from "./TrackEditor.svelte";
 	import TrackList from "./TrackList.svelte";
-	import AlbumView from "./AlbumView.svelte";
 	import ListView from "./ListView.svelte";
 	import FilterPopup from "./FilterPopup.svelte";
 	import EditList from "./EditList.svelte";
@@ -9,7 +8,7 @@
 	import LoginButton from "./LoginButton.svelte";
 	import ImportTools from "./ImportTools.svelte";
 	import {buildFilterQuery} from "./helpers.js";
-	import {DefaultView, ArtistView} from "./Views.js";
+	import {DefaultView, ArtistView, AlbumView} from "./Views.js";
 	
 	$: path = window.location.pathname;
 
@@ -17,14 +16,13 @@
 
 	let mobileNavOpen = false;
 
-
 	let tab = 0;
 	let loadedTrackID = "";
 	let loadedFilter = "";
 
 	let filters = {};
 
-	if(location.search && (location.pathname == "/" || location.pathname == "/tracks"))
+	if(location.search)
 	{
 		let query = window.location.search.substring(1);
 
@@ -74,7 +72,6 @@
 		{
 			history.replaceState({}, undefined, previousURL)
 		}
-		
 	}
 
 	function openFilter(event)
@@ -120,7 +117,6 @@
 		right: 0px;
 
 		z-index: 2;
-
 	}
 
 	nav a, .navopen a
@@ -288,14 +284,10 @@
 
 	{#if path == "/" || path == "" || path.startsWith("/track/")}
 		<ListView view={DefaultView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
-
 	{:else if path.startsWith("/album/")}
-		<AlbumView on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
-
+		<ListView view={AlbumView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path.startsWith("/artist/")}
-		<!--<ArtistView on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} /> -->
 		<ListView view={ArtistView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
-
 	{:else if path == "/about"}
 		<div class='main'>
 
