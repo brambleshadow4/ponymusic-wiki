@@ -345,6 +345,8 @@ app.get("/api/track/*", async(req,res) =>
 
 	response.tags = [];
 
+	response.originalTracks = [];
+
 	for(tag of tagRows)
 	{
 		let newTag = {property: tag.property, value: tag.value};
@@ -357,8 +359,13 @@ app.get("/api/track/*", async(req,res) =>
 
 		if(tag.property == "cover" || tag.property == "remix")
 		{
-			let remixRows = (await db.query("SELECT titlecache FROM tracks WHERE id=$1", [tag.value])).rows;
+			let remixRows = (await db.query("SELECT * FROM tracks WHERE id=$1", [tag.value])).rows;
 			newTag.text = remixRows.length ? remixRows[0].titlecache : "Deleted track";
+
+			if(remixRows.length)
+			{
+				response.originalTracks.push(remixRows[0]);
+			}
 		}
 		else
 		{

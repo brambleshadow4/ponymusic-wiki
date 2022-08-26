@@ -52,6 +52,9 @@
 
 			track = await (await fetch("/api/track/" + id + "?session=" + localStorage.session)).json();
 
+			console.log(track);
+			console.log(track.originalTracks.length)
+
 			if(track.deleted) // it's been deleted
 			{
 				tabProps = [[2,"History"]];
@@ -536,6 +539,11 @@
 
 	h2 {margin-top: 0; font-size: 12pt}
 
+	h2.subh2 {
+		margin-top: 12pt;
+		border-bottom: solid 1px black;
+	}
+
 	input {margin: 0px}
 
 	.main {
@@ -794,6 +802,30 @@
 
 			</div>
 		{/if}
+
+		{#if mode==0}
+			{#if track.originalTracks && track.originalTracks.length > 0}
+				<h2 class="subh2">Original tracks(s)</h2>
+
+				{#each track.originalTracks as track2}
+					<p><a href={"/track/" + track2.id}> {track2.titlecache}</a></p>
+
+					{#if track2.ogcache && track2.ogcache.embed}
+						<iframe title="Embeded track" src={track2.ogcache.embed} width={Math.min(track2.ogcache.width, window.innerWidth-63)} height={track2.ogcache.height} 
+							frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen
+
+						></iframe>
+					{:else if track2.ogcache && track2.ogcache.audio}
+						<audio controls>
+							<source src={track2.ogcache.audio} />
+						</audio> 
+					{/if}
+				{/each}
+			{/if}
+
+			
+		{/if}
 	{/if}
 
 </div>
+ 
