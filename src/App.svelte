@@ -22,28 +22,37 @@
 
 	let filters = {};
 
-	if(location.search)
+	function loadFilters()
 	{
-		let query = window.location.search.substring(1);
-
-		for (let text of query.split("&"))
+		if(location.search)
 		{
-			let [param, value] = text.split("=");
+			if(location.pathname == "/track/new")
+				return; 
+			let query = window.location.search.substring(1);
 
-			let typ = "include";
-
-			if(param.substring(0,2) == "x_")
+			for (let text of query.split("&"))
 			{
-				typ = "exclude";
-				param = param.substring(2);
+				let [param, value] = text.split("=");
+
+				let typ = "include";
+
+				if(param.substring(0,2) == "x_")
+				{
+					typ = "exclude";
+					param = param.substring(2);
+				}
+
+				let values = value.replace(/,,/g, "\uE000").split(",").map(x => decodeURIComponent(x).replace(/\uE000/g, ","));
+
+				filters[param] = {property: param};
+				filters[param][typ] = values;
 			}
-
-			let values = value.replace(/,,/g, "\uE000").split(",").map(x => decodeURIComponent(x).replace(/\uE000/g, ","));
-
-			filters[param] = {property: param};
-			filters[param][typ] = values;
 		}
 	}
+
+	loadFilters();
+
+	
 
 	if(window.location.pathname.startsWith("/track/"))
 	{
