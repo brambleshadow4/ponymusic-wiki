@@ -48,7 +48,7 @@
 		columnDefs = columnDefs;
 
 		let query = buildFilterQuery(filters, view.tabs[tab].sort || [], page[0], true);
-		let response = await (await fetch("/api/view/tracks" + query)).json();
+		let response = await (await fetch(view.api + query)).json();
 		data = response.rows;
 		page = [page[0], response.pages];
 		total = response.total;

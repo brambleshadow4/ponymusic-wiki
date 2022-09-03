@@ -205,16 +205,51 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 	let strippedRows = rows.map(x => {return {text: x.value, value: x.value, property}});
 
 	res.json(strippedRows);
-})
+});
 
+app.get("/api/view/artists", queryProcessing, async(req,res) =>
+{
+	let ses = await getSession(req);
+	let userID = ses && ses.user_id;
+	let page = Number(req.query.page) || 0; 
+	let offset = page*PAGE_COUNT;
+	
+	let query = `
+	SELECT * FROM
+		(
+			SELECT tracks.id, title,release_date, value as artist,
+				ROW_NUMBER() OVER (PARTITION BY value ORDER BY release_date DESC) as row_number,
+				(SELECT value FROM user_flags WHERE track_id=tracks.id AND user_flags.user_id='${userID}' AND flag='status') as status
+			FROM tracks FULL OUTER JOIN track_tags ON tracks.id=track_tags.track_id
+			WHERE property='artist'
+		) as tablea
+		LEFT JOIN 
+		(
+			SELECT COUNT(value) as tracks, value as artist
+			FROM track_tags
+			WHERE property='artist'
+			GROUP BY artist
+		) as tableb
+	ON tablea.artist=tableb.artist
+	WHERE tablea.row_number = 1
+	ORDER BY release_date DESC`;
+	//LIMIT ${PAGE_COUNT} OFFSET ${offset}`;
 
+	let {rows} = await db.query(query,[]);
+	let countRequest = await db.query(`SELECT COUNT(DISTINCT(value)) FROM track_tags WHERE property='artist'`, []);
+	let total = countRequest.rows[0].count;
+
+	res.json({rows, pages: Math.ceil(total/PAGE_COUNT), total});
+
+});
 
 app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 {
-	let page = Number(req.query.page) || 0; 
-	let offset = page*PAGE_COUNT;
 	let ses = await getSession(req);
 	let userID = ses && ses.user_id;
+	let page = Number(req.query.page) || 0; 
+	let offset = page*PAGE_COUNT;
+	
 
 	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","album","genre","pl","tag","release_date","status","title"]));
 
@@ -355,7 +390,6 @@ app.get("/api/track/*", async(req,res) =>
 		{
 			newTag.number = tag.number;
 		}
-
 
 		if(tag.property == "cover" || tag.property == "remix")
 		{

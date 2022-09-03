@@ -2,6 +2,7 @@ import {plEnumText, statusIcon, Columns} from "./helpers.js";
 
 
 let DefaultView = {
+	api: "/api/view/tracks",
 	htmlTitle: "<h1 class='no-margin'>Pony Music Wiki <span class='version'>(alpha build)</span></h1><div>A community maintained database of pony music.</div>",
 	hasButtonNewTrack: true,
 	tabs: [
@@ -23,6 +24,7 @@ let DefaultView = {
 }
 
 let ArtistView = {
+	api: "/api/view/tracks",
 	makeTitle: function(){
 		let artistName = decodeURIComponent(location.pathname.replace("/artist/","").trim());
 		return "Artist: " + artistName;
@@ -72,6 +74,7 @@ let ArtistView = {
 }
 
 let AlbumView = {
+	api: "/api/view/tracks",
 	makeTitle: function(){
 		let albumName = decodeURIComponent(location.pathname.replace("/album/","").trim());
 		return "Album: " + albumName;
@@ -100,6 +103,23 @@ let AlbumView = {
 	]
 }
 
+let ArtistList = {
+	htmlTitle: "<h1 class='no-margin'>Artists</h1>",
+	api: "/api/view/artists",
+	tabs: [
+		{
+			name: "(default)",
+			columns: [
+				Columns.StatusNF,
+				Columns.ArtistNF,
+				{name: "Tracks", width: "50", property: "tracks"},
+				{name: "Latest track", width: "200", property: "title"},
+				Columns.ReleasedNF
+			]
+		}
+	]
+}
+
 
 function filterArtist(row)
 {
@@ -108,4 +128,4 @@ function filterArtist(row)
 	return allArtists.split("\x1E").filter(x => x != artistName);
 }
 
-export {DefaultView, ArtistView, AlbumView}
+export {DefaultView, ArtistView, AlbumView, ArtistList}

@@ -156,12 +156,16 @@ let HeardButtons = hasPerm(PERM.USER_FLAGS) ? [
 
 let Columns = {}
 
+Columns.StatusNF = {name: "", width: "25", property: "status", printFn: statusIcon, icon:true};
 Columns.Status = {name: "", width: "25", property: "status", printFn: statusIcon, icon:true, filtered: false};
 Columns.Title = {name: "Title", width: "200", property: "title", filtered: false};
 Columns.Album = {name: "Album", width: "100", property: "album", linkTo: "/album/*", filtered: false};
+Columns.Artist = {name: "Artist", width: "200", property: "artist", filtered: false, linkTo:"/artist/*"}
+Columns.ArtistNF = {name: "Artist", width: "200", property: "artist", linkTo:"/artist/*"}
 Columns.Refs = {name: "Refs", width: "100", property: "pl", transform: plEnumText, filtered: false};
 Columns.Genre = {name: "Genre", width: "100", property: "genre",filtered: false};
 Columns.Tags = {name: "Tags", width: "100", property: "tag", filtered: false};
+Columns.ReleasedNF = {name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)]};
 Columns.Released = {name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)], filtered: false};
 
 export {Columns, HeardButtons, statusIcon}

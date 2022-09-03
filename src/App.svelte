@@ -8,7 +8,7 @@
 	import LoginButton from "./LoginButton.svelte";
 	import ImportTools from "./ImportTools.svelte";
 	import {buildFilterQuery} from "./helpers.js";
-	import {DefaultView, ArtistView, AlbumView} from "./Views.js";
+	import {DefaultView, ArtistView, AlbumView, ArtistList} from "./Views.js";
 	
 	$: path = window.location.pathname;
 
@@ -262,6 +262,7 @@
 	<nav>
 		<a href="/about">About</a>
 		<a href="/">Tracks</a>
+		<a href="/artists">Artists</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
 	</nav>
@@ -282,6 +283,7 @@
 	<div class='navopen'>
 		<a href="/about">About</a>
 		<a href="/">Tracks</a>
+		<a href="/artists">Artists</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
 	</div>
@@ -293,6 +295,8 @@
 
 	{#if path == "/" || path == "" || path.startsWith("/track/")}
 		<ListView view={DefaultView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+	{:else if path == "/artists"}
+		<ListView view={ArtistList} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path.startsWith("/album/")}
 		<ListView view={AlbumView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path.startsWith("/artist/")}
