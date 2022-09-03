@@ -11,6 +11,7 @@
 		bind:this={ref}
 		on:input={oninput} value={value} on:focus={oninput}
 		on:keyup={onkeyup}
+		on:keydown={onKeyDown}
 		on:blur={canOpenOptionList}
 		on:focus={canOpenOptionList}
 	/>
@@ -18,14 +19,14 @@
 	{#if !isNaN(number)}
 		<input bind:this={numberInput} class='number' placeholder="no" value={number || ""}
 			on:input={onNumberInput}
-			on:keyup={onkeyup}
+			on:keydown={onKeyDown}
 		/>
 	{/if}
 
 	{#if options.length && cool}
 		<div class='auto-complete'>
-		{#each options as item}
-			<div on:click={select(item)} on:mousedown={() => { inOptionList = true; }} class='option'>{item.text}</div>
+		{#each options as item, i}
+			<div on:click={select(item)} on:mousedown={() => { inOptionList = true; }} class={'option ' + (i == optionListKeyboardSel ? "keyboardSelect" : "")}>{item.text}</div>
 		{/each}
 		</div>
 	{/if}
@@ -50,15 +51,78 @@
 	let cool = false; // can open option list
 	let inOptionList = false;
 
+	let optionListKeyboardSel = -1;
+
 
 	//let LOOKUP_URL = location.protocol + "//" + location.host + ""
 	let options = [];
+
+	function onKeyDown(e)
+	{
+		if(e.key == "Enter")
+		{
+			let text = ref.value.trim();
+
+			if(options[optionListKeyboardSel])
+			{
+				text = options[optionListKeyboardSel].text;
+				value = options[optionListKeyboardSel].value;
+			}
+
+
+			if(!enumMode)
+			{
+				value = text
+			}
+
+			let tag = {property, value, text};
+
+			if(!isNaN(number))
+			{
+				tag.number = number;
+
+				if(number <= 0)
+				{
+					numberInput.focus();
+					return;
+				}
+			}
+
+			console.log(tag);
+
+			dispatch("valueSet", tag);
+			property = "";
+			value = "";
+		}
+
+
+		if(options.length == 0)
+		{
+			optionListKeyboardSel = -1;
+			return;
+		}
+
+		if(e.key == "ArrowDown")
+		{
+			optionListKeyboardSel = Math.min(options.length-1, optionListKeyboardSel+1);
+			e.preventDefault();
+		}
+		if (e.key == "ArrowUp")
+		{
+			optionListKeyboardSel = Math.max(0, optionListKeyboardSel-1);
+			e.preventDefault();
+		}
+
+		console.log(optionListKeyboardSel)
+	}
 
 	async function oninput(e)
 	{
 		canOpenOptionList();
 
 		displayText = e.target.value;
+
+		
 
 		if(!enumMode){
 			value = displayText;
@@ -104,33 +168,6 @@
 		if(!isNaN(numValue))
 		{
 			number = numValue
-		}
-	}
-
-	async function onkeyup(e)
-	{
-		if(e.key == "Enter")
-		{
-			let text = ref.value.trim();
-			if(!enumMode)
-			{
-				value = text
-			}
-
-			let tag = {property, value, text};
-
-			if(!isNaN(number))
-			{
-				tag.number = number;
-
-				if(number <= 0){
-					return;
-				}
-			}
-
-			dispatch("valueSet", tag);
-			property = "";
-			value = "";
 		}
 	}
 
@@ -185,10 +222,7 @@
 		line-height: 30px;
 	}
 
-	.auto-complete div:hover
-	{
-		background-color: #EFAAAA;
-	}
+	
 
 	.property-box {
 		font-size: initial;
@@ -234,5 +268,15 @@
 	}
 
 	.option {font-size: initial;}
+
+	.option.keyboardSelect
+	{
+		background-color: #D0D0D0;
+	}
+
+	.auto-complete div:hover
+	{
+		background-color: #B0B0B0;
+	}
 	
 </style>
