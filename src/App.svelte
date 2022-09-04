@@ -1,6 +1,5 @@
 <script>
 	import TrackEditor from "./TrackEditor.svelte";
-	import TrackList from "./TrackList.svelte";
 	import ListView from "./ListView.svelte";
 	import FilterPopup from "./FilterPopup.svelte";
 	import EditList from "./EditList.svelte";
@@ -8,7 +7,7 @@
 	import LoginButton from "./LoginButton.svelte";
 	import ImportTools from "./ImportTools.svelte";
 	import {buildFilterQuery} from "./helpers.js";
-	import {DefaultView, ArtistView, AlbumView, ArtistList} from "./Views.js";
+	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList} from "./Views.js";
 	
 	$: path = window.location.pathname;
 
@@ -263,6 +262,7 @@
 		<a href="/about">About</a>
 		<a href="/">Tracks</a>
 		<a href="/artists">Artists</a>
+		<a href="/albums">Albums</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
 	</nav>
@@ -284,6 +284,7 @@
 		<a href="/about">About</a>
 		<a href="/">Tracks</a>
 		<a href="/artists">Artists</a>
+		<a href="/albums">Albums</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
 	</div>
@@ -297,8 +298,10 @@
 		<ListView view={DefaultView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path == "/artists"}
 		<ListView view={ArtistList} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+	{:else if path == "/albums"}
+		<ListView view={AlbumList} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path.startsWith("/album/")}
-		<ListView view={AlbumView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+		<ListView view={AlbumView} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path.startsWith("/artist/")}
 		<ListView view={ArtistView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path == "/about"}

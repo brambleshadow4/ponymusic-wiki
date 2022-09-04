@@ -22,6 +22,8 @@
 
 	async function load(filters)
 	{	
+		console.log(view.api);
+
 		loaded = false;
 		
 		// handle switching back to page 0 when filters change
@@ -104,11 +106,16 @@
 
 	let columnDefs = view.tabs[0].columns;
 
-	let rowButtons = hasPerm(PERM.USER_FLAGS) ? [
-		["Heard it", "/notes.png"],
-		["Listen Later","/later.png"],
-		["Skip","/rest.png"]
-	] : [];
+	let rowButtons = [];
+
+	if(view.api == "/api/view/tracks" && hasPerm(PERM.USER_FLAGS))
+	{
+		rowButtons = [
+			["Heard it", "/notes.png"],
+			["Listen Later","/later.png"],
+			["Skip","/rest.png"]
+		]
+	}
 
 	// on:click={()=>{openTrack(song.id)}}
 
@@ -151,7 +158,7 @@
 			total={total}
 			selectedId={selectedId}
 			rowButtons = {rowButtons}
-			on:pagechange={onPageChange} on:rowclick={openTrack} on:openFilter
+			on:pagechange={onPageChange} on:rowclick={view.api == "/api/view/albums" ? () => {} : openTrack} on:openFilter
 			on:rowbuttonclick={changeUserFlag}
 		/>
 		

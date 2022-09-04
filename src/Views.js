@@ -120,6 +120,23 @@ let ArtistList = {
 	]
 }
 
+let AlbumList = {
+	htmlTitle: "<h1 class='no-margin'>Albums</h1>",
+	api: "/api/view/albums",
+	tabs: [
+		{
+			name: "(default)",
+			columns: [
+				{name: "Album", width: "300", property: "album", linkTo: "/album/*", filtered: false},
+				{name: "Tracks", width: "50", property: "tracks"},
+				Columns.ArtistNF,
+				Columns.GenreNF,
+				Columns.ReleasedNF
+			]
+		}
+	]
+}
+
 
 function filterArtist(row)
 {
@@ -128,4 +145,4 @@ function filterArtist(row)
 	return allArtists.split("\x1E").filter(x => x != artistName);
 }
 
-export {DefaultView, ArtistView, AlbumView, ArtistList}
+export {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList}
