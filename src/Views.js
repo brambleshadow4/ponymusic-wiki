@@ -112,6 +112,7 @@ let ArtistList = {
 			columns: [
 				Columns.StatusNF,
 				Columns.ArtistNF,
+				Columns.GenreNF,
 				{name: "Tracks", width: "50", property: "tracks"},
 				{name: "Latest track", width: "200", property: "title"},
 				Columns.ReleasedNF
@@ -128,8 +129,8 @@ let AlbumList = {
 			name: "(default)",
 			columns: [
 				{name: "Album", width: "300", property: "album", linkTo: "/album/*", filtered: false},
-				{name: "Tracks", width: "50", property: "tracks"},
 				Columns.ArtistNF,
+				{name: "Tracks", width: "50", property: "tracks"},
 				Columns.GenreNF,
 				Columns.ReleasedNF
 			]

@@ -144,14 +144,10 @@
 	nav a.smalllink, .navopen a.smalllink
 	{
 		font-size: initial;
-		color: rgb(0,100,200);;
-		text-decoration: underline;
+		/*color: rgb(0,100,200);*/
+		/*text-decoration: underline;*/
 	}
 
-	nav a.smalllink:hover, .navopen nav a.smalllink:hover
-	{
-		background-color: transparent;
-	}
 
 	.main-container
 	{
@@ -258,11 +254,11 @@
 
 
 {#if !mobileLayout}
-	<nav>
-		<a href="/about">About</a>
+	<nav>	
 		<a href="/">Tracks</a>
 		<a href="/artists">Artists</a>
 		<a href="/albums">Albums</a>
+		<a class='smalllink' href="/about">About</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
 	</nav>
@@ -281,10 +277,10 @@
 
 	{#if mobileNavOpen}
 	<div class='navopen'>
-		<a href="/about">About</a>
 		<a href="/">Tracks</a>
 		<a href="/artists">Artists</a>
 		<a href="/albums">Albums</a>
+		<a class='smalllink' href="/about">About</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
 	</div>
@@ -344,12 +340,12 @@
 
 			</ol>
 
-			<h2>Planned New Features, coming soon maybe</h2>
+			<h2>Upcoming features (updated 4 September 2022), coming eventually</h2>
 
-			<ul>
+			<ul>	
+				<li>Search - quickly jump to artists/albums/etc without having to filter</li>
 				<li>Publicallly visible lists that only one person can edit</li>
-				<li>Mark as watched/watch later/not interested etc.</li>
-				<li>Artist view: see the most recent track from each artist to quickly find active musicians</li>
+				<li>Favoriting pages</li>
 				<li>Tag view: quickly see all the tracks associated with a tag/artist/album/etc</li>
 				<li>Actually have tooling for moderators/admins</li>
 			</ul>

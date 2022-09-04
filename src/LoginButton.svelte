@@ -3,7 +3,7 @@
 	export let display = "fixed";
 
 	let signedIn = !!localStorage.role;
-	let avatar = localStorage.avatar || "/avatar.svg";
+	let avatar = localStorage.avatar || "/discord.png";
 	let loading = false;
 
 	function handleClick(e)
@@ -21,7 +21,7 @@
 			delete localStorage.session;
 			delete localStorage.avatar;
 			signedIn = false;
-			avatar = "/avatar.svg";
+			avatar = "/discord.png";
 
 			window.location.reload(true);
 		}

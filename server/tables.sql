@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS track_tags(
 	number INTEGER
 );
 
+CREATE INDEX IF NOT EXISTS property_index ON track_tags(property, value);
+
 CREATE TABLE IF NOT EXISTS track_history (
 	track_id INTEGER,
 	user_id VARCHAR(355),
@@ -49,6 +51,8 @@ CREATE TABLE IF NOT EXISTS sessions (
 	user_id VARCHAR(255),
 	expire_time TIMESTAMP
 );
+
+
 
 -- INSERT INTO users (id, name, role) VALUES('1', 'System', 2)
 -- INSERT INTO sessions (session, user_id, expire_time) VALUES ('1', '1', NOW() + interval '1 year')

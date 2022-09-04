@@ -215,21 +215,29 @@ app.get("/api/view/artists", queryProcessing, async(req,res) =>
 	let offset = page*PAGE_COUNT;
 	
 	let query = `
-	SELECT * FROM
-		(
-			SELECT tracks.id, title,release_date, value as artist,
-				ROW_NUMBER() OVER (PARTITION BY value ORDER BY release_date DESC) as row_number,
-				(SELECT value FROM user_flags WHERE track_id=tracks.id AND user_flags.user_id='${userID}' AND flag='status') as status
-			FROM tracks FULL OUTER JOIN track_tags ON tracks.id=track_tags.track_id
-			WHERE property='artist'
-		) as tablea
-		LEFT JOIN 
-		(
-			SELECT COUNT(value) as tracks, value as artist
+	SELECT *, (
+		SELECT COALESCE(string_agg(value, CHR(30)), '') FROM (
+			SELECT DISTINCT(value)
 			FROM track_tags
-			WHERE property='artist'
-			GROUP BY artist
-		) as tableb
+			WHERE track_id IN (
+				SELECT track_id
+				FROM track_tags
+				WHERE property='artist' AND value=tablea.artist
+			) AND property='genre') as td
+		) as genre
+	FROM (
+		SELECT tracks.id, title,release_date, value as artist,
+			ROW_NUMBER() OVER (PARTITION BY value ORDER BY release_date DESC) as row_number,
+			(SELECT value FROM user_flags WHERE track_id=tracks.id AND user_flags.user_id='${userID}' AND flag='status') as status
+		FROM tracks FULL OUTER JOIN track_tags ON tracks.id=track_tags.track_id
+		WHERE property='artist'
+	) as tablea
+	LEFT JOIN (
+		SELECT COUNT(value) as tracks, value as artist
+		FROM track_tags
+		WHERE property='artist'
+		GROUP BY artist
+	) as tableb
 	ON tablea.artist=tableb.artist
 	WHERE tablea.row_number = 1
 	ORDER BY release_date DESC
