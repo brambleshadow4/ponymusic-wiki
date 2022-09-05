@@ -96,33 +96,10 @@
 			on:pagechange={onPageChange}
 		/>
 
-		<!--table>
-			<tr>
-				<th>Timestamp</th><th>User</th><th>Track</th>
-			</tr>
-			{#each edits as edit}
-			<tr>
-				<td>{}</td>
-				<td>{edit.user_name}</td>
-				{#if edit.track_title == null}
-					<td><a href="#edit" class='deleted' on:click={() => openTrack(edit.track_id)}>deleted ({edit.track_id})</a></td>
-				{:else}
-					<td><a  href="#edit" on:click={() => openTrack(edit.track_id)}>{edit.track_title}</a></td>
-				{/if}
-			</tr>
-			{/each}
-		</table-->
 	{/if}
 </div>
 
 <style>
-
-	table,tr,td,th
-	{
-		border-collapse: collapse;
-		border: solid 1px black;
-		padding: 0px 10px;
-	}
 
 	.frame{
 		height: 100%;
@@ -134,9 +111,6 @@
 		.frame {padding-left: 5px}
 	}
 
-	.no-margin{
-		margin: 0;
-	}
 
 </style>
 

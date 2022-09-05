@@ -805,7 +805,7 @@
 
 		{#if mode==0}
 			{#if track.originalTracks && track.originalTracks.length > 0}
-				<h2 class="subh2">Original tracks(s)</h2>
+				<h2 class="subh2">Original track</h2>
 
 				{#each track.originalTracks as track2}
 					<p><a href={"/track/" + track2.id}> {track2.titlecache}</a></p>

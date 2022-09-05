@@ -158,7 +158,7 @@
 		right: 0;
 	}
 
-	p, ol, ul, h2,h3{
+	p, ol, ul, h2 {
 		margin-top: 0px;
 	}
 
@@ -192,10 +192,6 @@
 
 		width: calc(100% - .5in);
 		max-width: 800px;		
-	}
-
-	.no-margin{
-		margin: 0;
 	}
 
 	blockquote
@@ -269,7 +265,7 @@
 {#if mobileLayout}
 	<nav>
 		<div class='navbar'>
-			<img on:click={()=>{mobileNavOpen = !mobileNavOpen}} src="/menu.png" />
+			<img alt="menu icond" on:click={()=>{mobileNavOpen = !mobileNavOpen}} src="/menu.png" />
 			<span class='flex-main'>Ponymusic.wiki</span>
 			<LoginButton display="inline"/>
 		</div>
@@ -295,9 +291,9 @@
 	{:else if path == "/artists"}
 		<ListView view={ArtistList} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path == "/albums"}
-		<ListView view={AlbumList} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+		<ListView view={AlbumList} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path.startsWith("/album/")}
-		<ListView view={AlbumView} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+		<ListView view={AlbumView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path.startsWith("/artist/")}
 		<ListView view={ArtistView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path == "/about"}
