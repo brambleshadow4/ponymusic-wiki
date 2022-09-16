@@ -723,26 +723,27 @@
 			{/if}
 		{/if}
 
+		
 
 		{#if mode== 0 || mode == 1}
-		<div>Tags:</div>
-		<div>
-				
-			{#each track.tags as tag}
-				<Tag canRemove={mode==1} tag={tag} on:remove={removeTag(tag)}/>
-			{/each}
+			<div>Tags:</div>
+			<div>
+					
+				{#each track.tags as tag}
+					<Tag canRemove={mode==1} tag={tag} on:remove={removeTag(tag)}/>
+				{/each}
 
-			{#if enteringTag}
-				<TagEntryInput 
-					property={tagProperty}
-					value={tagValue}
-					number={tagNumber}
-					bind:ref
-					on:valueSet={onEntry}
-				/>
+				{#if enteringTag}
+					<TagEntryInput 
+						property={tagProperty}
+						value={tagValue}
+						number={tagNumber}
+						bind:ref
+						on:valueSet={onEntry}
+					/>
 
-			{/if}			
-		</div>
+				{/if}			
+			</div>
 		{/if}
 
 		{#if mode==1}
@@ -804,6 +805,17 @@
 		{/if}
 
 		{#if mode==0}
+
+			{#if Number(track.remixCount) && Number(track.coverCount)}
+				<div>
+					<a href={"/remix/"+track.id}>{track.remixCount} remixes</a>, <a href={"/cover/"+track.id}>{track.coverCount} covers</a>
+				</div>
+			{:else if Number(track.remixCount)}
+				<div><a href={"/remix/"+track.id}>{track.remixCount} remixes</a></div>
+			{:else if Number(track.coverCount)}
+				<div><a href={"/cover/"+track.id}>{track.coverCount} covers</a></div>
+			{/if}
+
 			{#if track.originalTracks && track.originalTracks.length > 0}
 				<h2 class="subh2">Original track</h2>
 

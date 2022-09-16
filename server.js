@@ -424,6 +424,9 @@ app.get("/api/track/*", async(req,res) =>
 	let trackRows = (await db.query("SELECT * FROM tracks WHERE id=$1", [id])).rows;
 	let tagRows = (await db.query("SELECT * FROM track_tags WHERE track_id=$1", [id])).rows;
 
+	let coverCount = (await db.query("SELECT COUNT(*) as count FROM track_tags WHERE property='cover' AND value=$1", [id])).rows[0].count;
+	let remixCount = (await db.query("SELECT COUNT(*) as count FROM track_tags WHERE property='remix' AND value=$1", [id])).rows[0].count;
+
 	let userFlags = (await db.query("SELECT value as status FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag='status'",[id,userID])).rows;
 
 	let response = trackRows[0];
@@ -435,6 +438,9 @@ app.get("/api/track/*", async(req,res) =>
 	}
 
 	response.tags = [];
+
+	response.remixCount = remixCount;
+	response.coverCount = coverCount;
 
 	response.originalTracks = [];
 
@@ -837,7 +843,6 @@ async function buildWhereClause(req, allowedFilters)
 			whereClauses.push(buildStatusClause(userID, req.query.x_status, true))
 		}
 	}
-	
 
 
 	if(whereClauses.length)
