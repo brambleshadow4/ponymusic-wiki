@@ -18,6 +18,9 @@
 				return "/artist/" + tag.value;
 			case "album":
 				return "/album/" + tag.value;
+			case "cover":
+			case "remix":
+				return "/remix/" + tag.value + "-" + encodeURIComponent(tag.text);
 			default:
 				return "";
 		}

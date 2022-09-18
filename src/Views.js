@@ -10,7 +10,7 @@ let DefaultView = {
 			name: "(default)",
 			columns: [
 				Columns.Status,
-				{name: "Artist", width: "200", property: "artist", linkTo:"/artist/*",  filtered: false,},
+				{name: "Artist", width: "200", property: "artist", linkTo:"/artist/*",  filtered: false},
 				{name: "Featured Arist", width: "50", property: "featured_artist", linkTo:"/artist/*", filtered: false},
 				Columns.Title,
 				Columns.Album,
@@ -103,9 +103,43 @@ let AlbumView = {
 	]
 }
 
+let RemixCoverView = {
+	api: "/api/view/tracks",
+	makeTitle: function(){
+		let piece = location.pathname.substring("/remix/".length);
+		let trackURI = piece.substring(piece.indexOf("-")+1);
+		let trackName = decodeURIComponent(trackURI).trim();
+		return "Remixes + Covers of: " + trackName;
+	},
+	tabs: [
+		{
+			name: "(default)",
+			columns: [
+				Columns.Status,
+				Columns.Artist,
+				{name: "Featured Arist", width: "50", property: "featured_artist", linkTo:"/artist/*", filtered: false},
+				Columns.Title,
+				Columns.Album,
+				Columns.Refs,
+				Columns.Genre,
+				Columns.Tags,
+				Columns.Released
+			],
+			filter: function(filters) {
+				let piece = location.pathname.substring("/remix/".length);
+				let trackNo = piece.substring(0, piece.indexOf("-"));
+				let filterCopy = JSON.parse(JSON.stringify(filters));
+				filterCopy.remixcover = {include: [trackNo]};
+				return filterCopy
+			}
+		}
+	]
+
+}
+
 let ArtistList = {
-	htmlTitle: "<h1 class='no-margin'>Artists</h1>",
 	api: "/api/view/artists",
+	htmlTitle: "<h1 class='no-margin'>Artists</h1>",
 	tabs: [
 		{
 			name: "(default)",
@@ -146,4 +180,4 @@ function filterArtist(row)
 	return allArtists.split("\x1E").filter(x => x != artistName);
 }
 
-export {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList}
+export {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView}

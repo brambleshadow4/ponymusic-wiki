@@ -591,6 +591,10 @@
 		z-index: -1;
 	}
 
+	.remix-blurb {
+		margin-bottom: 8pt;
+	}
+
 	.tabs .tab{
 		border-bottom: 32px solid #E0E0E0;
 		border-left: 16px solid transparent;
@@ -710,6 +714,14 @@
 					<source src={track.ogcache.audio} />
 				</audio> 
 			{/if}
+			{#if Number(track.remixCount) || Number(track.coverCount)}
+				<div class='remix-blurb'>
+					<a href={"/remix/"+track.id + "-" + encodeURIComponent(track.titlecache)}>
+						{#if Number(track.remixCount)}{track.remixCount} remixes{/if}{#if Number(track.remixCount) && Number(track.coverCount)},{/if}
+						{#if Number(track.coverCount)}{track.coverCount} covers{/if}
+					</a>
+				</div>
+			{/if}
 
 			{#if hasPerm(PERM.USER_FLAGS)}
 				<div class="userFlagButtons">
@@ -722,8 +734,6 @@
 				</div>
 			{/if}
 		{/if}
-
-		
 
 		{#if mode== 0 || mode == 1}
 			<div>Tags:</div>
@@ -805,17 +815,6 @@
 		{/if}
 
 		{#if mode==0}
-
-			{#if Number(track.remixCount) && Number(track.coverCount)}
-				<div>
-					<a href={"/remix/"+track.id}>{track.remixCount} remixes</a>, <a href={"/cover/"+track.id}>{track.coverCount} covers</a>
-				</div>
-			{:else if Number(track.remixCount)}
-				<div><a href={"/remix/"+track.id}>{track.remixCount} remixes</a></div>
-			{:else if Number(track.coverCount)}
-				<div><a href={"/cover/"+track.id}>{track.coverCount} covers</a></div>
-			{/if}
-
 			{#if track.originalTracks && track.originalTracks.length > 0}
 				<h2 class="subh2">Original track</h2>
 

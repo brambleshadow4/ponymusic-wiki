@@ -307,10 +307,8 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let offset = page*PAGE_COUNT;
 	
 
-	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","album","genre","pl","tag","release_date","status","title"]));
-
+	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","album","genre","pl","tag","release_date","status","title","remixcover"]));
 	let albumNoSelect = "";
-
 	let orderBy = "ORDER BY release_date DESC";
 
 	//console.log(req.query.sort);
@@ -778,7 +776,7 @@ async function buildWhereClause(req, allowedFilters)
 	let whereClause = "";
 	let whereClauses = [];
 
-	let simpleFilters = ["artist","featured_artist","album","genre","pl","tag"];
+	let simpleFilters = ["artist","featured_artist","album","genre","pl","tag","remixcover"];
 	
 	for(let key of simpleFilters)
 	{
@@ -865,6 +863,11 @@ function buildWhereClausePart(property, valueList, negate)
 	if(property == "artist")
 	{
 		propertyClause = `(property='artist' OR property='original artist')`;
+	}
+
+	if(property == "remixcover")
+	{
+		propertyClause = `(property='remix' OR property='cover')`;
 	}
 
 	if(negate)

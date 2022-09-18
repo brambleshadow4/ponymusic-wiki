@@ -7,7 +7,7 @@
 	import LoginButton from "./LoginButton.svelte";
 	import ImportTools from "./ImportTools.svelte";
 	import {buildFilterQuery} from "./helpers.js";
-	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList} from "./Views.js";
+	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView} from "./Views.js";
 	
 	$: path = window.location.pathname;
 
@@ -296,6 +296,8 @@
 		<ListView view={AlbumView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path.startsWith("/artist/")}
 		<ListView view={ArtistView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+	{:else if path.startsWith("/remix/")}
+		<ListView view={RemixCoverView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 	{:else if path == "/about"}
 		<div class='main'>
 
