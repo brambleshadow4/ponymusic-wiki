@@ -52,9 +52,6 @@
 
 			track = await (await fetch("/api/track/" + id + "?session=" + localStorage.session)).json();
 
-			console.log(track);
-			console.log(track.originalTracks.length)
-
 			if(track.deleted) // it's been deleted
 			{
 				tabProps = [[2,"History"]];

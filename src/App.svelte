@@ -257,6 +257,7 @@
 		<a class='smalllink' href="/about">About</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
+		<a class='smalllink' href="/export-data">Download the Data</a>
 	</nav>
 
 	<LoginButton display="fixed"/>
@@ -279,6 +280,7 @@
 		<a class='smalllink' href="/about">About</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
+		<a class='smalllink' href="/export-data">Download the Data</a>
 	</div>
 	{/if}
 {/if}
@@ -364,6 +366,14 @@
 		<div class='main'>
 			
 			<ImportTools />
+		</div>
+	{:else if path=="/export-data"}
+		<div class='main'>
+			<h1>Download the Data</h1>
+			<p>Since ponymusicwiki encourages contributions from everyone in the fandom, we offer a full export of all tracks and their metadata. User-based information is not available to download (in the future, we might offer an option to download user data for yourself)</p>
+			<p>We currently offer the data as a SQL file to import into a DBMS. You can download a copy of the database here:</p>
+			<p><a href="/export/export.sql">export.sql</a></p>
+			<p>I personally use <a href="https://sqlitebrowser.org/">DB browser for SQLite</a></p>
 		</div>
 	{/if}
 </div>

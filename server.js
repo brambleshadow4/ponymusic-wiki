@@ -12,8 +12,6 @@ const { v4: uuidv4 } = require('uuid');
 
 const {PERM, ROLE, auth, reqHasPerm, getSession} = require("./server/auth.js");
 const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
-
-
 const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl","cover","remix","original artist"];
 
 const app = express();
