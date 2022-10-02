@@ -5,6 +5,7 @@ let DefaultView = {
 	api: "/api/view/tracks",
 	htmlTitle: "<h1 class='no-margin'>Pony Music Wiki <span class='version'>(alpha build)</span></h1><div>A community maintained database of pony music.</div>",
 	hasButtonNewTrack: true,
+	hasButtonRandomTrack: true,
 	tabs: [
 		{
 			name: "(default)",
@@ -25,6 +26,7 @@ let DefaultView = {
 
 let ArtistView = {
 	api: "/api/view/tracks",
+	hasButtonRandomTrack: true,
 	makeTitle: function(){
 		let artistName = decodeURIComponent(location.pathname.replace("/artist/","").trim());
 		return "Artist: " + artistName;
@@ -75,6 +77,7 @@ let ArtistView = {
 
 let AlbumView = {
 	api: "/api/view/tracks",
+	hasButtonRandomTrack: true,
 	makeTitle: function(){
 		let albumName = decodeURIComponent(location.pathname.replace("/album/","").trim());
 		return "Album: " + albumName;
@@ -105,6 +108,7 @@ let AlbumView = {
 
 let RemixCoverView = {
 	api: "/api/view/tracks",
+	hasButtonRandomTrack: true,
 	makeTitle: function(){
 		let piece = location.pathname.substring("/remix/".length);
 		let trackURI = piece.substring(piece.indexOf("-")+1);

@@ -302,15 +302,14 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let ses = await getSession(req);
 	let userID = ses && ses.user_id;
 	let page = Number(req.query.page) || 0; 
+	
+	let limitCount = PAGE_COUNT;
 	let offset = page*PAGE_COUNT;
 	
 
 	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","album","genre","pl","tag","release_date","status","title","remixcover"]));
 	let albumNoSelect = "";
-	let orderBy = "ORDER BY release_date DESC";
-
-	//console.log(req.query.sort);
-	
+	let orderBy = "ORDER BY release_date DESC";	
 
 	if(req.query.album && req.query.album.length == 1)
 	{
@@ -320,6 +319,13 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 		{
 			orderBy = "ORDER BY album_no ASC";
 		}
+	}
+
+	if(req.query.sort && req.query.sort[0] == "^random")
+	{
+		orderBy = "ORDER BY random() ASC";	
+		limitCount = 1;
+		offset = 0;
 	}
 
 	let query = `
@@ -336,9 +342,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 		FROM tracks 
 		${whereClause}
 		${orderBy}
-		LIMIT ${PAGE_COUNT} OFFSET ${offset}`;
-
-	//console.log(query);
+		LIMIT ${limitCount} OFFSET ${offset}`;
 
 	let {rows} = await db.query(query,[userID]);
 	let countRequest = await db.query(`SELECT COUNT(*) AS count FROM tracks ${whereClause}`,[]);

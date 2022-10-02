@@ -18,11 +18,13 @@
 	let total = 0;
 	let tab = 0;
 
+	let queryCache = "";
 	let loaded = false;
 
 	async function load(filters)
 	{	
 		console.log(view.api);
+		console.log(filters);
 
 		loaded = false;
 		
@@ -50,11 +52,31 @@
 		columnDefs = columnDefs;
 
 		let query = buildFilterQuery(filters, view.tabs[tab].sort || [], page[0], true);
+		queryCache = query;
 		let response = await (await fetch(view.api + query)).json();
 		data = response.rows;
 		page = [page[0], response.pages];
 		total = response.total;
 		loaded = true;
+	}
+
+	async function requestRandom()
+	{
+		let newFilters = JSON.parse(JSON.stringify(filters));
+
+		if(view.tabs[tab].filter)
+		{
+			newFilters = view.tabs[tab].filter(newFilters);
+		}
+
+		let query = buildFilterQuery(newFilters, [{asc: "random"}], 0, true);
+		let response = await (await fetch(view.api + query)).json();
+
+		if(response.rows[0])
+		{
+			dispatch("openTrack", response.rows[0].id);
+		}
+		
 	}
 
 	function setTab(no)
@@ -137,8 +159,9 @@
 		{@html view.htmlTitle}
 	{/if}
 
-	<div>
+	<div class='action-links'>
 		{#if view.hasButtonNewTrack}<a href="#new" on:click={()=>{openTrack({detail: {id:"new"}})}}>+ Add a track</a>{/if}
+		{#if view.hasButtonRandomTrack}<a href="#random" on:click={requestRandom}><img class='icon' src="/random.svg"/> Random Track</a>{/if}
 	</div>
 
 	{#if view.tabs.length > 1}
@@ -206,6 +229,21 @@
 	h1{
 		padding-top: 0px;
 		margin: 0px;
+	}
+
+	.icon
+	{
+		width: 15px;
+		height: 15px;
+	}
+
+	.right {
+		float: right;
+	}
+
+	.action-links a
+	{
+		margin-right: 20px;
 	}
 
 </style>
