@@ -1,8 +1,10 @@
 /node_modules/
 /public/build/
+/public/export/
 /server/*.pem
 /*.sql
 
 .DS_Store
-
 .env
+
+*.csv

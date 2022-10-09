@@ -23,9 +23,12 @@
 		"cors": "^2.8.5",
 		"dotenv": "^10.0.0",
 		"express": "^4.17.2",
+		"jquery-csv": "^1.0.21",
 		"node-fetch": "^2.6.7",
+		"open": "^8.4.0",
 		"path": "^0.12.7",
 		"pg": "^8.7.1",
+		"readline-sync": "^1.4.10",
 		"simple-oauth2": "^4.3.0",
 		"sirv-cli": "^1.0.0",
 		"uuid": "^8.3.2"
