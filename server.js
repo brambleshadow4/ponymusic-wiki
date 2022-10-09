@@ -691,23 +691,33 @@ app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =
 });
 
 
-app.post("/api/findDuplicates", processJSON, async (req,res) =>
+app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 {
 	var data = req.body;
 
 	let title = (data.title || "").trim();
 
 	let duplicates = [];
+	let unknownArtists = [];
 
 	if(data.id == "new"){
 		data.id = -1;
 	}
 
+	let duplicateTrackIDs = new Set();
+	let hasWarnings = false;
+
 	let info = await db.query("SELECT id, titlecache FROM tracks WHERE LOWER(title)=LOWER($2) AND id !=$1", [data.id, title]);
 
 	for(row of info.rows)
 	{
-		duplicates.push({value: title, id: row.id, name: row.titlecache});
+		if(!duplicateTrackIDs.has(row.id))
+		{
+			hasWarnings = true;
+			duplicates.push({value: title, id: row.id, name: row.titlecache});
+			duplicateTrackIDs.add(row.id);
+		}
+		
 	}
 
 	// hyperlink tag
@@ -729,15 +739,38 @@ app.post("/api/findDuplicates", processJSON, async (req,res) =>
 
 	for(tag of data.tags)
 	{
+		if(tag.property != "hyperlink")
+			continue;
+
 		info = await db.query("SELECT a.track_id as id, b.titlecache as name FROM track_tags as a LEFT JOIN tracks as b ON a.track_id=b.id WHERE property='hyperlink' AND value=$1 AND track_id !=$2", [tag.value, data.id]);
 
 		for(row of info.rows)
 		{
-			duplicates.push({value: tag.value, id: row.id, name: row.name});
+			if(!duplicateTrackIDs.has(row.id))
+			{
+				hasWarnings = true;
+				duplicates.push({value: tag.value, id: row.id, name: row.name});
+				duplicateTrackIDs.add(row.id);
+			}
 		}
 	}
 
-	res.json({status: 200, duplicates});
+	for(tag of data.tags)
+	{
+		if(tag.property != "artist" && tag.property != "featured artist")
+			continue;
+
+		info = await db.query("SELECT * FROM track_tags WHERE ((property='artist' OR property='featured artist') AND LOWER(value)=LOWER($1)) LIMIT 1", [tag.value])
+
+		if(info.rows.length == 0)
+		{
+			hasWarnings = true;
+			unknownArtists.push(tag.value);
+			console.log(unknownArtists);
+		}
+	}
+
+	res.json({status: 200, warnings: hasWarnings, duplicates, unknownArtists});
 	
 });
 

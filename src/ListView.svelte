@@ -23,9 +23,6 @@
 
 	async function load(filters)
 	{	
-		console.log(view.api);
-		console.log(filters);
-
 		loaded = false;
 		
 		// handle switching back to page 0 when filters change

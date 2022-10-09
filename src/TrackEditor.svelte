@@ -21,7 +21,7 @@
 	let ref;
 	let trackDeleted = false;
 	let errorMessage = "";
-	let duplicates = [];
+	let trackWarnings = [];
 	let nameOverrides = {};
 	let scrapedTitle = "";
 
@@ -40,7 +40,7 @@
 
 	let spinner1 = false;
 	let sendingRequest = false;
-	let findDuplicatesChannelStatus = 0;
+	let getWarningsChannelStatus = 0;
 
 	async function load()
 	{
@@ -172,9 +172,9 @@
 
 		updateHasProperty();
 
-		if(tag.property == "hyperlink")
+		if(tag.property == "hyperlink" || tag.property == "artist" || tag.property == "featured artist")
 		{
-			findDuplicates();
+			getTrackWarnings();
 		}
 	};
 
@@ -196,11 +196,11 @@
 		}
 	}
 
-	async function findDuplicates()
+	async function getTrackWarnings()
 	{
-		if(findDuplicatesChannelStatus == 0)
+		if(getWarningsChannelStatus == 0)
 		{
-			findDuplicatesChannelStatus = 1;
+			getWarningsChannelStatus = 1;
 
 			var data = 
 			{
@@ -213,7 +213,7 @@
 			var response = {};
 			try 
 			{
-				response = await (await fetch("/api/findDuplicates", {
+				response = await (await fetch("/api/getTrackWarnings", {
 					method: "POST",
 					headers: {"Content-Type": "text/json"},
 					body: JSON.stringify(data)
@@ -221,22 +221,22 @@
 			}
 			catch(e){};
 
-			duplicates = response.duplicates || [];
+			trackWarnings = response || {};
 
 			// handle subsequent requests.
-			if(findDuplicatesChannelStatus == 1)
+			if(getWarningsChannelStatus == 1)
 			{
-				findDuplicatesChannelStatus = 0;
+				getWarningsChannelStatus = 0;
 			}
-			else if (findDuplicatesChannelStatus == 2)
+			else if (getWarningsChannelStatus == 2)
 			{
-				findDuplicatesChannelStatus = 0;
-				findDuplicates();
+				getWarningsChannelStatus = 0;
+				getTrackWarnings();
 			}
 		}
-		else if (findDuplicatesChannelStatus == 1)
+		else if (getWarningsChannelStatus == 1)
 		{
-			findDuplicatesChannelStatus = 2;
+			getWarningsChannelStatus = 2;
 		}
 	}
 
@@ -476,7 +476,7 @@
 			}
 		}
 
-		findDuplicates();
+		getTrackWarnings();
 	}
 
 	/**
@@ -616,6 +616,10 @@
 		margin-right: .5in;
 	}
 
+	.indent {
+		padding-left: .5in;
+	}
+
 	#name{
 		width: calc(100% - 1.5in);
 	}
@@ -683,7 +687,7 @@
 			<div>
 				<div class='field'>
 					<span class="label">Title:</span>
-					<input id='name' type="text" maxlength="255" bind:this={nameInput} on:input={findDuplicates} value={track.title}/>
+					<input id='name' type="text" maxlength="255" bind:this={nameInput} on:input={getTrackWarnings} value={track.title}/>
 				</div>
 				
 				<div class='field'>
@@ -782,12 +786,20 @@
 					<!--<button>+ Remix</button>-->
 				</div>
 				
-				{#if duplicates.length}
+				{#if trackWarnings.warnings}
 					<div class="tag-warnings">
-						<div>This track has the same title/hyperlink as other tracks. Please make sure it is not a duplicate of the following:</div>
-						{#each duplicates as item}
-							<div><a target="_blank" href={"/track/" + item.id}>{item.name}</a></div>
-						{/each}
+						{#if trackWarnings.duplicates.length}
+							<div>This track has the same title/hyperlink as other tracks. Please make sure it is not a duplicate of the following:</div>
+							{#each trackWarnings.duplicates as item}
+								<div class='indent'><a target="_blank" href={"/track/" + item.id}>{item.name}</a></div>
+							{/each}
+						{/if}
+						{#if trackWarnings.unknownArtists.length}
+							<div>This track has an artist that is currently not in the wiki. Please make sure the name is correct:</div>
+							{#each trackWarnings.unknownArtists as item}
+								<div class='indent'>{item}</div>
+							{/each}
+						{/if}
 					</div>
 				{/if}
 			</div>
