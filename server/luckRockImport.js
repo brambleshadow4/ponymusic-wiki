@@ -78,10 +78,17 @@ async function processData(data)
 
 		// need to do artist processing
 
-		
-		
+		track.artist = track.artist.split(/, & |, | & /)
+			.map(x => x.replace(/ Cover$| cover$| Remix$| remix/,""))
+			.join("\x1E");
+		track.genre = track.genre.replace(/\//g, "\x1E");
 
-		let params = "?title=" + encodeURIComponent(track.title) + "&date=" + encodeURIComponent(track.date) + "&artist=" + encodeURIComponent(track.artist) + "&url=" + encodeURIComponent(track.url);
+
+		let params = "?title=" + encodeURIComponent(track.title) 
+			+ "&date=" + encodeURIComponent(track.date) 
+			+ "&artist=" + encodeURIComponent(track.artist) 
+			+ "&genre=" + encodeURIComponent(track.genre)
+			+ "&url=" + encodeURIComponent(track.url);
 
 		open(HOST + "/track/new" + params);
 

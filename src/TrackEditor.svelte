@@ -346,6 +346,8 @@
 		}
 		catch(e){};
 
+		console.log(params);
+
 		for(let pair of nameOverridesRaw)
 		{
 			nameOverrides[pair[0]] = pair[1];
@@ -359,7 +361,14 @@
 
 		if(params['artist'])
 		{
-			addParsedArtist(params['artist'], "artist");
+			let artistList = params['artist'].split("\x1E");
+			artistList.forEach(x => addParsedArtist(x, "artist"));
+		}
+
+		if(params['genre'])
+		{
+			let genreList = params['genre'].split("\x1E");
+			genreList.forEach(x => addTag({property: "genre", value: x, text: x}));
 		}
 
 		if(params['url'])
