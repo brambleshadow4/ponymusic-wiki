@@ -697,30 +697,21 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 
 	let title = (data.title || "").trim();
 
-	let duplicates = [];
+	let sameTitle = [];
+	let sameHyperlink = []
 	let unknownArtists = [];
+
 
 	if(data.id == "new"){
 		data.id = -1;
 	}
 
-	let duplicateTrackIDs = new Set();
+	let sameHyperlinkIDs = new Set();
 	let hasWarnings = false;
 
-	let info = await db.query("SELECT id, titlecache FROM tracks WHERE LOWER(title)=LOWER($2) AND id !=$1", [data.id, title]);
+	
 
-	for(row of info.rows)
-	{
-		if(!duplicateTrackIDs.has(row.id))
-		{
-			hasWarnings = true;
-			duplicates.push({value: title, id: row.id, name: row.titlecache});
-			duplicateTrackIDs.add(row.id);
-		}
-		
-	}
-
-	// hyperlink tag
+	// double check tags are okay
 
 	for(tag of data.tags)
 	{
@@ -737,6 +728,10 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		}
 	}
 
+	// check hyperlinks
+
+	var info = "";
+
 	for(tag of data.tags)
 	{
 		if(tag.property != "hyperlink")
@@ -746,14 +741,27 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 
 		for(row of info.rows)
 		{
-			if(!duplicateTrackIDs.has(row.id))
-			{
-				hasWarnings = true;
-				duplicates.push({value: tag.value, id: row.id, name: row.name});
-				duplicateTrackIDs.add(row.id);
-			}
+			hasWarnings = true;
+			sameHyperlink.push({value: tag.value, id: row.id, name: row.name});
+			sameHyperlinkIDs.add(row.id);
 		}
 	}
+
+	// check title
+
+	info = await db.query("SELECT id, titlecache FROM tracks WHERE LOWER(title)=LOWER($2) AND id !=$1", [data.id, title]);
+
+	for(row of info.rows)
+	{
+		if(!sameHyperlinkIDs.has(row.id))
+		{
+			hasWarnings = true;
+			sameTitle.push({value: title, id: row.id, name: row.titlecache});
+		}
+		
+	}
+
+	// check artists
 
 	for(tag of data.tags)
 	{
@@ -766,11 +774,10 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		{
 			hasWarnings = true;
 			unknownArtists.push(tag.value);
-			console.log(unknownArtists);
 		}
 	}
 
-	res.json({status: 200, warnings: hasWarnings, duplicates, unknownArtists});
+	res.json({status: 200, warnings: hasWarnings, sameTitle, sameHyperlink, unknownArtists});
 	
 });
 

@@ -193,6 +193,11 @@
 
 			track.tags = track.tags;
 			updateHasProperty();
+
+			if(tag.property == "hyperlink" || tag.property == "artist" || tag.property == "featured artist")
+			{
+				getTrackWarnings();
+			}
 		}
 	}
 
@@ -797,9 +802,15 @@
 				
 				{#if trackWarnings.warnings}
 					<div class="tag-warnings">
-						{#if trackWarnings.duplicates.length}
-							<div>This track has the same title/hyperlink as other tracks. Please make sure it is not a duplicate of the following:</div>
-							{#each trackWarnings.duplicates as item}
+						{#if trackWarnings.sameHyperlink.length}
+							<div>This track has the same hyperlink as other tracks. Please make sure it is not a duplicate of the following:</div>
+							{#each trackWarnings.sameHyperlink as item}
+								<div class='indent'><a target="_blank" href={"/track/" + item.id}>{item.name}</a></div>
+							{/each}
+						{/if}
+						{#if trackWarnings.sameTitle.length}
+							<div>This track has the same title as other tracks. Please make sure it is not a duplicate of the following:</div>
+							{#each trackWarnings.sameTitle as item}
 								<div class='indent'><a target="_blank" href={"/track/" + item.id}>{item.name}</a></div>
 							{/each}
 						{/if}
