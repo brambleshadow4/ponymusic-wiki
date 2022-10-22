@@ -25,6 +25,7 @@
 		"express": "^4.17.2",
 		"jquery-csv": "^1.0.21",
 		"node-fetch": "^2.6.7",
+		"node-fetch-commonjs": "^3.2.4",
 		"open": "^8.4.0",
 		"path": "^0.12.7",
 		"pg": "^8.7.1",
