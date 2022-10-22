@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS tracks (
 	titlecache VARCHAR(511) NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS release_date_index ON tracks(release_date);
+
 -- ALTER TABLE tracks ADD COLUMN ogcache JSONB
 
 --
@@ -24,6 +26,7 @@ CREATE TABLE IF NOT EXISTS track_tags(
 );
 
 CREATE INDEX IF NOT EXISTS property_index ON track_tags(property, value);
+CREATE INDEX IF NOT EXISTS track_id_index ON track_tags(track_id);
 
 CREATE TABLE IF NOT EXISTS track_history (
 	track_id INTEGER,
