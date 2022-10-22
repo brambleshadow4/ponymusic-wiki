@@ -73,9 +73,8 @@ function sqlEscapeString(s)
 
 	s = s.replace(/\\/g, "\\\\");
 	s = s.replace(/'/g, "''");
-	s = s.replace(/%/g,"\\%")
-	s = s.replace(/\n/g,"\\n")
-	s = s.replace(/\|/g, "\\|");
+	s = s.replace(/%/g,"\\%");
+	s = s.replace(/\n/g,"\\n");
 
 	return "'" + s + "'";
 }

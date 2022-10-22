@@ -899,6 +899,8 @@ function buildWhereClausePart(property, valueList, negate)
 	let valueListNoNulls = valueList.filter(x => x).map(sqlEscapeString).join(",");
 	let hasBlank = valueList.filter(x => !x).length > 0;
 
+	console.log(valueListNoNulls);
+
 	let clauses = [];
 
 	let propertyClause = `property='${property}'`;
@@ -1018,7 +1020,7 @@ function sqlEscapeString(s)
 	s = s.replace(/\\/g, "\\\\");
 	s = s.replace(/'/g, "''");
 	s = s.replace(/%/g,"\\%")
-	s = s.replace(/\|/g, "\\|");
+	// pipes are fine within a string
 
 	return "'" + s + "'";
 }
