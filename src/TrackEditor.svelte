@@ -81,6 +81,31 @@
 			mode = 0;
 			enteringTag = false;
 			spinner1 = false;
+
+			if(sessionStorage.merge_data)
+			{
+				let mergeData = JSON.parse(sessionStorage.merge_data);
+				if(mergeData.id == track.id)
+				{
+					mode = 1;
+
+					if(track.release_date > mergeData.release_date)
+					{
+						track.release_date = mergeData.release_date;
+					}
+
+					scrapedTitle = mergeData.title;
+
+					for(let tag of mergeData.tags)
+					{
+						addTag(tag);
+					}
+				}
+
+				delete sessionStorage.merge_data;
+			}
+
+
 		}
 		else
 		{
@@ -210,7 +235,7 @@
 			var data = 
 			{
 				id,
-				title: nameInput.value.trim(),
+				title: nameInput && nameInput.value.trim() || "", // nameInput can be undefined during merge
 				tags: track.tags,
 				session: sessionStorage.session
 			}
@@ -493,6 +518,14 @@
 		getTrackWarnings();
 	}
 
+	function mergeTrack(mergeToID)
+	{
+		track.id = mergeToID;
+		track.release_date = dateInput.value || track.release_date;
+		sessionStorage["merge_data"] = JSON.stringify(track);
+		window.location.href = "/track/" + mergeToID;
+	}
+
 	/**
 	 * prop should be "artist" or "featured artist"
 	 */
@@ -674,6 +707,14 @@
 		width: 20px;
 	}
 
+	.mini-button{
+		padding: 2px;
+		margin-left: 10px;
+	}
+	.mini-button:hover{
+		background-color: #e4e4e4;
+	}
+
 </style>
 
 
@@ -805,13 +846,13 @@
 						{#if trackWarnings.sameHyperlink.length}
 							<div>This track has the same hyperlink as other tracks. Please make sure it is not a duplicate of the following:</div>
 							{#each trackWarnings.sameHyperlink as item}
-								<div class='indent'><a target="_blank" href={"/track/" + item.id}>{item.name}</a></div>
+								<div class='indent'><a target="_blank" href={"/track/" + item.id}>{item.name}</a><button class='mini-button' on:click={()=>mergeTrack(item.id)}>Merge &gt;&gt;</button></div>
 							{/each}
 						{/if}
 						{#if trackWarnings.sameTitle.length}
 							<div>This track has the same title as other tracks. Please make sure it is not a duplicate of the following:</div>
 							{#each trackWarnings.sameTitle as item}
-								<div class='indent'><a target="_blank" href={"/track/" + item.id}>{item.name}</a></div>
+								<div class='indent'><a target="_blank" href={"/track/" + item.id}>{item.name}</a><button class='mini-button' on:click={()=>mergeTrack(item.id)}>Merge &gt;&gt;</button></div>
 							{/each}
 						{/if}
 						{#if trackWarnings.unknownArtists.length}
