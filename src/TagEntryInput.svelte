@@ -148,7 +148,7 @@
 		});
 
 		let matches = await data.json();
-		options = matches;
+		options = matches.slice(0,15);
 
 		console.log(matches);
 	}
@@ -269,14 +269,14 @@
 
 	.option {font-size: initial;}
 
-	.option.keyboardSelect
+	.option.keyboardSelect, .auto-complete .keyboardSelect:hover
 	{
-		background-color: #D0D0D0;
+		background-color: #B0B0B0;
 	}
 
 	.auto-complete div:hover
 	{
-		background-color: #B0B0B0;
+		background-color: #D0D0D0;
 	}
 	
 </style>

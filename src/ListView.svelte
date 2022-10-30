@@ -160,7 +160,7 @@
 	<div class='action-links'>
 		{#if view.hasButtonNewTrack}<a href="#new" on:click={()=>{openTrack({detail: {id:"new"}})}}>+ Add a track</a>{/if}
 		{#if view.hasButtonRandomTrack}<a href="#random" on:click={requestRandom}><img class='icon' src="/random.svg"/> Random Track</a>{/if}
-		<SearchInput />
+		{#if view.api == "/api/view/tracks"}<SearchInput />{/if}
 	</div>
 
 	{#if view.tabs.length > 1}

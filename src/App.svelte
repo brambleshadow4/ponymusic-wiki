@@ -7,7 +7,7 @@
 	import LoginButton from "./LoginButton.svelte";
 	import ImportTools from "./ImportTools.svelte";
 	import {buildFilterQuery} from "./helpers.js";
-	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView} from "./Views.js";
+	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
 	$: path = window.location.pathname;
 
@@ -290,16 +290,28 @@
 
 	{#if path == "/" || path == "" || path.startsWith("/track/")}
 		<ListView view={DefaultView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+
 	{:else if path == "/artists"}
 		<ListView view={ArtistList} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+		
 	{:else if path == "/albums"}
 		<ListView view={AlbumList} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+
 	{:else if path.startsWith("/album/")}
 		<ListView view={AlbumView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+
 	{:else if path.startsWith("/artist/")}
 		<ListView view={ArtistView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+
+	{:else if path.startsWith("/genre/")}
+		<ListView view={GenreView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+
+	{:else if path.startsWith("/tag/")}
+		<ListView view={TagView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+
 	{:else if path.startsWith("/remix/")}
 		<ListView view={RemixCoverView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+
 	{:else if path == "/about"}
 		<div class='main'>
 

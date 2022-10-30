@@ -4,6 +4,7 @@
 	<input 
 		id="tag-entry-input"
 		type="text" maxlength="255"
+		placeholder="Search artists, albums, ..." 
 		bind:this={ref}
 		on:input={oninput} value={value}
 		on:focus={oninput}
@@ -199,7 +200,7 @@
 
 	}
 
-	.option.keyboardSelect
+	.option.keyboardSelect, .option.keyboardSelect:hover
 	{
 		background-color: #B0B0B0;
 	}

@@ -124,7 +124,6 @@ app.get("/login", async (req,res) =>
 				return;
 			}
 
-
 			let role = ROLE.USER;
 
 			let userID = "d:" + data.id;

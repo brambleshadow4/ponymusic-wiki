@@ -106,6 +106,70 @@ let AlbumView = {
 	]
 }
 
+let TagView = {
+	api: "/api/view/tracks",
+	makeTitle: function(){
+		let tagName = decodeURIComponent(location.pathname.replace("/tag/","").trim());
+		return "Tag: " + tagName;
+	},
+	hasButtonNewTrack: true,
+	hasButtonRandomTrack: true,
+	tabs: [
+		{
+			name: "(default)",
+			columns: [
+				Columns.Status,
+				{name: "Artist", width: "200", property: "artist", linkTo:"/artist/*",  filtered: false},
+				{name: "Featured Arist", width: "50", property: "featured_artist", linkTo:"/artist/*", filtered: false},
+				Columns.Title,
+				Columns.Album,
+				Columns.Refs,
+				Columns.Genre,
+				Columns.Tags,
+				Columns.Released
+			],
+			filter: function(filters) {
+				let tagName = decodeURIComponent(location.pathname.replace("/tag/","").trim());
+				let filterCopy = JSON.parse(JSON.stringify(filters));
+				filterCopy.tag = {include: [tagName]};
+				return filterCopy;
+			}
+		}
+	]
+}
+
+let GenreView = {
+	api: "/api/view/tracks",
+	makeTitle: function(){
+		let genreName = decodeURIComponent(location.pathname.replace("/genre/","").trim());
+		return "Genre: " + genreName;
+	},
+	hasButtonNewTrack: true,
+	hasButtonRandomTrack: true,
+	tabs: [
+		{
+			name: "(default)",
+			columns: [
+				Columns.Status,
+				{name: "Artist", width: "200", property: "artist", linkTo:"/artist/*",  filtered: false},
+				{name: "Featured Arist", width: "50", property: "featured_artist", linkTo:"/artist/*", filtered: false},
+				Columns.Title,
+				Columns.Album,
+				Columns.Refs,
+				Columns.Genre,
+				Columns.Tags,
+				Columns.Released
+			],
+			filter: function(filters) {
+				let genreName = decodeURIComponent(location.pathname.replace("/genre/","").trim());
+				let filterCopy = JSON.parse(JSON.stringify(filters));
+				filterCopy.genre = {include: [genreName]};
+				return filterCopy;
+			}
+		}
+	]
+}
+
 let RemixCoverView = {
 	api: "/api/view/tracks",
 	hasButtonRandomTrack: true,
@@ -184,4 +248,4 @@ function filterArtist(row)
 	return allArtists.split("\x1E").filter(x => x != artistName);
 }
 
-export {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView}
+export {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, GenreView, TagView}
