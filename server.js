@@ -205,6 +205,57 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 	res.json(strippedRows);
 });
 
+app.get("/api/search", queryProcessing, async (req,res) =>
+{
+	let search = req.query.search[0];
+
+	if(!search || !search.trim())
+	{
+		res.json([]);
+		return;
+	}
+
+	var weakPattern = "%" + sqlEscapeStringNoQuotes(search).toLowerCase() + "%";
+	var strongPattern = sqlEscapeStringNoQuotes(search).toLowerCase() + "%";
+
+	
+	let queries = [
+		db.query("SELECT DISTINCT property,value FROM track_tags WHERE LOWER(value) LIKE $1 AND property NOT IN ('featured artist', 'original artist','hyperlink') ORDER BY value ASC LIMIT 10", [strongPattern]),
+		db.query("SELECT * FROM tracks WHERE LOWER(title) LIKE $1 LIMIT 10", [strongPattern]),
+		db.query("SELECT DISTINCT property,value FROM track_tags WHERE LOWER(value) LIKE $1 AND property NOT IN ('featured artist', 'original artist','hyperlink') ORDER BY value ASC LIMIT 10", [weakPattern]),
+		db.query("SELECT * FROM tracks WHERE LOWER(title) LIKE $1 LIMIT 10", [weakPattern]),
+	]
+
+	let queryResults = await Promise.all(queries);
+
+	let returns = queryResults[0].rows.map(x => {return {property:x.property, value:x.value, display: x.property + ": " + x.value}})
+	returns = returns.concat(queryResults[1].rows.map(x => {return {id:x.id, display: x.titlecache}}));
+	returns = returns.concat(queryResults[2].rows.map(x => {return {property:x.property, value:x.value, display: x.property + ": " + x.value}}))
+	returns = returns.concat(queryResults[3].rows.map(x => {return {id:x.id, display: x.titlecache}}));
+
+	let keys = new Set();
+
+	for(let i=0; i<returns.length; i++)
+	{
+		let key = returns[i].id || returns[i].property + ":" + returns[i].value;
+
+		if(keys.has(key))
+		{
+			returns.splice(i,1);
+			i--;
+		}
+		else
+		{
+			keys.add(key);
+		}
+	}
+
+	returns = returns.slice(0,10);
+		
+	
+	res.json(returns);
+});
+
 app.get("/api/view/artists", queryProcessing, async(req,res) =>
 {
 	let ses = await getSession(req);
@@ -898,8 +949,6 @@ function buildWhereClausePart(property, valueList, negate)
 {
 	let valueListNoNulls = valueList.filter(x => x).map(sqlEscapeString).join(",");
 	let hasBlank = valueList.filter(x => !x).length > 0;
-
-	console.log(valueListNoNulls);
 
 	let clauses = [];
 

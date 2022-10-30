@@ -4,6 +4,7 @@
 	import Spinner from "./Spinner.svelte";
 	import {PERM, hasPerm} from "./authClient.js";
 	import Grid from "./Grid.svelte";
+	import SearchInput from "./SearchInput.svelte";
 
 	export let selectedId = "";
 	export let filters = {};
@@ -159,6 +160,7 @@
 	<div class='action-links'>
 		{#if view.hasButtonNewTrack}<a href="#new" on:click={()=>{openTrack({detail: {id:"new"}})}}>+ Add a track</a>{/if}
 		{#if view.hasButtonRandomTrack}<a href="#random" on:click={requestRandom}><img class='icon' src="/random.svg"/> Random Track</a>{/if}
+		<SearchInput />
 	</div>
 
 	{#if view.tabs.length > 1}
