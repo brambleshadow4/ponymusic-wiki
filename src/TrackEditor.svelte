@@ -3,10 +3,12 @@
 	import TagEntryInput from "./TagEntryInput.svelte";
 	import TrackHistory from "./TrackHistory.svelte";
 	import Tag from "./Tag.svelte";
+	import TrackWarnings from "./TrackWarnings.svelte";
 	import Spinner from "./Spinner.svelte";
 	import { createEventDispatcher } from 'svelte';
 	import {tagComp, setUserFlag} from "./helpers.js";
 	import {PERM, hasPerm} from "./authClient.js";
+	import {parseTitle, getArtistName} from "./titleParsing.js";
 	import { onMount } from 'svelte';
 
 	const dispatch = createEventDispatcher();
@@ -22,7 +24,6 @@
 	let trackDeleted = false;
 	let errorMessage = "";
 	let trackWarnings = [];
-	let nameOverrides = {};
 	let scrapedTitle = "";
 
 	let activeUserFlag = 0;
@@ -368,20 +369,6 @@
 		let paramsRaw = window.location.search.substring(1);
 		let params = {};
 		paramsRaw = paramsRaw.split("&");
-
-		nameOverrides = {};
-		let nameOverridesRaw = [];
-		try{
-			nameOverridesRaw = JSON.parse(localStorage.nameOverrides)
-		}
-		catch(e){};
-
-		console.log(params);
-
-		for(let pair of nameOverridesRaw)
-		{
-			nameOverrides[pair[0]] = pair[1];
-		}
 		
 		for(let param of paramsRaw)
 		{
@@ -392,7 +379,12 @@
 		if(params['artist'])
 		{
 			let artistList = params['artist'].split("\x1E");
-			artistList.forEach(x => addParsedArtist(x, "artist"));
+			artistList.forEach(x => {
+
+				let name = getArtistName(x);
+				if(name)
+					addTag({property:"artist", value: name, text: name});
+			});
 		}
 
 		if(params['genre'])
@@ -434,47 +426,16 @@
 
 		if(params['title'])
 		{
-			let title = params['title'].replace(/<\/?(span|a)[^>]*>/g,"");
+			scrapedTitle = params['title'].replace(/<\/?(span|a)[^>]*>/g,"");
+			let result = parseTitle(params['title']);
+			console.log(result);
 
-			let parseRule = localStorage.parseRule;
-
-			if(parseRule == "1" || parseRule == undefined)
+			track.title = result.title;
+			for(let tag of result.tags)
 			{
-
-				let match = /(?:(.*)?(?:-|–))?(.*)/.exec(title);
-
-				scrapedTitle = title.trim();
-				let artists = (match[1] || "").trim();
-				let parsedTitle = match[2].trim();
-				
-				if(artists)
-				{
-					artists = artists.split(/,|&/g).map(x => x.trim()).filter(x => x);
-
-					for(let artist of artists)
-					{
-						addParsedArtist(artist, "artist");
-					}
-				}
-
-				track.title = parsedTitle;
-
-				match = /.*\(fe?a?t?\. (.*)\)/.exec(parsedTitle);
-				if(match && match[1])
-				{
-					artists = match[1].split(/,|&/g).map(x => x.trim()).filter(x => x);
-
-					for(let artist of artists)
-					{
-						addParsedArtist(artist, "featured artist");
-					}
-				}
-
+				addTag(tag);
 			}
-			if(parseRule == "0")
-			{
-				track.title = title;
-			}
+			
 		}
 
 		if(params['date'])
@@ -524,16 +485,6 @@
 		track.release_date = dateInput.value || track.release_date;
 		sessionStorage["merge_data"] = JSON.stringify(track);
 		window.location.href = "/track/" + mergeToID;
-	}
-
-	/**
-	 * prop should be "artist" or "featured artist"
-	 */
-	function addParsedArtist(artistName, property)
-	{
-		let trueName = nameOverrides[artistName] != undefined ? nameOverrides[artistName] : artistName;
-		if(trueName)
-			addTag({property, value: trueName, text: trueName});
 	}
 
 	function changeUserFlag(button)
@@ -653,14 +604,6 @@
 		top: 0;
 
 		z-index: -2;
-	}
-
-	.tag-warnings
-	{
-		background-color: #fff7e6;
-		border: solid 1px #ffcc66;
-		padding: 10px;
-		margin-right: .5in;
 	}
 
 	.indent {
@@ -841,28 +784,8 @@
 					<!--<button>+ Remix</button>-->
 				</div>
 				
-				{#if trackWarnings.warnings}
-					<div class="tag-warnings">
-						{#if trackWarnings.sameHyperlink.length}
-							<div>This track has the same hyperlink as other tracks. Please make sure it is not a duplicate of the following:</div>
-							{#each trackWarnings.sameHyperlink as item}
-								<div class='indent'><a target="_blank" href={"/track/" + item.id}>{item.name}</a><button class='mini-button' on:click={()=>mergeTrack(item.id)}>Merge &gt;&gt;</button></div>
-							{/each}
-						{/if}
-						{#if trackWarnings.sameTitle.length}
-							<div>This track has the same title as other tracks. Please make sure it is not a duplicate of the following:</div>
-							{#each trackWarnings.sameTitle as item}
-								<div class='indent'><a target="_blank" href={"/track/" + item.id}>{item.name}</a><button class='mini-button' on:click={()=>mergeTrack(item.id)}>Merge &gt;&gt;</button></div>
-							{/each}
-						{/if}
-						{#if trackWarnings.unknownArtists.length}
-							<div>This track has an artist that is currently not in the wiki. Please make sure the name is correct:</div>
-							{#each trackWarnings.unknownArtists as item}
-								<div class='indent'>{item}</div>
-							{/each}
-						{/if}
-					</div>
-				{/if}
+				<TrackWarnings warnings={trackWarnings} on:merge={(e) => mergeTrack(e.detail)}/>
+	
 			</div>
 
 			<div>
