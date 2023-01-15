@@ -20,7 +20,6 @@ let HOST = "https://ponymusic.wiki"
 let processedFile = fs.readFileSync("./server/skipList.txt", {encoding:'utf8', flag:'r'});
 let skipURLs = new Set(processedFile.split(/\r?\n/));
 
-console.log(skipURLs);
 
 let rawData = fs.readFileSync("./server/luckrock.csv", {encoding:'utf8', flag:'r'});
 

@@ -6,6 +6,7 @@
 	import PonyRefs from "./PonyRefs.svelte";
 	import LoginButton from "./LoginButton.svelte";
 	import ImportTools from "./ImportTools.svelte";
+	import AlbumImport from "./AlbumImport.svelte";
 	import {buildFilterQuery} from "./helpers.js";
 	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
@@ -387,6 +388,8 @@
 			<p><a href="/export/export.sql">export.sql</a></p>
 			<p>I personally use <a href="https://sqlitebrowser.org/">DB browser for SQLite</a></p>
 		</div>
+	{:else if path == "/album-import"}
+		<div class='main'><AlbumImport /></div>
 	{/if}
 </div>
 

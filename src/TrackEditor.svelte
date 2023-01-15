@@ -231,7 +231,7 @@
 		if(getWarningsChannelStatus == 0)
 		{
 			getWarningsChannelStatus = 1;
-
+			
 			var data = 
 			{
 				id,

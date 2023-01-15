@@ -1,10 +1,60 @@
-
 <h1>Import Tools</h1>
-
+<h2>Bookmarklet</h2>
 <p>The current approach is the use of a bookmarklet, which is a piece of javascript that you can add to the bookmark bar of your browser. When you click the bookmarklet, it scrapes the page for a few pieces of information, then sends it over to ponymusic.wiki where you can correct any spellings and then add it quickly.</p>
 
+<h3>Bookmarklet Tags</h3>
 
-<h2>Bookmarklet</h2>
+<p>These will be added to the track when you use the bookmarklet. For album tags, the track number will increase automatically when adding a track</p>
+
+<div>		
+	{#each tags as tag}
+		<Tag canRemove={true} tag={tag} on:remove={removeTag(tag)}/>
+	{/each}
+
+	{#if enteringTag}
+		<TagEntryInput 
+			property={tagProperty}
+			value={tagValue}
+			number={tagNumber}
+			bind:ref
+			on:valueSet={onEntry}
+		/>
+	{/if}			
+</div>
+
+<div class='field post-tags'>
+	<div>
+		<button on:click={addTagEntryField("artist")}>+ Artist</button>
+		<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button>
+		<button on:click={addTagEntryField("genre")}>+ Genre</button>
+		<button on:click={addTagEntryField("album")}>+ Album</button>
+		<button on:click={addTagEntryField("tag")}>+ Tag</button>
+	</div>
+</div>
+
+<h3>Name Overrides</h3>
+
+<p>Some artists may have different names on their youTube/bandcamp. Adding it here will automatically change its name (or remove the tag if left blank).</p>
+
+<div id='name-override-list'>
+	<span style="display:inline-block; width: 2.5in">Arist name</span><span>Replace w/</span>
+	{#each nameOverrides as pair}
+		<div><input type="text" value={pair[0]} on:input={updateNameOverrides}/><input type="text" value={pair[1]} on:input={updateNameOverrides}/></div>
+	{/each}
+	<div><input type="text" on:input={updateNameOverrides}/><input type="text" on:input={updateNameOverrides}/></div>
+</div>
+
+<h3>Parse Rules</h3>
+
+<p>The youTube/bandcamp title often contains names of artists/genres of the track. This setting controls how that information is parsed</p>
+
+<RadioGroup 
+	checked={parseRule}
+	options={["No Parsing", "<artist1>, <artist2> & <artist3> - Track Title (feat. <featuredArtist>)[<genre>]"]} 
+	on:change={(e) => {localStorage.parseRule = e.detail}}
+	/>
+
+<h3>The Bookmarklet code</h3>
 
 <div><textarea rows="5" bind:this={compiled}></textarea></div>
 
@@ -41,71 +91,13 @@ if(title){
 }</textarea></div>
 
 
-<h2>Bookmarklet Tags</h2>
-
-<p>These will be added to the track when you use the bookmarklet. For album tags, the track number will increase automatically when adding a track</p>
-
-<div>		
-	{#each tags as tag}
-		<Tag canRemove={true} tag={tag} on:remove={removeTag(tag)}/>
-	{/each}
-
-	{#if enteringTag}
-		<TagEntryInput 
-			property={tagProperty}
-			value={tagValue}
-			number={tagNumber}
-			bind:ref
-			on:valueSet={onEntry}
-		/>
-	{/if}			
-</div>
-
-<div class='field post-tags'>
-	<div>
-		<button on:click={addTagEntryField("artist")}>+ Artist</button>
-		<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button>
-		<button on:click={addTagEntryField("genre")}>+ Genre</button>
-		<button on:click={addTagEntryField("album")}>+ Album</button>
-		<button on:click={addTagEntryField("tag")}>+ Tag</button>
-	</div>
-</div>
-
-<h2>Name Overrides</h2>
-
-<p>Some artists may have different names on their youTube/bandcamp. Adding it here will automatically change its name (or remove the tag if left blank).</p>
-
-<div id='name-override-list'>
-	<span style="display:inline-block; width: 2.5in">Arist name</span><span>Replace w/</span>
-	{#each nameOverrides as pair}
-		<div><input type="text" value={pair[0]} on:input={updateNameOverrides}/><input type="text" value={pair[1]} on:input={updateNameOverrides}/></div>
-	{/each}
-	<div><input type="text" on:input={updateNameOverrides}/><input type="text" on:input={updateNameOverrides}/></div>
-</div>
-
-<h2>Parse Rules</h2>
-
-<p>The youTube/bandcamp title often contains names of artists/genres of the track. This setting controls how that information is parsed</p>
-
-<RadioGroup 
-	checked={parseRule}
-	options={["No Parsing", "<artist1>, <artist2> & <artist3> - Track Title (feat. <featuredArtist>)[<genre>]"]} 
-	on:change={(e) => {localStorage.parseRule = e.detail}}
-	/>
-
-
-
 <h2>YouTube Channels</h2>
 
 <p>TODO, eventually we'll want to have a way of scanning brony youtubers and automatically checking which URLs have been added already and which ones haven't</p>
 
 <style>
 
-	h2 + p, h1 + p, p + h2 {
-		margin-top: 0px;
-	}
-
-	h2 + p{
+	h2 + p, h1 + p, p + h2, h1 + h2, h2 + p,h3+p, p+h3{
 		margin-top: 0px;
 	}
 
