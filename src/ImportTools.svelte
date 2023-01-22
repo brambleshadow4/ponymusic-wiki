@@ -6,31 +6,7 @@
 
 <p>These will be added to the track when you use the bookmarklet. For album tags, the track number will increase automatically when adding a track</p>
 
-<div>		
-	{#each tags as tag}
-		<Tag canRemove={true} tag={tag} on:remove={removeTag(tag)}/>
-	{/each}
-
-	{#if enteringTag}
-		<TagEntryInput 
-			property={tagProperty}
-			value={tagValue}
-			number={tagNumber}
-			bind:ref
-			on:valueSet={onEntry}
-		/>
-	{/if}			
-</div>
-
-<div class='field post-tags'>
-	<div>
-		<button on:click={addTagEntryField("artist")}>+ Artist</button>
-		<button on:click={addTagEntryField("featured artist")}>+ Featured Artist</button>
-		<button on:click={addTagEntryField("genre")}>+ Genre</button>
-		<button on:click={addTagEntryField("album")}>+ Album</button>
-		<button on:click={addTagEntryField("tag")}>+ Tag</button>
-	</div>
-</div>
+<TagGroupInput bind:value={tags} on:change={saveTags}/>
 
 <h3>Name Overrides</h3>
 
@@ -113,9 +89,8 @@ if(title){
 
 <script>
 	import { onMount } from 'svelte';
-	import TagEntryInput from "./TagEntryInput.svelte";
+	import TagGroupInput from "./TagGroupInput.svelte";
 	import {tagComp} from "./helpers.js";
-	import Tag from "./Tag.svelte";
 	import RadioGroup from "./RadioGroup.svelte";
 
 	let compiled, source, ref, tagProperty, tagValue, tagNumber;
@@ -143,68 +118,10 @@ if(title){
 
 	onMount(mount);
 
-	function addTagEntryField(tagType)
+	function saveTags()
 	{
-		return function()
-		{
-			if(ref) {
-				ref.value = "";
-			}
-
-			tagProperty = tagType;
-			tagValue = "";
-			tagNumber = tagType == "album" ? 0 : undefined;
-			enteringTag = true;
-			setTimeout(()=>{ref.focus()}, 10);
-		}
-	}
-
-	function removeTag(tag)
-	{
-		return function()
-		{
-			for(let i=0; i<tags.length; i++)
-			{
-				if(tags[i].property == tag.property && tags[i].value == tag.value)
-				{
-					tags.splice(i, 1)
-					break;
-				}
-			}
-
-			tags = tags;
-			localStorage.autoImportTags = JSON.stringify(tags);
-		}
-	}
-
-	function onEntry(e)
-	{
-		addTag(e.detail)
-		enteringTag = false;
-	}
-
-	function addTag(tag)
-	{
-		if(!tag.value){ return; }
-
-		if(tag.property == "pl")
-		{
-			for(let i=0; i<track.tags.length; i++)
-			{
-				if(track.tags[i].property == "pl")
-				{
-					track.tags.splice(i, 1)
-					i--;
-				}
-			}
-		}
-
-		tags.push(tag);
-		tags.sort(tagComp);
-
-		tags = tags;
 		localStorage.autoImportTags = JSON.stringify(tags);
-	};
+	}
 
 	function updateNameOverrides()
 	{

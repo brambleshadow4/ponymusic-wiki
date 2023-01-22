@@ -88,8 +88,6 @@
 				}
 			}
 
-			console.log(tag);
-
 			dispatch("valueSet", tag);
 			property = "";
 			value = "";
@@ -113,7 +111,6 @@
 			e.preventDefault();
 		}
 
-		console.log(optionListKeyboardSel)
 	}
 
 	async function oninput(e)
@@ -133,10 +130,6 @@
 			return;
 		};
 
-		console.log({
-			property,
-			value,
-		})
 
 		let data = await fetch("/api/tagAutofill", {
 			method: "POST",
@@ -150,7 +143,6 @@
 		let matches = await data.json();
 		options = matches.slice(0,15);
 
-		console.log(matches);
 	}
 
 	async function onNumberInput(e)

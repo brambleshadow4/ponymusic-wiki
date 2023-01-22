@@ -1,7 +1,13 @@
 <script>
 
 	import AlbumImportTrack from "./AlbumImportTrack.svelte";
+	import TagGroupInput from "./TagGroupInput.svelte";
+	import {addTagToTrack} from "./helpers.js";
 	let album = {}; // title
+
+	let albumTags = [];
+
+
 
 	function parseFile(ev)
 	{
@@ -9,7 +15,32 @@
 	    let reader = new FileReader();
 
 		reader.onload = (evt) => {
-			album = JSON.parse(evt.target.result);
+			let albumData = JSON.parse(evt.target.result);
+
+			console.log(albumData);
+
+			let i = 0;
+			for(let track of albumData.tracks)
+			{	
+				if(track.tags == undefined)
+					track.tags = [];
+
+				i++;
+				for(let tag of albumTags)
+				{
+					let tagCopy = JSON.parse(JSON.stringify(tag));
+					if(tagCopy.number)
+					{
+						tagCopy.number = i;
+					}
+
+					addTagToTrack(track, tagCopy);
+				}
+			}
+
+
+			album = albumData;
+
 		   // console.log(evt.target.result);
 		};
 		reader.readAsText(files[0])
@@ -52,15 +83,13 @@ dl.click();
 
 <div><input type="file" on:change={parseFile} /></div>
 
+<TagGroupInput bind:value={albumTags} />
+
+<div>
+	<label>Release:</label> <input type="date" />
+</div>
+
 {#if album.tracks}
-
-	<div>
-		<label>Album tag:</label> <input bind:value={album.title} />
-	</div>
-	<div>
-		<label>Artist tag:</label> <input bind:value={album.artist}/>
-	</div>
-
 	<div>Tracks:</div>
 	{#each album.tracks as track}
 		<AlbumImportTrack bind:value={track} />

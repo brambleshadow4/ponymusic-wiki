@@ -759,11 +759,9 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 	let sameHyperlinkIDs = new Set();
 	let hasWarnings = false;
 
-	
-
 	// double check tags are okay
 
-	for(tag of data.tags)
+	for(let tag of data.tags)
 	{
 		if (!tag.value || typeof(tag.value) != "string") {
 			res.json({status:400, error: "Invalid tag " + JSON.stringify(tag) });
@@ -782,7 +780,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 
 	var info = "";
 
-	for(tag of data.tags)
+	for(let tag of data.tags)
 	{
 		if(tag.property != "hyperlink")
 			continue;
@@ -801,7 +799,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 
 	info = await db.query("SELECT id, titlecache FROM tracks WHERE LOWER(title)=LOWER($2) AND id !=$1", [data.id, title]);
 
-	for(row of info.rows)
+	for(let row of info.rows)
 	{
 		if(!sameHyperlinkIDs.has(row.id))
 		{
@@ -813,7 +811,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 
 	// check artists
 
-	for(tag of data.tags)
+	for(let tag of data.tags)
 	{
 		if(tag.property != "artist" && tag.property != "featured artist")
 			continue;

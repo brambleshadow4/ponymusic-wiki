@@ -20,6 +20,15 @@ export function tagComp(tag1, tag2){
 	return 0;
 }
 
+export function addTagToTrack(track, tag)
+{
+	let hasTag = track.tags.filter(x => x.property == tag.property && x.value == tag.value && x.number == tag.number).length;
+
+	if(!hasTag){
+		track.tags.push(tag);
+	}
+}
+
 function propertyOrder(prop){
 	switch(prop){
 		case "hyperlink": return 0;

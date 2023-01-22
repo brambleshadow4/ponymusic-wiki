@@ -4,6 +4,7 @@
 	import TrackWarnings from "./TrackWarnings.svelte";
 	import {onMount} from "svelte";
 	import {parseTitle} from "./titleParsing.js";
+	import {addTagToTrack} from "./helpers.js";
 	import Tag from "./Tag.svelte";
 
 	let warnings = {warnings: false};
@@ -14,17 +15,17 @@
 
 		value.scrapedTitle = value.title;
 		value.title = result.title;
-		value.tags = result.tags;
-		value.tags.push({property: "hyperlink", value: value.url});
+		for(let tag of result.tags)
+		{
+			addTagToTrack(value, tag);
+		}
+
+		addTagToTrack(value, {property: "hyperlink", value: value.url});
 
 		let stuff = await getWarnings(value);
 		if(stuff)
 		{
 			warnings = stuff;
-			if(warnings.warnings){
-				console.log(value)
-				console.log(warnings);
-			}
 		}
 
 		value = value;
