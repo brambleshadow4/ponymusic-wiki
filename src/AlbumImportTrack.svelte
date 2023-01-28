@@ -1,11 +1,13 @@
 <script>
 	export let value = {};
+	export let releaseDate = "";
 
 	import TrackWarnings from "./TrackWarnings.svelte";
 	import {onMount} from "svelte";
 	import {parseTitle} from "./titleParsing.js";
 	import {addTagToTrack} from "./helpers.js";
 	import Tag from "./Tag.svelte";
+	import {} from "svelte"
 
 	let warnings = {warnings: false};
 
@@ -59,20 +61,46 @@
 		};
 	}
 
+	function onEdit(){
+		sessionStorage.merge_data = JSON.stringify({
+			id: "new",
+			tags: value.tags,
+			title: value.title,
+			release_date: releaseDate
+		});
+
+		window.open("/track/new", "_blank");
+	}
+
+	function mergeTrack(ID)
+	{
+		sessionStorage.merge_data = JSON.stringify({
+			id: ID,
+			tags: value.tags,
+			title: value.title,
+			release_date: releaseDate
+		});
+
+		window.open("/track/" + ID,"_blank");
+	}
+
 </script>
 
 <div>
 	<span class='track-title'>{value.title}</span>
 	
 	<div class='indent'>
-
+		<div><span>{value.scrapedTitle}</span></div>
 		{#if value.tags}
 			{#each value.tags as tag}
 				<Tag canRemove={false} tag={tag}/>
 			{/each}
 		{/if}
 
-		<TrackWarnings warnings={warnings} />
+		<TrackWarnings warnings={warnings} on:merge={(e) => mergeTrack(e.detail)}/>
+		<div>
+			<input type="checkbox" id={"checkbox-"+value.scrapedTitle} bind:checked={value.skip}/> <label for={"checkbox-"+value.scrapedTitle}>Skip import</label> <button on:click={onEdit}>Edit</button>
+		</div>
 	</div>
 </div>
 
@@ -84,5 +112,7 @@
 	.indent {
 		padding-left:.5in;
 	}
+
+	label {display: inline-block;}
 </style>
 

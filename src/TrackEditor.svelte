@@ -82,37 +82,42 @@
 			mode = 0;
 			enteringTag = false;
 			spinner1 = false;
-
-			if(sessionStorage.merge_data)
-			{
-				let mergeData = JSON.parse(sessionStorage.merge_data);
-				if(mergeData.id == track.id)
-				{
-					mode = 1;
-
-					if(track.release_date > mergeData.release_date)
-					{
-						track.release_date = mergeData.release_date;
-					}
-
-					scrapedTitle = mergeData.title;
-
-					for(let tag of mergeData.tags)
-					{
-						addTag(tag);
-					}
-				}
-
-				delete sessionStorage.merge_data;
-			}
-
-
 		}
 		else
 		{
 			mode = 1;
 			tabProps = [];
 			setTimeout(parseImportParams, 0);
+		}
+
+		if(sessionStorage.merge_data)
+		{
+			let mergeData = JSON.parse(sessionStorage.merge_data);
+
+			if(mergeData.id == track.id)
+				mode = 1;	
+
+			console.log(mergeData)
+
+			console.log(track.release_date);
+
+			if(!track.release_date || track.release_date > mergeData.release_date)
+			{
+				track.release_date = mergeData.release_date;
+			}
+
+			if(mergeData.id == "new")
+				track.title = mergeData.title;
+
+
+			scrapedTitle = mergeData.title;
+
+			for(let tag of mergeData.tags)
+			{
+				addTag(tag);
+			}
+
+			delete sessionStorage.merge_data;
 		}
 	}
 
@@ -481,6 +486,8 @@
 
 	function mergeTrack(mergeToID)
 	{
+		console.log("are we merging?")
+
 		track.id = mergeToID;
 		track.release_date = dateInput.value || track.release_date;
 		sessionStorage["merge_data"] = JSON.stringify(track);

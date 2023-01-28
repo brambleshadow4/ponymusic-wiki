@@ -752,7 +752,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 	let unknownArtists = [];
 
 
-	if(data.id == "new"){
+	if(data.id == "new" || data.id === undefined){
 		data.id = -1;
 	}
 

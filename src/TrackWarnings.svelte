@@ -5,15 +5,19 @@
 		sameTitle: [],
 		unknownArtists: []
 	};
-	export let mergeButton=false;
+	
 	import { createEventDispatcher, onMount } from 'svelte';
-
 
 	onMount(() => {
 
 		//console.log(warnings);
 
 	})
+
+	function onMerge(trackID)
+	{
+		dispatch("merge", trackID);
+	}
 
 
 	const dispatch = createEventDispatcher();
@@ -27,7 +31,7 @@
 			{#each warnings.sameHyperlink as item}
 				<div class='indent'>
 					<a target="_blank" href={"/track/" + item.id}>{item.name}</a>
-					{#if mergeButton}<button class='mini-button' on:click={()=>dispatch(("merge",item.id))}>Merge &gt;&gt;</button>{/if}
+					<button class='mini-button' on:click={()=>onMerge(item.id)}>Merge &gt;&gt;</button>
 				</div>
 			{/each}
 		{/if}
@@ -36,7 +40,7 @@
 			{#each warnings.sameTitle as item}
 				<div class='indent'>
 					<a target="_blank" href={"/track/" + item.id}>{item.name}</a>
-					{#if mergeButton}<button class='mini-button' on:click={()=>dispatch(("merge",item.id))}>Merge &gt;&gt;</button>{/if}
+					<button class='mini-button' on:click={()=>onMerge(item.id)}>Merge &gt;&gt;</button>
 				</div>
 			{/each}
 		{/if}

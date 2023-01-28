@@ -4,10 +4,9 @@
 	import TagGroupInput from "./TagGroupInput.svelte";
 	import {addTagToTrack} from "./helpers.js";
 	let album = {}; // title
-
 	let albumTags = [];
-
-
+	let releaseDate = "";
+	let importProgress = "";
 
 	function parseFile(ev)
 	{
@@ -17,7 +16,7 @@
 		reader.onload = (evt) => {
 			let albumData = JSON.parse(evt.target.result);
 
-			console.log(albumData);
+			releaseDate = albumData.release_date;
 
 			let i = 0;
 			for(let track of albumData.tracks)
@@ -38,13 +37,65 @@
 				}
 			}
 
-
 			album = albumData;
 
-		   // console.log(evt.target.result);
+		   //console.log(evt.target.result);
 		};
 		reader.readAsText(files[0])
 	}
+
+	async function doImport()
+	{
+		let num = 0;
+		
+		for(let track of album.tracks)
+		{
+			importProgress = num + "/" + album.tracks.length;
+			num++;
+			if(track.skip)
+				continue;
+
+			await saveSingleTrack(track);
+		}
+
+		importProgress = "";
+
+		let albumName = album.tracks[0].tags.filter(x => x.property == "album")[0].value;
+		window.open("/album/" + albumName, "_blank");
+	}
+
+	async function saveSingleTrack(track)
+	{
+		var data = {
+			id: "new",
+			title: track.title,
+			release_date: releaseDate,
+			tags: track.tags,
+			session: sessionStorage.session
+		}
+
+		var response = {};
+
+		try 
+		{
+			response = await (await fetch("/api/track", 
+			{
+				method: "POST",
+				headers: {"Content-Type": "text/json"},
+				body: JSON.stringify(data)
+			})).json();
+		}
+		catch(e){};
+
+		if(response.status != 200)
+		{
+			alert("Request failed: " + (response.error || ""));
+			return 0;
+		}
+
+		return 1;
+	}
+
 
 	/*
 let albumTitle = document.querySelector('h2.trackTitle').innerHTML.trim();
@@ -69,7 +120,7 @@ if(dateText)
 
 var dl = document.createElement("a");
 document.body.appendChild(dl);
-var json = JSON.stringify({album: albumTitle, date: dateText, tracks: data},"","\t"),
+var json = JSON.stringify({album: albumTitle, release_date: dateText, tracks: data},"","\t"),
 blob = new Blob([json], {type: "octet/stream"});
 dl.href = window.URL.createObjectURL(blob);
 dl.download = "albumData.json";
@@ -85,15 +136,16 @@ dl.click();
 
 <TagGroupInput bind:value={albumTags} />
 
-<div>
-	<label>Release:</label> <input type="date" />
-</div>
-
 {#if album.tracks}
+	<div>
+		<label>Release:</label> <input type="date" bind:value={releaseDate} />
+	</div>
 	<div>Tracks:</div>
 	{#each album.tracks as track}
-		<AlbumImportTrack bind:value={track} />
+		<AlbumImportTrack bind:value={track} releaseDate={releaseDate} />
 	{/each}
+
+	<div><button on:click={doImport} disabled={importProgress!=""}>Import</button> {#if importProgress}{importProgress}{/if}</div>
 {:else}
 
 {/if}
