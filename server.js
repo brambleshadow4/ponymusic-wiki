@@ -11,8 +11,9 @@ const {AuthorizationCode} = require('simple-oauth2');
 const { v4: uuidv4 } = require('uuid');
 
 const {PERM, ROLE, auth, reqHasPerm, getSession} = require("./server/auth.js");
-const {getOgCache, getOgPropertiesFromURL} = require('./server/helpers.js');
+const {getOgCache, getOgPropertiesFromURL, areTitlesIdentical} = require('./server/helpers.js');
 const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl","cover","remix","original artist"];
+
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -756,7 +757,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		data.id = -1;
 	}
 
-	let sameHyperlinkIDs = new Set();
+	let potentialDuplicateIDs = new Set();
 	let hasWarnings = false;
 
 	// double check tags are okay
@@ -791,22 +792,49 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		{
 			hasWarnings = true;
 			sameHyperlink.push({value: tag.value, id: row.id, name: row.name});
-			sameHyperlinkIDs.add(row.id);
+			potentialDuplicateIDs.add(row.id);
 		}
 	}
 
-	// check title
+	// check title against previously released songs by this artist
+
+	for(let tag of data.tags)
+	{
+		if(tag.property != "artist")
+			continue;
+
+		info = await db.query(`
+			SELECT title,id,titlecache FROM tracks WHERE id IN (
+				SELECT tracks.id
+				FROM tracks LEFT JOIN track_tags ON tracks.id = track_tags.track_id
+				WHERE property='artist' AND LOWER(value)=LOWER($1)
+			)`, [tag.value]);
+
+		for(let row of info.rows)
+		{
+			if(!potentialDuplicateIDs.has(row.id) && areTitlesIdentical(row.title, title))
+			{
+				hasWarnings = true;
+				sameTitle.push({value: title, id: row.id, name: row.titlecache});
+				potentialDuplicateIDs.add(row.id);
+			}
+		}
+	}
+
+	
+
+	// check title - exact mathes
 
 	info = await db.query("SELECT id, titlecache FROM tracks WHERE LOWER(title)=LOWER($2) AND id !=$1", [data.id, title]);
 
 	for(let row of info.rows)
 	{
-		if(!sameHyperlinkIDs.has(row.id))
+		if(!potentialDuplicateIDs.has(row.id))
 		{
 			hasWarnings = true;
 			sameTitle.push({value: title, id: row.id, name: row.titlecache});
+			potentialDuplicateIDs.add(row.id);
 		}
-		
 	}
 
 	// check artists
@@ -1126,11 +1154,16 @@ function queryProcessing(req, res, next)
 	next();
 }
 
-app.get('*', (req, res) => 
+app.get('*', (req, res) =>
 {
+	let filePath = path.resolve(__dirname, 'public', req.url);
+	if(fs.existsSync("./public" + filePath))
+	{
+		res.sendFile(filePath);
+		return;
+	}
 	res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
-});
-
+ });
 
 if(process.env.SSL_CERT)
 {

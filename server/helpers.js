@@ -98,8 +98,86 @@ async function getOgPropertiesFromURL(url, options)
 	return properties;
 }
 
+function areTitlesIdentical(title1, title2)
+{
+	let simple1 = getSimplifiedTitle(title1);
+	let simple2 = getSimplifiedTitle(title2);
+	let dist = damerauLevenshteinDistance(simple1, simple2);
+	return dist <= 3;
+}
+
+function getSimplifiedTitle(title)
+{
+	let simple = title.replace(/\([^()]*\)/g,"")
+	simple = simple.replace(/\[[^\[\]]*\]/g,"")
+
+	simple = simple.toLowerCase();
+
+	let i = simple.lastIndexOf(" w/")
+	if(i != -1)
+		simple = simple.substring(0, i);
+
+	simple = simple.replace(/ - [^-]* remix/g,"");
+
+	simple = simple.replace(/[^A-Za-z0-9 ]/g,"");
+	simple = simple.replace(/ +/g," ");
+
+	i = simple.lastIndexOf(" feat ")
+	if(i != -1)
+		simple = simple.substring(0, i);
+
+	i = simple.lastIndexOf(" ft ")
+	if(i != -1)
+		simple = simple.substring(0, i);
+
+	return simple;
+}
+
+function damerauLevenshteinDistance(a, b)
+{
+	if(a > b)
+	{
+		let swap = a;
+		a = b
+		b = swap;
+	}
+
+	let cachedValues = [...(a+"1").split("").map(x => [])]
+
+	cachedValues[0][0] = 0;
+	let i =0;
+	let j = 1;
+
+	while(cachedValues[a.length][b.length] == undefined)
+	{
+		let routes = [];
+		if(i > 0)
+			routes.push(cachedValues[i-1][j] + 1)
+		if(j > 0)
+			routes.push(cachedValues[i][j-1] + 1)
+		if(i > 0 && j > 0)
+			routes.push(cachedValues[i-1][j-1] + (a[i]==b[j] ? 0 : 1))
+		if(i > 1 && j > 1 && a[i-1] == b[j] && b[j-1] == a[i])
+			routes.push(cachedValues[i-2][j-2] + (a[i]==b[j] ? 0 : 1))
+
+		cachedValues[i][j] = Math.min(...routes);
+
+		j--;
+		i++;
+
+		if(i > a.length || j < 0)
+		{
+			j = i+j+1;
+			i = 0;
+		}
+	}
+
+	return cachedValues[a.length][b.length]
+}
+
 
 module.exports = {
 	getOgCache,
-	getOgPropertiesFromURL
+	getOgPropertiesFromURL,
+	areTitlesIdentical
 }

@@ -182,4 +182,4 @@ Columns.Tags = {name: "Tags", width: "100", property: "tag", filtered: false};
 Columns.ReleasedNF = {name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)]};
 Columns.Released = {name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)], filtered: false};
 
-export {Columns, HeardButtons, statusIcon}
+export {Columns, HeardButtons, statusIcon};

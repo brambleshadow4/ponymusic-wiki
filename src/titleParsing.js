@@ -1,4 +1,3 @@
-export {parseTitle, getArtistName};
 
 function parseTitle(title)
 {
@@ -69,5 +68,9 @@ function getNameOverrides()
 
 	return nameOverrides;
 }
-	
+
+
+
+export {parseTitle, getArtistName};
+
 
