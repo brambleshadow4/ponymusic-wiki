@@ -4,12 +4,14 @@ CREATE TABLE IF NOT EXISTS tracks (
 	release_date DATE NOT NULL,
 	locked BOOLEAN NOT NULL,
 	ogcache JSONB NOT NULL,
-	titlecache VARCHAR(511) NOT NULL
+	titlecache VARCHAR(511) NOT NULL,
+	hidden BOOLEAN NOT NULL DEFAULT false
 );
 
 CREATE INDEX IF NOT EXISTS release_date_index ON tracks(release_date);
 
 -- ALTER TABLE tracks ADD COLUMN ogcache JSONB
+-- ALTER TABLE tracks ADD COLUMN hidden BOOLEAN NOT NULL DEFAULT false
 
 --
 -- UPDATE tracks

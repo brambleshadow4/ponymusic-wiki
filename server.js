@@ -221,9 +221,9 @@ app.get("/api/search", queryProcessing, async (req,res) =>
 	
 	let queries = [
 		db.query("SELECT DISTINCT property,value FROM track_tags WHERE LOWER(value) LIKE $1 AND property NOT IN ('featured artist', 'original artist','hyperlink') ORDER BY value ASC LIMIT 10", [strongPattern]),
-		db.query("SELECT * FROM tracks WHERE LOWER(title) LIKE $1 LIMIT 10", [strongPattern]),
+		db.query("SELECT * FROM tracks WHERE LOWER(title) LIKE $1 AND hidden=false LIMIT 10", [strongPattern]),
 		db.query("SELECT DISTINCT property,value FROM track_tags WHERE LOWER(value) LIKE $1 AND property NOT IN ('featured artist', 'original artist','hyperlink') ORDER BY value ASC LIMIT 10", [weakPattern]),
-		db.query("SELECT * FROM tracks WHERE LOWER(title) LIKE $1 LIMIT 10", [weakPattern]),
+		db.query("SELECT * FROM tracks WHERE LOWER(title) LIKE $1 AND hidden=false LIMIT 10", [weakPattern]),
 	]
 
 	let queryResults = await Promise.all(queries);
@@ -279,12 +279,12 @@ app.get("/api/view/artists", queryProcessing, async(req,res) =>
 			ROW_NUMBER() OVER (PARTITION BY value ORDER BY release_date DESC) as row_number,
 			(SELECT value FROM user_flags WHERE track_id=tracks.id AND user_flags.user_id='${userID}' AND flag='status') as status
 		FROM tracks FULL OUTER JOIN track_tags ON tracks.id=track_tags.track_id
-		WHERE property='artist'
+		WHERE property='artist' AND tracks.hidden=false
 	) as tablea
 	LEFT JOIN (
 		SELECT COUNT(value) as tracks, value as artist
-		FROM track_tags
-		WHERE property='artist'
+		FROM track_tags LEFT JOIN tracks on track_tags.track_id = tracks.id
+		WHERE track_tags.property='artist' AND tracks.hidden=false
 		GROUP BY artist
 	) as tableb
 	ON tablea.artist=tableb.artist
@@ -332,7 +332,7 @@ app.get("/api/view/albums", queryProcessing, async(req,res) =>
 		FROM (
 			SELECT tracks.id, release_date, value as album
 			FROM tracks FULL OUTER JOIN track_tags ON tracks.id=track_tags.track_id
-			WHERE property='album'
+			WHERE property='album' AND tracks.hidden=false
 		) as tb
 		GROUP BY album
 		ORDER BY album
@@ -748,9 +748,17 @@ app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =
 		res.json({status: 400});
 	}
 
-	await db.query("DELETE FROM tracks WHERE id=$1", [id]);	
-	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
-	await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {deleted:true}]);
+	if(data.hide)
+	{
+		await db.query("UPDATE tracks SET hidden=true WHERE id=$1", [id]);
+		await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {hidden:true}]);
+	}
+	else
+	{
+		await db.query("DELETE FROM tracks WHERE id=$1", [id]);	
+		await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
+		await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {deleted:true}]);
+	}	
 
 	res.json({status: 200, id});
 });
@@ -907,7 +915,7 @@ async function buildWhereClause(req, allowedFilters)
 	let session = req.query.session;
 
 	let whereClause = "";
-	let whereClauses = [];
+	let whereClauses = ["hidden=false"];
 
 	let simpleFilters = ["artist","featured_artist","album","genre","pl","tag","remixcover"];
 	

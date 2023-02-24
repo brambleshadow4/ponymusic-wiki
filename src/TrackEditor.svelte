@@ -340,7 +340,12 @@
 		load();
 	}
 
-	async function deleteTrack()
+	async function hideTrack()
+	{
+		await deleteTrack(true);
+	}
+
+	async function deleteTrack(shouldHide)
 	{
 		sendingRequest = true;
 
@@ -352,7 +357,7 @@
 			{
 				method: "DELETE",
 				headers: {"Content-Type": "text/json"},
-				body: JSON.stringify({id, session: sessionStorage.session})
+				body: JSON.stringify({id, session: sessionStorage.session, hide: shouldHide})
 			})).json();
 		}
 		catch(e){}
@@ -801,8 +806,9 @@
 				{:else if !sessionStorage.session}
 					<p>Sign in to make edits to the wiki</p>
 				{/if}
-				{#if hasPerm(PERM.DELETE_TRACK) && id != "new"}
+				{#if hasPerm(PERM.DELETE_TRACK) && id != "new"}	
 					<button style="float: right; margin-right:.5in" on:click={deleteTrack} disabled={sendingRequest}>Delete</button>
+					<button style="float: right;" on:click={hideTrack} disabled={sendingRequest}>Hide</button>
 				{/if}
 				{#if errorMessage}
 					<p>{errorMessage}</p>
