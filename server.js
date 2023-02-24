@@ -539,7 +539,13 @@ app.get("/api/track/*", async(req,res) =>
 app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 {
 	var data = req.body;
-	let userID = (await getSession(req)).user_id;
+	let ses = await getSession(req);
+	if(!ses)
+	{
+		res.json({status: 400, err: "Invalid Session"});
+		return;
+	}
+	let userID = ses.user_id;
 
 	let title = trim2(data.title || "")
 	let release_date = data.release_date.trim();
@@ -726,7 +732,15 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =>
 {
 	var data = req.body;
-	let userID = (await getSession(req)).user_id;
+
+	let ses = await getSession(req);
+	if(!ses)
+	{
+		res.json({status: 400, err: "Invalid Session"});
+		return;
+	}
+
+	let userID = ses.user_id;
 
 	let id = Number(data.id)
 
@@ -886,7 +900,8 @@ async function buildWhereClause(req, allowedFilters)
 
 	if(req.query.session)
 	{
-		userID = (await getSession(req)).user_id;
+		let session = await getSession(req);
+		userID = session ? session.user_id : "";
 	}
 
 	let session = req.query.session;

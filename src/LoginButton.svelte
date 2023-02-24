@@ -6,6 +6,16 @@
 	let avatar = localStorage.avatar || "/discord.png";
 	let loading = false;
 
+	function clearSession()
+	{
+		delete sessionStorage.session;
+		delete localStorage.role
+		delete localStorage.session;
+		delete localStorage.avatar;
+		signedIn = false;
+		avatar = "/discord.png";
+	}
+
 	function handleClick(e)
 	{
 		if(signedIn)
@@ -16,12 +26,9 @@
 				return;
 			}
 
-			delete sessionStorage.session;
-			delete localStorage.role
-			delete localStorage.session;
-			delete localStorage.avatar;
-			signedIn = false;
-			avatar = "/discord.png";
+			clearSession();
+
+			
 
 			window.location.reload(true);
 		}
@@ -89,11 +96,7 @@
 			}
 			else if(data.status == 400)
 			{
-				delete localStorage.role;
-				delete localStorage.avatar;
-				delete localStorage.session;
-				delete sessionStorage.session;
-				signedIn = false;
+				clearSession();
 			}
 
 			loading = false;
