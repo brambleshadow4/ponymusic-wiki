@@ -412,7 +412,7 @@ app.get("/api/history/track/*", async(req,res) =>
 
 	for(let row of rows)
 	{
-		if(row.value.deleted){
+		if(row.value.deleted || row.value.hidden != undefined){
 			continue;
 		}
 
@@ -752,6 +752,11 @@ app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =
 	{
 		await db.query("UPDATE tracks SET hidden=true WHERE id=$1", [id]);
 		await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {hidden:true}]);
+	}
+	else if(data.unhide)
+	{
+		await db.query("UPDATE tracks SET hidden=false WHERE id=$1", [id]);
+		await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {hidden:false}]);
 	}
 	else
 	{

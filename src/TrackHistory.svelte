@@ -70,6 +70,13 @@
 				oldEntry.tags = [];
 			}
 
+			if(newEntry.hidden != undefined)
+			{
+				delta.hidden = newEntry.hidden;
+				changes.push(delta)
+				continue;
+			}
+
 			if(newEntry.title != oldEntry.title){
 				delta.titleChange = [oldEntry.title, newEntry.title];
 			}
@@ -140,10 +147,18 @@
 		
 		<div class='frame'>
 			{#each history as item,i}
-				<div class='history-entry'><input id={"history-entry-"+i} type="checkbox" on:click={select(i)}/><label for={"history-entry-"+i}>{item.name} – {new Date(item.timestamp).toLocaleString()}</label></div>
+
+				<div class='history-entry'>
+					{#if !item.deleted && item.hidden == undefined}
+						<input id={"history-entry-"+i} type="checkbox" style={"visible: " + (item.hidden || item.deleted ? " hidden;" : " visible;")} on:click={select(i)}/>
+					{/if}
+					<label for={"history-entry-"+i}>{item.name} – {new Date(item.timestamp).toLocaleString()}</label>
+				</div>
 
 				{#if item.deleted}
 					<div>Track deleted</div>
+				{:else if item.hidden != undefined}
+					<div>Track {item.hidden ? "hidden" : "unhidden"}</div>
 				{:else}
 
 					{#if item.titleChange}<div>Title: <em>{item.titleChange[0]}</em> => <em>{item.titleChange[1]}</em></div>{/if}
@@ -195,7 +210,6 @@
 		left: -20px;
 		top: 5px;
 	}
-
 
 	.action-menu{
 		position: fixed;

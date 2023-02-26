@@ -342,13 +342,45 @@
 
 	async function hideTrack()
 	{
-		await deleteTrack(true);
+		sendingRequest = true;
+		let response = {};
+
+		try 
+		{
+			let payload = {id, session: sessionStorage.session};
+			if(track.hidden)
+			{
+				payload.unhide = true;
+			}
+			else
+			{
+				payload.hide = true;
+			}
+
+			response = await (await fetch("/api/track", 
+			{
+				method: "DELETE",
+				headers: {"Content-Type": "text/json"},
+				body: JSON.stringify(payload)
+			})).json();
+		}
+		catch(e){}
+
+		sendingRequest = false;
+
+		if(response.status != 200)
+		{
+			errorMessage = "Request failed: " + (response.error || "");
+		}
+		else
+		{	
+			location.reload();
+		}
 	}
 
 	async function deleteTrack(shouldHide)
 	{
 		sendingRequest = true;
-
 		let response = {};
 
 		try 
@@ -357,7 +389,7 @@
 			{
 				method: "DELETE",
 				headers: {"Content-Type": "text/json"},
-				body: JSON.stringify({id, session: sessionStorage.session, hide: shouldHide})
+				body: JSON.stringify({id, session: sessionStorage.session})
 			})).json();
 		}
 		catch(e){}
@@ -670,6 +702,15 @@
 		background-color: #e4e4e4;
 	}
 
+	.hidden-banner
+	{
+		background-color: #ffeecc;
+		border: solid 1px #ffcc66;
+		margin-top: .3in;
+		margin-right: .3in;
+		padding: 10px;
+	}
+
 </style>
 
 
@@ -689,6 +730,11 @@
 		{#if id=="new"}
 			<h1>Add Track</h1>
 		{:else}
+
+			{#if track.hidden}
+				<div class='hidden-banner'>Track is hidden.</div>
+			{/if}
+
 			<h1 class={"h1-" + mode}>{track.title}</h1>
 			{#if mode==0}<h2>{formatDate(track.release_date)}</h2>{/if}
 		{/if}
@@ -808,7 +854,7 @@
 				{/if}
 				{#if hasPerm(PERM.DELETE_TRACK) && id != "new"}	
 					<button style="float: right; margin-right:.5in" on:click={deleteTrack} disabled={sendingRequest}>Delete</button>
-					<button style="float: right;" on:click={hideTrack} disabled={sendingRequest}>Hide</button>
+					<button style="float: right;" on:click={hideTrack} disabled={sendingRequest}>{track.hidden ? "Unhide" : "Hide"}</button>
 				{/if}
 				{#if errorMessage}
 					<p>{errorMessage}</p>
