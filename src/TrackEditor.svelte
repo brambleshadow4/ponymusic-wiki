@@ -215,7 +215,8 @@
 		{
 			for(let i=0; i<track.tags.length; i++)
 			{
-				if(track.tags[i].property == tag.property && track.tags[i].value == tag.value)
+				let otherTag = track.tags[i];
+				if(otherTag.property == tag.property && otherTag.value == tag.value && otherTag.number == tag.number)
 				{
 					track.tags.splice(i, 1)
 					break;

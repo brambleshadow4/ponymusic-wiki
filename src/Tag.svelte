@@ -15,6 +15,7 @@
 		{
 			case "artist":
 			case "featured artist":
+			case "original artist":
 				return "/artist/" + tag.value;
 			case "album":
 				return "/album/" + tag.value;
