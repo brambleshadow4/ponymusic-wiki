@@ -33,6 +33,29 @@
 		}
 	}
 
+	function getPreviousEntry(history, index)
+	{
+		let i = index+1
+
+		while(history[i] && history[i].value)
+		{
+			if(history[i].value.deleted)
+			{
+				return {title: "", release_date: "", tags: []};
+			}
+
+			if(history[i].value.tags)
+			{
+				return history[i].value;
+			}
+
+			i++
+		}
+
+		return {title: "", release_date: "", tags: []};
+	}
+
+
 	async function loadHistory()
 	{
 		loaded = false;
@@ -44,30 +67,19 @@
 		rawHistory = await (await fetch("/api/history/track/" + id)).json();
 		let changes = [];
 
-		console.log(rawHistory);
-
-		rawHistory.push({ value: {title: "", release_date: "", tags: []}});
-
 		for(let i=0; i < rawHistory.length - 1; i++)
 		{
 			let newEntry = rawHistory[i].value;
-			let oldEntry = rawHistory[i+1].value;
+			let oldEntry = getPreviousEntry(rawHistory,i);
 
 			let delta = {}
 			delta.timestamp = rawHistory[i].timestamp;
 			delta.name =  rawHistory[i].name
-
 			if(newEntry.deleted)
 			{
 				delta.deleted = true;
 				changes.push(delta);
 				continue;
-			}
-			if(oldEntry.deleted)
-			{
-				oldEntry.title = ""
-				oldEntry.release_date = "";
-				oldEntry.tags = [];
 			}
 
 			if(newEntry.hidden != undefined)
