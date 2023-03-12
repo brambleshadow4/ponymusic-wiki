@@ -67,7 +67,9 @@
 		rawHistory = await (await fetch("/api/history/track/" + id)).json();
 		let changes = [];
 
-		for(let i=0; i < rawHistory.length - 1; i++)
+		console.log(rawHistory);
+
+		for(let i=0; i < rawHistory.length; i++)
 		{
 			let newEntry = rawHistory[i].value;
 			let oldEntry = getPreviousEntry(rawHistory,i);
