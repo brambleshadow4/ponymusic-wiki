@@ -28,7 +28,7 @@ function parseTitle(title)
 		}
 	}
 
-	match = /.*\(fe?a?t?\. (.*)\)/.exec(parsedTitle);
+	match = /.*\((?:F|f)e?a?t?\. (.*)\)/.exec(parsedTitle);
 	if(match && match[1])
 	{
 		artists = match[1].split(/,|&/g).map(x => x.trim()).filter(x => x);

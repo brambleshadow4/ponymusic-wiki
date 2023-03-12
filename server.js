@@ -784,7 +784,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		data.id = -1;
 	}
 
-	let potentialDuplicateIDs = new Set();
+	let potentialDuplicateIDs = new Set([data.id]);
 	let hasWarnings = false;
 
 	// double check tags are okay
