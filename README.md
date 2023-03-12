@@ -45,6 +45,26 @@ npm install
 npm run dev
 ```
 
+Allowing 
+----------------
+If you want to allow anyone to have readonly access to the POSTGRES daetabase, consider adding a user like octavia.
+
+SQL:
+```
+CREATE ROLE octavia WITH LOGIN
+NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION VALID UNTIL 'infinity';
+GRANT CONNECT ON DATABASE ponymusic TO octavia;
+GRANT USAGE ON SCHEMA public TO octavia;
+GRANT SELECT ON tracks, track_tags TO octavia;
+```
+
+In postgresql.conf:
+
+In pg_hba.conf:
+
+```
+host  ponymusic  octavia  0.0.0.0/0  trust
+```
 
 Sidenotes 
 ===============
