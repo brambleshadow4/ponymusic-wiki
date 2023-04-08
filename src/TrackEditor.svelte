@@ -419,6 +419,15 @@
 			params[key] = decodeURIComponent(value).replace(/&amp;/g, "&");
 		}
 
+		if(params['trackPost'])
+		{
+			let newTrack = JSON.parse(decodeURIComponent(params['trackPost']));
+			track.title = newTrack.title;
+			track.release_date = newTrack.release_date
+			newTrack.tags.forEach(x => addTag(x));
+			console.log(track)
+		}
+
 		if(params['artist'])
 		{
 			let artistList = params['artist'].split("\x1E");
@@ -518,6 +527,8 @@
 				addTag(tag);
 			}
 		}
+
+		console.log(track.tags)
 
 		getTrackWarnings();
 	}

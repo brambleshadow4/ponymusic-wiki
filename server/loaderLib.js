@@ -3,6 +3,7 @@ exports.doPull = doPull;
 exports.doExport = doExport;
 
 const fs = require('fs');
+const https = require("https")
 const {Pool, Client} = require('pg');
 require('dotenv').config()
 
@@ -20,9 +21,42 @@ async function doLoad(filename)
 
 async function doPull()
 {
-	console.log(process.env.PULL_KEY);
+	return new Promise(async function(res,rej){
 
+		let filename = "PROD " + new Date().toISOString().substring(0,10) + ".sql";
 
+		console.log("Pulling from ponymusic.wiki");
+
+		const file = fs.createWriteStream(filename);
+
+		const request = https.get("https://ponymusic.wiki/export/db?PULL_KEY=" + process.env.PULL_KEY, function(response)
+		{
+			response.pipe(file);
+
+			response.on('data', (d) => {
+				//process.stdout.write(d);
+			});
+
+			// after download completed close filestream
+			file.on("finish", async () => {
+				file.close();
+				console.log("Download Complete");
+
+				await doLoad(filename);
+
+				console.log("Import Complete")
+
+				res();
+			});
+		}).on("error", function(e){
+
+			throw(e);
+
+			rej();
+
+		});
+
+	});
 }
 
 function sqlEscapeString(s)

@@ -1,6 +1,6 @@
-
 const readline = require('readline');
 const pro = require('process');
+const loader = require("./loaderLib.js");
 
 main();
 
@@ -20,16 +20,17 @@ async function main()
 	let x = await read(">");
 
 	if(x == "1"){
-		await doExport();
+		console.log("DUMPING to fullExport.sql");
+		await loader.doExport();
 	}
 	
 	if(x == "2"){
 		let filename = await read("File: ");
-		await doLoad()filename;
+		await loader.doLoad(filename);
 	}
 
 	if(x == "3"){
-		await doPull();
+		await loader.doPull();
 	}
 
 	process.exit();

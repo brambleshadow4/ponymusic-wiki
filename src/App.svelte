@@ -385,8 +385,9 @@
 			<h1>Download the Data</h1>
 			<p>Since ponymusicwiki encourages contributions from everyone in the fandom, we offer a full export of all tracks and their metadata. User-based information is not available to download (in the future, we might offer an option to download user data for yourself)</p>
 			<p>We currently offer the data as a SQL file to import into a DBMS. You can download a copy of the database here:</p>
-			<p><a href="/export/export.sql">export.sql</a></p>
+			<p><a href="/export/db">export.sql</a></p>
 			<p>I personally use <a href="https://sqlitebrowser.org/">DB browser for SQLite</a></p>
+			<p>For nerds who would like to access the database in real time and perform SQL queries, we also have a public, readonly login to the postgres database. Reach out to brambleshadow4 if you'd like to know the username and password</p>
 		</div>
 	{:else if path == "/album-import"}
 		<div class='main'><AlbumImport /></div>
