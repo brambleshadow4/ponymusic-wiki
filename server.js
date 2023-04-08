@@ -9,6 +9,7 @@ const https = require("https")
 const http = require("http");
 const {AuthorizationCode} = require('simple-oauth2');
 const { v4: uuidv4 } = require('uuid');
+const loader = require("./server/loaderLib.js");
 
 const {PERM, ROLE, auth, reqHasPerm, getSession} = require("./server/auth.js");
 const {getOgCache, getOgPropertiesFromURL, areTitlesIdentical} = require('./server/helpers.js');
@@ -907,6 +908,12 @@ app.put("/api/setUserFlag", processJSON, auth(PERM.USER_FLAGS), async (req, res)
 } )
 
 
+let lastGeneratedDBFile = "";
+let generateLock = false;
+
+
+
+
 async function buildWhereClause(req, allowedFilters)
 {
 	let userID ="";
@@ -1182,8 +1189,51 @@ function queryProcessing(req, res, next)
 	next();
 }
 
-app.get('*', (req, res) =>
+app.get("/export/db", queryProcessing, async (req,res) => {
+	console.log(req.query);
+
+	let pullKey = "";
+
+	if(req.query.PULL_KEY && req.query.PULL_KEY[0])
+	{
+		pullKey = req.query.PULL_KEY[0]
+	}
+
+	if(generateLock)
+	{
+		res.status(500).send("Generating File, try again later");
+		return;
+	}
+
+	let date = new Date().toISOString().substring(0,10);
+
+	if(lastGeneratedDBFile < date)
+	{
+		generateLock = true;
+		lastGeneratedDBFile = date;
+
+		console.log("EXPORTING DATA");
+
+		await loader.doExport();
+
+		generateLock = false;
+	}	
+
+	if(pullKey == process.env.PULL_KEY)
+	{
+		res.sendFile(path.resolve(__dirname, 'fullExport.sql'), {maxAge: 0});
+	}
+	else
+	{
+		res.redirect("/export/export.sql");
+	}
+
+});
+
+app.get('*', queryProcessing, (req, res) =>
 {
+	console.log(req.url + " " + new Date().toISOString());
+
 	let filePath = path.resolve(__dirname, 'public', req.url);
 	if(fs.existsSync("./public" + filePath))
 	{
@@ -1192,6 +1242,13 @@ app.get('*', (req, res) =>
 	}
 	res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
  });
+
+
+async function handleExport(req,res)
+{
+	
+}
+
 
 if(process.env.SSL_CERT)
 {
