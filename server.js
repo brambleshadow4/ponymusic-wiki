@@ -609,8 +609,6 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 			return;
 		}
 
-		
-
 		if(tag.property == "artist")
 		{
 			titleCacheArtists.push(tag.value);
@@ -628,7 +626,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		}
 	}
 
-	titleCache = (title + ' - ' + titleCacheArtists.join(", ")).substring(0,512);
+	titleCache = (title + ' - ' + titleCacheArtists.join(", ")).substring(0,500);
 
 	// insert the track
 

@@ -1,6 +1,6 @@
-const readline = require('readline');
-const pro = require('process');
-const loader = require("./loaderLib.js");
+import readline from 'readline';
+import pro from 'process';
+import loader from "./loaderLib.js";
 
 main();
 

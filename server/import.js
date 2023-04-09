@@ -5,6 +5,8 @@ import rl from "readline-sync";
 import fetch from "node-fetch";
 import dotenv from "dotenv"; dotenv.config();
 import pg from "pg";
+import readline from 'readline';
+import pro from 'process';
 const {Pool, Client} = pg;
 import Semaphore from './semaphore.js';
 import {parseTitle, processArtistAliases} from "../src/titleParsing.js";
@@ -24,12 +26,30 @@ let localDb = new Pool();
 
 main();
 
+var consoleInterface;
 
 
 async function main()
 {
+
+	consoleInterface = readline.createInterface({ input: pro.stdin, output: pro.stdout });
+	
+	console.clear();
+	console.log("+------Ponymusic.wiki IMPORT------+");
+	console.log("|  1. From luckrock.csv           |")         
+	console.log("|  2. From brass.json             |");
+	console.log("+---------------------------------+")
+
+	var tracks = [];
+
+	let option = await read(">");
+
+	if(option == "1")
+		tracks = loadFromLuckRock();
+	if(option == "2")
+		tracks = loadFromBrassScribe();
+
 	// pick data source
-	let tracks = loadFromLuckRock();
 
 	await Promise.all(tracks.map(processTrack));
 }
@@ -99,6 +119,25 @@ function loadFromLuckRock()
 	return rv;
 
 
+}
+
+function loadFromBrassScribe()
+{
+	let rawData = fs.readFileSync("./server/brass.json", {encoding:'utf8', flag:'r'});
+
+	let data = JSON.parse(rawData);
+
+	return data.map(row => {
+
+		let tags = artistToArtistTags(row.artist);
+		tags.push({property: "hyperlink", value: row.url, text: row.url})
+
+		return {
+			title: row.title,
+			release_date: row.date,
+			tags
+		}
+	})
 }
 
 
@@ -227,12 +266,13 @@ async function processTrack(track)
 			}
 		}
 
-
-		if (LIMIT <= 0)
-			return;
-
 		await promptQueue.whenResourceIsAvailable(async function()
 		{
+			if (LIMIT <= 0)
+				return;
+			else
+				console.log(LIMIT);
+
 			if(trackWarnings.warnings)
 			{
 				await openTrackInBrowser(track);
@@ -241,9 +281,9 @@ async function processTrack(track)
 			{
 				await addTrackDirectly(track);
 			}
-		});
 
-		LIMIT--;	
+			LIMIT--;
+		});
 	});
 }
 
@@ -276,4 +316,12 @@ async function openTrackInBrowser(track)
 	open(HOST + "/track/new" + params);
 	await stall(500);
 	rl.question(`Opening ${track.title}. Press enter to continue`);
+}
+
+async function read(prompt)
+{
+	prompt = prompt || "";
+	return new Promise((accept, reject)=> {
+		consoleInterface.question(prompt, accept);
+	})
 }

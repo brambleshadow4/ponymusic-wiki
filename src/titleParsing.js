@@ -2,6 +2,8 @@ let aliases = {
 	"Ponies at Dawn": "",
 	"LBP": "LoneBronyProductions",
 	"CantoAcrylicVA": "CantoAcrylic",
+	"FenPhoenix": "FenPony",
+	"Fen": "FenPony",
 }
 
 
