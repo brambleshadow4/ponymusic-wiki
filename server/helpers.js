@@ -1,5 +1,5 @@
-const fetch = require('node-fetch');
-const fs = require('fs');
+import fetch from 'node-fetch';
+import fs from 'fs';
 
 async function getOgCache(track)
 {
@@ -176,7 +176,7 @@ function damerauLevenshteinDistance(a, b)
 }
 
 
-module.exports = {
+export {
 	getOgCache,
 	getOgPropertiesFromURL,
 	areTitlesIdentical

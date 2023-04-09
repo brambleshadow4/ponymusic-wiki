@@ -2,6 +2,7 @@
 	"name": "ponymusic-wiki",
 	"version": "0.1.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"build": "rollup -c",
 		"dev": "rollup -c -w",

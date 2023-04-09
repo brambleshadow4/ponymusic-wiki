@@ -1,11 +1,11 @@
-exports.doLoad = doLoad;
-exports.doPull = doPull;
-exports.doExport = doExport;
+export default {doLoad, doPull, doExport};
 
-const fs = require('fs');
-const https = require("https")
-const {Pool, Client} = require('pg');
-require('dotenv').config()
+import fs from 'fs';
+import https from "https"
+import pg from "pg";
+const {Pool, Client} = pg;
+import dotenv from "dotenv";
+dotenv.config();
 
 async function doLoad(filename)
 {

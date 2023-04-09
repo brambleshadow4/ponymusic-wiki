@@ -1,15 +1,16 @@
+let aliases = {
+	"Ponies at Dawn": "",
+	"LBP": "LoneBronyProductions",
+	"CantoAcrylicVA": "CantoAcrylic",
+}
+
 
 function parseTitle(title)
 {
-	let nameOverrides = getNameOverrides();
 	let parsedTitle = title.replace(/<\/?(span|a)[^>]*>/g,"");
-	let parseRule = localStorage.parseRule;
+	//let parseRule = localStorage.parseRule;
 	let tags = [];
 
-	if(parseRule == "0")
-	{
-		return {title: parsedTitle, tags};
-	}
 
 	let match = /(?:(.*)?(?: - | – ))?(.*)/.exec(title);
 
@@ -22,9 +23,7 @@ function parseTitle(title)
 
 		for(let artist of artists)
 		{
-			let name = getArtistName(artist, nameOverrides);
-			if(name)
-				tags.push({property:"artist", value: name , text: name});
+			tags.push({property:"artist", value: artist, text: artist});	
 		}
 	}
 
@@ -35,42 +34,49 @@ function parseTitle(title)
 
 		for(let artist of artists)
 		{
-			let name = getArtistName(artist, nameOverrides);
-			if(name)
-				tags.push({property:"featured artist", value: name , text: name});
+			tags.push({property:"featured artist", value: artist , text: artist});
 		}
 	}
 
 	return {title: parsedTitle, tags};
 }
 
-function getArtistName(artistName, overrides)
+
+function artistAlias(name)
 {
-	if(!overrides)
-		overrides = getNameOverrides();
-	return overrides[artistName] != undefined ? overrides[artistName] : artistName;
+	if(aliases[name])
+		return aliases[name]
+	return name;
 }
 
 
-function getNameOverrides()
+function processArtistAliases(track)
 {
-	let nameOverrides = {};
-	let nameOverridesRaw = [];
-	try{
-		nameOverridesRaw = JSON.parse(localStorage.nameOverrides)
-	}
-	catch(e){};
-
-	for(let pair of nameOverridesRaw)
+	for(let i=0; i<track.tags.length; i++)
 	{
-		nameOverrides[pair[0]] = pair[1];
-	}
+		let tag = track.tags[i];
+		if(tag.property != "artist" && tag.property != "featured artist")
+			continue;
 
-	return nameOverrides;
+		let alias = artistAlias(tag.value)
+
+		if(!alias)
+		{
+			track.tags.splice(i,1);
+			i--;
+			continue;
+		}
+
+		if(tag.value != alias)
+		{
+			tag.value = alias;
+			tag.text = alias;
+		}
+	}
 }
 
 
 
-export {parseTitle, getArtistName};
+export {parseTitle, artistAlias, processArtistAliases};
 
 

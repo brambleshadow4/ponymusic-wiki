@@ -8,7 +8,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import {tagComp, setUserFlag} from "./helpers.js";
 	import {PERM, hasPerm} from "./authClient.js";
-	import {parseTitle, getArtistName} from "./titleParsing.js";
+	import {parseTitle, artistAlias} from "./titleParsing.js";
 	import { onMount } from 'svelte';
 
 	const dispatch = createEventDispatcher();
@@ -433,7 +433,7 @@
 			let artistList = params['artist'].split("\x1E");
 			artistList.forEach(x => {
 
-				let name = getArtistName(x);
+				let name = artistAlias(x);
 				if(name)
 					addTag({property:"artist", value: name, text: name});
 			});

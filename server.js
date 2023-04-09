@@ -1,18 +1,23 @@
-require('dotenv').config()
-const cors = require('cors');
-const path = require('path');
-const express = require('express');
-const fs = require('fs');
-const bodyParser = require('body-parser');
-const {Pool} = require('pg');
-const https = require("https")
-const http = require("http");
-const {AuthorizationCode} = require('simple-oauth2');
-const { v4: uuidv4 } = require('uuid');
-const loader = require("./server/loaderLib.js");
+import dotenv from "dotenv";
+dotenv.config();
 
-const {PERM, ROLE, auth, reqHasPerm, getSession} = require("./server/auth.js");
-const {getOgCache, getOgPropertiesFromURL, areTitlesIdentical} = require('./server/helpers.js');
+import cors from 'cors';
+import path from 'path';
+import express from 'express';
+import fs from 'fs';
+import bodyParser from 'body-parser';
+import pg from "pg";
+const {Pool} = pg;
+import https from "https";
+import http from "http";
+import {AuthorizationCode} from 'simple-oauth2';
+import { v4 as uuidv4 } from 'uuid';
+import loader from "./server/loaderLib.js";
+
+import {PERM, ROLE, auth, reqHasPerm, getSession} from "./server/auth.js";
+import {getOgCache, getOgPropertiesFromURL, areTitlesIdentical} from './server/helpers.js';
+
+
 const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl","cover","remix","original artist"];
 
 
@@ -41,13 +46,13 @@ const DELAY = 1500;
 
 // getOgPropertiesFromURL("https://www.youtube.com/watch?v=CNPdO5TZ1DQ", {logProperties:true});
 
-db = new Pool();
+let db = new Pool();
 
 
 let tableQueries = fs.readFileSync("./server/tables.sql", {encoding:'utf8'})
 	.split(";");
 
-for (query of tableQueries)
+for (let query of tableQueries)
 {
 	db.query(query, (err, res) =>
 	{
@@ -496,7 +501,7 @@ app.get("/api/track/*", async(req,res) =>
 
 	response.originalTracks = [];
 
-	for(tag of tagRows)
+	for(let tag of tagRows)
 	{
 		let newTag = {property: tag.property, value: tag.value};
 
@@ -595,7 +600,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 	data.tags = data.tags.filter(x => x && x.property && x.value && !(x.property == "original artist"));
 
-	for(tag of data.tags)
+	for(let tag of data.tags)
 	{	
 		let value = tag.value;
 
@@ -797,7 +802,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 			return;
 		}
 
-		value = tag.value.trim();
+		let value = tag.value.trim();
 
 		if (!tag.property || value.length == 0 || value.length > MAX_STRING_LENGTH || validProperties.indexOf(tag.property) == -1){
 			res.json({status:400, error: "Invalid tag " + JSON.stringify(tag) });
@@ -816,7 +821,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 
 		info = await db.query("SELECT a.track_id as id, b.titlecache as name FROM track_tags as a LEFT JOIN tracks as b ON a.track_id=b.id WHERE property='hyperlink' AND value=$1 AND track_id !=$2", [tag.value, data.id]);
 
-		for(row of info.rows)
+		for(let row of info.rows)
 		{
 			hasWarnings = true;
 			sameHyperlink.push({value: tag.value, id: row.id, name: row.name});
@@ -1178,7 +1183,7 @@ function addDelay(req, res, next)
 
 function queryProcessing(req, res, next)
 {
-	for(key in req.query)
+	for(let key in req.query)
 	{
 		let s = req.query[key].replace(/,,/g, "\uE000");
 		s = s.split(",");
@@ -1190,7 +1195,6 @@ function queryProcessing(req, res, next)
 }
 
 app.get("/export/db", queryProcessing, async (req,res) => {
-	console.log(req.query);
 
 	let pullKey = "";
 
@@ -1221,7 +1225,7 @@ app.get("/export/db", queryProcessing, async (req,res) => {
 
 	if(pullKey == process.env.PULL_KEY)
 	{
-		res.sendFile(path.resolve(__dirname, 'fullExport.sql'), {maxAge: 0});
+		res.sendFile(path.resolve(process.cwd(), 'fullExport.sql'), {maxAge: 0});
 	}
 	else
 	{
@@ -1232,15 +1236,13 @@ app.get("/export/db", queryProcessing, async (req,res) => {
 
 app.get('*', queryProcessing, (req, res) =>
 {
-	console.log(req.url + " " + new Date().toISOString());
-
-	let filePath = path.resolve(__dirname, 'public', req.url);
+	let filePath = path.resolve(process.cwd(), 'public', req.url);
 	if(fs.existsSync("./public" + filePath))
 	{
 		res.sendFile(filePath);
 		return;
 	}
-	res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+	res.sendFile(path.resolve(process.cwd(), 'public', 'index.html'));
  });
 
 

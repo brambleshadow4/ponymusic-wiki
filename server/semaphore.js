@@ -1,4 +1,4 @@
-function Sempahore(initialCount)
+function Semaphore(initialCount)
 {
 	let count = initialCount;
 	let promiseQueue = []
@@ -39,4 +39,4 @@ function Sempahore(initialCount)
 	}
 }
 
-exports.Semaphore = Sempahore;
+export default Semaphore;

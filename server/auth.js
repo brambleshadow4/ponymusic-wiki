@@ -3,8 +3,16 @@
  * authentication for the connecting user
  */ 
 
-require('dotenv').config()
-const {Pool} = require('pg');
+import dotenv from "dotenv";
+dotenv.config();
+
+import pg from "pg";
+
+export {
+	PERM, ROLE, auth, reqHasPerm, getSession
+}
+
+
 
 const ROLE = {
 	DEFAULT: "1",
@@ -50,7 +58,7 @@ lookup[ROLE.USER] = {};
 lookup[ROLE.USER][PERM.UPDATE_TRACK] = true;
 lookup[ROLE.USER][PERM.USER_FLAGS] = true;
 
-db = new Pool();
+const db = new pg.Pool();
 
 let sessions = {}; // string => {id: ###} map
 
@@ -113,6 +121,3 @@ function auth(permission)
 	}
 }
 
-module.exports = {
-	PERM, ROLE, auth, reqHasPerm, getSession
-}
