@@ -14,11 +14,11 @@ let LIMIT = 60;
 let SESSION = ""; // DO NOT COMMIT A REAL SESSION ID HERE
 
 
-let trackQueue = new Semaphore(1);
+let trackQueue = new Semaphore(100);
 let promptQueue = new Semaphore(1);
 
-let HOST = "http://localhost:8000";
-//let HOST = "https://ponymusic.wiki";
+//let HOST = "http://localhost:8000";
+let HOST = "https://ponymusic.wiki";
 
 let localDb = new Pool();
 
