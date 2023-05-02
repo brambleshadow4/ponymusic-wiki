@@ -4,6 +4,7 @@ let aliases = {
 	"CantoAcrylicVA": "CantoAcrylic",
 	"FenPhoenix": "FenPony",
 	"Fen": "FenPony",
+	"El Brony Villero": "Brony Villero",
 }
 
 
@@ -30,6 +31,11 @@ function parseTitle(title)
 	}
 
 	match = /.*\((?:F|f)e?a?t?\. (.*)\)/.exec(parsedTitle);
+	if(!match)
+	{
+		match = /.*(?:F|f)e?a?t?\. (.*)/.exec(parsedTitle);
+	}
+
 	if(match && match[1])
 	{
 		artists = match[1].split(/,|&/g).map(x => x.trim()).filter(x => x);
@@ -39,6 +45,8 @@ function parseTitle(title)
 			tags.push({property:"featured artist", value: artist , text: artist});
 		}
 	}
+
+	
 
 	return {title: parsedTitle, tags};
 }

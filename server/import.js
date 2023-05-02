@@ -13,7 +13,7 @@ import {parseTitle, processArtistAliases} from "../src/titleParsing.js";
 
 
 let LIMIT = 60;
-let SESSION = ""; // DO NOT COMMIT A REAL SESSION ID HERE
+let SESSION = process.env.PROD_SESSION || "";
 
 
 let trackQueue = new Semaphore(100);
