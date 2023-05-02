@@ -211,9 +211,6 @@ async function processTrack(track)
 			})
 
 			responseCache = response;
-
-			
-
 			trackWarnings = await response.json();
 
 			if(trackWarnings.status == 400)

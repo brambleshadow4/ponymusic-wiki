@@ -17,38 +17,60 @@ function parseTitle(title)
 
 	let match = /(?:(.*)?(?: - | – ))?(.*)/.exec(title);
 
-	let artists = (match[1] || "").trim();
-	parsedTitle = match[2].trim();
+	let artistList = (match[1] || "").trim();
+	let songName = match[2].trim();
 	
-	if(artists)
+	if(artistList)
 	{
-		artists = artists.split(/,|&/g).map(x => x.trim()).filter(x => x);
+		artistList = artistList.split(/,|&| and /g).map(x => x.trim()).filter(x => x);
 
-		for(let artist of artists)
+		for(let artist of artistList)
 		{
 			tags.push({property:"artist", value: artist, text: artist});	
 		}
 	}
 
-	match = /.*\((?:F|f)e?a?t?\. (.*)\)/.exec(parsedTitle);
-	if(!match)
+	var featArtistString = "";
+
+
+	while(true)
 	{
-		match = /.*(?:F|f)e?a?t?\. (.*)/.exec(parsedTitle);
+		match = /.*\((?:F|f)e?a?t\.? (.*)\)/.exec(songName);
+		if(match)
+		{
+			featArtistString = match[1];
+			break;
+		}
+
+
+		match = /.*(?:F|f)e?a?t\.? (.*)/.exec(songName);
+		if(match)
+		{
+			featArtistString = match[1];
+			break;
+		}
+
+		match = /.*w\/ (.*)/.exec(songName);
+
+		if(match)
+		{
+			featArtistString = match[1];
+		}
+
+		break;
 	}
 
-	if(match && match[1])
+	if(featArtistString)
 	{
-		artists = match[1].split(/,|&/g).map(x => x.trim()).filter(x => x);
+		let featArtists = featArtistString.split(/,|&| and /g).map(x => x.trim()).filter(x => x);
 
-		for(let artist of artists)
+		for(let artist of featArtists)
 		{
 			tags.push({property:"featured artist", value: artist , text: artist});
 		}
 	}
 
-	
-
-	return {title: parsedTitle, tags};
+	return {title: songName, tags};
 }
 
 
