@@ -72,6 +72,27 @@ describe('titleParsing', function () {
 		assert.equal(tags.length, 2);
 
 	});
+
+	it('supports the format: (vc. name)', function () {
+
+		let {title, tags} = parseTitle("Frozen Night - Zuriak's Resolve (vc. Yoed Nir)")
+		assert.equal(title, "Zuriak's Resolve (vc. Yoed Nir)");
+		assertHasTag(tags, "featured artist", "Yoed Nir");
+		assertHasTag(tags, "artist", "Frozen Night");
+		assert.equal(tags.length, 2);
+	});
+
+	it('gets rid of tags like 【Music】', function () {
+
+		let {title, tags} = parseTitle("【Music】The Replacer")
+		assert.equal(title, "The Replacer");
+		assert.equal(tags.length, 0);
+	});
+
+	//【Music】The Replacer
+
+
+	
 });
 
 /*

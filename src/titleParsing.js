@@ -15,6 +15,8 @@ function parseTitle(title)
 	let tags = [];
 
 
+	title = title.replace(/【Music】/g,"");
+
 	let match = /(?:(.*)?(?: - | – ))?(.*)/.exec(title);
 
 	let artistList = (match[1] || "").trim();
@@ -55,6 +57,15 @@ function parseTitle(title)
 		if(match)
 		{
 			featArtistString = match[1];
+			break;
+		}
+
+		match = /.*\((?:V|v)c\.? (.*)\)/.exec(songName);
+
+		if(match)
+		{
+			featArtistString = match[1];
+			break;
 		}
 
 		break;
