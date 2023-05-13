@@ -89,6 +89,14 @@ describe('titleParsing', function () {
 		assert.equal(tags.length, 0);
 	});
 
+	it('adds the producer as an artist', function () {
+
+		let {title, tags} = parseTitle("Fly Away (Prod. COLD MELODY)")
+		assert.equal(title, "Fly Away (Prod. COLD MELODY)");
+		assertHasTag(tags, "artist", "COLD MELODY");
+		assert.equal(tags.length, 1);
+	});
+
 	//【Music】The Replacer
 
 

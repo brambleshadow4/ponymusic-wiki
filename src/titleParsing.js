@@ -5,6 +5,7 @@ let aliases = {
 	"FenPhoenix": "FenPony",
 	"Fen": "FenPony",
 	"El Brony Villero": "Brony Villero",
+	"Matthew Mosier Music": "Matthew Mosier"
 }
 
 
@@ -68,7 +69,16 @@ function parseTitle(title)
 			break;
 		}
 
+		
 		break;
+	}
+
+	// handle producer credit
+	match = /.*\((?:P|p)rod\.? (.*)\)/.exec(songName);
+
+	if(match)
+	{
+		tags.push({property:"artist", value: match[1], text: match[1]});
 	}
 
 	if(featArtistString)
