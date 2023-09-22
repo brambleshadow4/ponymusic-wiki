@@ -5,7 +5,11 @@ let aliases = {
 	"FenPhoenix": "FenPony",
 	"Fen": "FenPony",
 	"El Brony Villero": "Brony Villero",
-	"Matthew Mosier Music": "Matthew Mosier"
+	"El Brony Villero :v": "Brony Villero",
+	"Matthew Mosier Music": "Matthew Mosier",
+	"FillyInTheBox": "Filly in the Box",
+	"ThunderShyOfficial-2": "ThunderShy",
+	"Canto": "CantoAcrylic",
 }
 
 

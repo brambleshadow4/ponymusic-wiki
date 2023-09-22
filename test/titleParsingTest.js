@@ -4,6 +4,8 @@ import {parseTitle} from "../src/titleParsing.js";
 
 
 
+<span dir="auto" class="style-scope yt-formatted-string">Our Little Rainbow (ft. </span><a class="yt-simple-endpoint style-scope yt-formatted-string" spellcheck="false" href="/channel/UCGY-ztwOdJ9xxZK8O80xDjA" dir="auto">@Flitterkriz</a><span dir="auto" class="style-scope yt-formatted-string">) [Pony Parody]</span>
+
 function assertHasTag(tags, property, value)
 {
 	let matches = tags.filter(tag => tag.property == property && tag.value == value);

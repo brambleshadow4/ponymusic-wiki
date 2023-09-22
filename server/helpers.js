@@ -119,7 +119,7 @@ function getSimplifiedTitle(title)
 
 	simple = simple.replace(/ - [^-]* remix/g,"");
 
-	simple = simple.replace(/[^A-Za-z0-9 ]/g,"");
+	simple = simple.replace(/[^A-Za-z0-9 Ѐ-ӿ]/g,""); // Ѐ-ӿ is the Cyrillic alphabet
 	simple = simple.replace(/ +/g," ");
 
 	i = simple.lastIndexOf(" feat ")

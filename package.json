@@ -6,6 +6,8 @@
 	"scripts": {
 		"build": "rollup -c",
 		"dev": "rollup -c -w",
+		"import": "node server/import.js",
+		"loader": "node server/loader.js",
 		"start": "node server.js",
 		"start__old": "sirv public --no-clear",
 		"test": "mocha"
