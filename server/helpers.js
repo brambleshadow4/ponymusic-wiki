@@ -7,47 +7,47 @@ async function getOgCache(track, albumHyperlinks)
 		albumHyperlinks = [];
 	let hyperlinks = track.tags.filter(x => x.property == "hyperlink").map(x => x.value);
 
-	hyperlinks = hyperlinks.concat(albumHyperlinks);
-
-	if(!hyperlinks.length){
+	if(!hyperlinks.length && !albumHyperlinks.length){
 		return null;
 	}
-	
-	// youTube is a special case because we can lookup the embed from the URL.
-	let youTubeLinks = hyperlinks.filter(x => /https:\/\/www\.youtube\.com\/watch\?v=(.*)/.exec(x));
 
-	if(youTubeLinks.length)
+	var linkOfChoice;
+
+	for(let links of [hyperlinks, albumHyperlinks])
 	{
-		let pattern = /https:\/\/www\.youtube\.com\/watch\?v=(.*)/;
-		let match = pattern.exec(youTubeLinks[0])
+		// youTube is a special case because we can lookup the embed from the URL.
+		let youTubeLinks = links.filter(x => /https:\/\/www\.youtube\.com\/watch\?v=(.*)/.exec(x));
 
-		return {embed:"https://www.youtube.com/embed/" + match[1], width: 560, height: 315};
-	}
+		if(youTubeLinks.length)
+		{
+			let pattern = /https:\/\/www\.youtube\.com\/watch\?v=(.*)/;
+			let match = pattern.exec(youTubeLinks[0])
 
-	// generic lookup
-	
-	let linkOfChoice = hyperlinks[0];
-	let bandcampLinks = hyperlinks.filter(x => /https:\/\/[a-zA-Z0-9]+\.bandcamp\.com.*/.exec(x));
-	let soundcloudLinks = hyperlinks.filter(x => x.startsWith("https://soundcloud.com"));
+			return {embed:"https://www.youtube.com/embed/" + match[1], width: 560, height: 315};
+		}
 
-	if(bandcampLinks.length){
-		linkOfChoice = bandcampLinks[0]
-	}
-	else if(soundcloudLinks.length){
-		linkOfChoice = soundcloudLinks[0];
+		// generic lookup
+		
+		let bandcampLinks = links.filter(x => /https:\/\/[a-zA-Z0-9]+\.bandcamp\.com.*/.exec(x));
+		let soundcloudLinks = links.filter(x => x.startsWith("https://soundcloud.com"));
+
+		linkOfChoice = bandcampLinks[0] || soundcloudLinks[0] || links[0]
+
+		if(linkOfChoice)
+			break;
 	}
 
 	let properties = await getOgPropertiesFromURL(linkOfChoice);
 
 	//console.log(properties);
 
-	if(bandcampLinks.length)
+	if(linkOfChoice.indexOf("bandcamp.com") > -1)
 	{
 		console.log("og bandcamp");
 
 		return {embed:properties["og:video"], width: 560, height: 130};
 	}
-	else if (soundcloudLinks.length)
+	else if (linkOfChoice.indexOf("soundcloud.com") > -1)
 	{
 		console.log("og soundcloud");
 		return {embed:properties["twitter:player"], width: 500, height: 500};
@@ -62,6 +62,8 @@ async function getOgCache(track, albumHyperlinks)
 		console.log("og audio");
 		return {audio: properties["og:audio"]};
 	}
+
+	console.log("something went wrong")
 
 	return null;		
 }
