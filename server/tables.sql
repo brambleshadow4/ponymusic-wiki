@@ -30,11 +30,31 @@ CREATE TABLE IF NOT EXISTS track_tags(
 CREATE INDEX IF NOT EXISTS property_index ON track_tags(property, value);
 CREATE INDEX IF NOT EXISTS track_id_index ON track_tags(track_id);
 
+CREATE TABLE IF NOT EXISTS track_tags_metadata (
+	property VARCHAR(255) NOT NULL,
+	value TEXT NOT NULL,
+	meta_property VARCHAR(255) NOT NULL,
+	meta_value TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS property_index ON track_tags_metadata(property, value);
+CREATE INDEX IF NOT EXISTS meta_property_index ON track_tags_metadata(meta_property, meta_value);
+
 CREATE TABLE IF NOT EXISTS track_history (
 	track_id INTEGER,
 	user_id VARCHAR(355),
 	timestamp TIMESTAMP,
 	value JSONB
+);
+
+CREATE TABLE IF NOT EXISTS track_tags_metadata_history (
+	user_id VARCHAR(355),
+	timestamp TIMESTAMP,
+	is_delete BOOLEAN NOT NULL,
+	property VARCHAR(255) NOT NULL,
+	value TEXT NOT NULL,
+	meta_property VARCHAR(255) NOT NULL,
+	meta_value TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS users (

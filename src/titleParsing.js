@@ -9,6 +9,7 @@ let aliases = {
 	"Matthew Mosier Music": "Matthew Mosier",
 	"FillyInTheBox": "Filly in the Box",
 	"ThunderShyOfficial-2": "ThunderShy",
+	"ThunderShyOfficial-2 AI": "ThunderShy",
 	"Canto": "CantoAcrylic",
 }
 

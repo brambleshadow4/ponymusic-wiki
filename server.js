@@ -52,16 +52,27 @@ let db = new Pool();
 let tableQueries = fs.readFileSync("./server/tables.sql", {encoding:'utf8'})
 	.split(";");
 
-for (let query of tableQueries)
+function runQueries()
 {
+	let query = tableQueries.shift();
+
+	if(!query)
+		return;
+
 	db.query(query, (err, res) =>
 	{
 		if(err)
 		{
 			throw new Error(err);
 		}
+
+		runQueries();
 	});
-}
+
+}	
+
+runQueries();
+
 
 app.use(express.static('public'));
 
@@ -368,6 +379,8 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let albumNoSelect = "";
 	let orderBy = "ORDER BY release_date DESC";	
 
+	let response = {};
+
 	if(req.query.album && req.query.album.length == 1)
 	{
 		albumNoSelect = `(SELECT number from track_tags WHERE track_id=id AND property='album' AND value=${sqlEscapeString(req.query.album[0])} LIMIT 1) as album_no,`;
@@ -376,6 +389,9 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 		{
 			orderBy = "ORDER BY album_no ASC";
 		}
+
+		let albumHyperlinks = await db.query("SELECT meta_value FROM track_tags_metadata WHERE property='album' AND value=$1 AND meta_property='hyperlink'",[req.query.album[0]]);
+		response.albumHyperlinks = albumHyperlinks.rows.map(x => x.meta_value);
 	}
 
 	if(req.query.sort && req.query.sort[0] == "^random")
@@ -405,7 +421,11 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let countRequest = await db.query(`SELECT COUNT(*) AS count FROM tracks ${whereClause}`,[]);
 	let total = countRequest.rows[0].count;
 
-	res.json({rows, pages: Math.ceil(total/PAGE_COUNT), total});
+	response.rows = rows;
+	response.pages = Math.ceil(total/PAGE_COUNT);
+	response.total = total;
+
+	res.json(response);
 });
 
 app.get("/api/history/track/*", async(req,res) =>
@@ -886,6 +906,52 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 
 	res.json({status: 200, warnings: hasWarnings, sameTitle, sameHyperlink, unknownArtists});
 	
+});
+
+app.put("/api/setTagMetadata", processJSON, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
+
+	let userID = (await getSession(req)).user_id;
+
+	let validPair = false;
+
+	let value = req.body.value;
+	let property = req.body.property;
+	let metaProperty = req.body.meta_property;
+	let metaValue = req.body.meta_value;
+
+	if(property == "album" && metaProperty == "hyperlink")
+		validPair = true;
+
+	if(!validPair){
+		res.statusCode = 400;
+		res.json({status: 400});
+		console.log("bad pair")
+		return;
+	}
+
+
+	if(!value || value == "" || !metaValue || metaValue=="")
+	{
+		res.statusCode = 400;
+		res.json({status: 400});
+		return;
+	}
+	
+	if(req.body.is_delete)
+	{
+		await db.query("DELETE FROM track_tags_metadata WHERE property=$1 AND value=$2 AND meta_property=$3 AND meta_value=$4", 
+			[property, value, metaProperty, metaValue]);
+	}
+	else
+	{
+		await db.query("INSERT INTO track_tags_metadata (property, value, meta_property, meta_value) VALUES ($1, $2, $3, $4) ", 
+			[property, value, metaProperty, metaValue]);
+	}
+
+	await db.query("INSERT INTO track_tags_metadata_history (property, value, meta_property, meta_value, user_id, is_delete, timestamp) VALUES ($1, $2, $3, $4, $5, $6, NOW()) ", 
+		[property, value, metaProperty, metaValue, userID, !!req.body.is_delete]);
+
+	res.json({status: 200})
 });
 
 app.put("/api/setUserFlag", processJSON, auth(PERM.USER_FLAGS), async (req, res) =>

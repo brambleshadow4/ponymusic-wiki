@@ -18,6 +18,7 @@
 	let page = [0,1];
 	let total = 0;
 	let tab = 0;
+	let albumHyperlinks = null;
 
 	let queryCache = "";
 	let loaded = false;
@@ -55,6 +56,10 @@
 		data = response.rows;
 		page = [page[0], response.pages];
 		total = response.total;
+
+		if(response.albumHyperlinks)
+			albumHyperlinks = response.albumHyperlinks;
+
 		loaded = true;
 	}
 
@@ -124,6 +129,55 @@
 		data = data;
 	}
 
+	async function addAlbumLink()
+	{
+		let thisAlbum = view.tabs[0].filter({}).album.include[0];
+		console.log(thisAlbum)
+
+		let link = prompt("Album hyperlink")
+		if(!link)
+			return
+
+		let response = await (await fetch("/api/setTagMetadata", {
+			method: "PUT",
+			headers: {"Content-Type": "text/json"},
+			body: JSON.stringify({
+				session: sessionStorage.session,
+				property: "album",
+				value: thisAlbum,
+				is_delete: false,
+				meta_property: "hyperlink",
+				meta_value: link,
+			})
+		})).json();
+
+		window.location.reload();
+	}
+
+	async function removeAlbumLink(oldLink)
+	{
+		let thisAlbum = view.tabs[0].filter({}).album.include[0];
+
+		if(!confirm("Are you sure you want to delete this link?"))
+			return
+
+		let response = await (await fetch("/api/setTagMetadata", {
+			method: "PUT",
+			headers: {"Content-Type": "text/json"},
+			body: JSON.stringify({
+				session: sessionStorage.session,
+				property: "album",
+				value: thisAlbum,
+				is_delete: true,
+				meta_property: "hyperlink",
+				meta_value: oldLink,
+			})
+		})).json();
+
+		console.log("what")
+		window.location.reload();
+	}
+
 	let columnDefs = view.tabs[0].columns;
 
 	let rowButtons = [];
@@ -155,6 +209,21 @@
 		<h1>{view.makeTitle()}</h1>
 	{:else if view.htmlTitle}
 		{@html view.htmlTitle}
+	{/if}
+
+	{#if albumHyperlinks}
+		<div class='tag-info'>
+			{#each albumHyperlinks as link}
+				<a href={link}>{link}</a>
+				{#if hasPerm(PERM.EDIT_TAG_METADATA)}
+					<span on:click={() => removeAlbumLink(link)}>❌</span>
+				{/if}
+				&nbsp;
+			{/each}
+			{#if hasPerm(PERM.EDIT_TAG_METADATA)}
+				<button on:click={addAlbumLink}>Add Link</button>
+			{/if}
+		</div>
 	{/if}
 
 	<div class='action-links'>
@@ -209,6 +278,13 @@
 		padding-top: 9px;
 		padding-left: 15px;
 		padding-right: 15px;
+	}
+
+	.tag-info {
+		margin-bottom: 10px;
+	}
+	.tag-info button {
+		padding: 3px;
 	}
 
 	.tabs span

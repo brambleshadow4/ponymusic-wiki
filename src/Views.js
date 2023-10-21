@@ -100,6 +100,7 @@ let AlbumView = {
 				let albumName = decodeURIComponent(location.pathname.replace("/album/","").trim());
 				let filterCopy = JSON.parse(JSON.stringify(filters));
 				filterCopy.album = {include: [albumName]};
+				console.log(filterCopy)
 				return filterCopy;
 			}
 		}

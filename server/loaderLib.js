@@ -93,6 +93,9 @@ async function doExport()
 	textArr.push(await exportTable("track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"}));
 	textArr.push(await exportTable("track_history", {track_id: "number", user_id: "string", value:"json", timestamp: "date"}));
 	textArr.push(await exportTable("user_flags", {track_id: "number", user_id: "string", flag:"string", value:"number"}));
+	textArr.push(await exportTable("tracK_tags_metadata", {property: "string", value:"string", meta_property:"string", meta_value:"string"}));
+	textArr.push(await exportTable("tracK_tags_metadata_history", {user_id: "string", timestamp: "date", is_delete:"bool", property:"string", value:"string", meta_property:"string", meta_value:"string"}));
+
 	textArr.push("SELECT SETVAL(pg_get_serial_sequence('tracks', 'id'), (SELECT (MAX(track_id) + 1) FROM track_history));");
 	
 	fs.writeFileSync("./fullExport.sql", textArr.join(""));
