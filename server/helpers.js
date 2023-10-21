@@ -1,9 +1,13 @@
 import fetch from 'node-fetch';
 import fs from 'fs';
 
-async function getOgCache(track)
+async function getOgCache(track, albumHyperlinks)
 {
+	if(!albumHyperlinks)
+		albumHyperlinks = [];
 	let hyperlinks = track.tags.filter(x => x.property == "hyperlink").map(x => x.value);
+
+	hyperlinks = hyperlinks.concat(albumHyperlinks);
 
 	if(!hyperlinks.length){
 		return null;

@@ -390,7 +390,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 			orderBy = "ORDER BY album_no ASC";
 		}
 
-		let albumHyperlinks = await db.query("SELECT meta_value FROM track_tags_metadata WHERE property='album' AND value=$1 AND meta_property='hyperlink'",[req.query.album[0]]);
+		let albumHyperlinks = await db.query("SELECT * FROM track_tags_metadata WHERE property='album' AND value=$1 AND meta_property='hyperlink'",[req.query.album[0]]);
 		response.albumHyperlinks = albumHyperlinks.rows.map(x => x.meta_value);
 	}
 
@@ -544,6 +544,7 @@ app.get("/api/track/*", async(req,res) =>
 		{
 			newTag.text = tag.value;
 		}
+
 		
 
 		response.tags.push(newTag);
@@ -601,13 +602,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 	let id = data.id;
 
-	let ogcache = {};
-
-	try
-	{
-		ogcache = await getOgCache(data) || {};
-	}
-	catch(e){};
+	
 
 	var info = {};
 	let deleted = false;
@@ -617,6 +612,8 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	let titleCacheArtists = [];
 
 	// validate tags
+
+	let albumHyperlinkCache = [];
 
 	data.tags = data.tags.filter(x => x && x.property && x.value && !(x.property == "original artist"));
 
@@ -634,6 +631,16 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 			titleCacheArtists.push(tag.value);
 		}
 
+		if(tag.property == "album")
+		{
+			let {rows} = await db.query("SELECT * from track_tags_metadata WHERE property='album' AND value=$1 AND meta_property='hyperlink'", [tag.value]);
+			for(let link of rows)
+			{
+				albumHyperlinkCache.push(link.meta_value);
+			}
+
+		}
+
 		tag.value = trim2(tag.value);
 
 		// Use whatever existing casing is in the database for the tag value.
@@ -647,6 +654,14 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	}
 
 	titleCache = (title + ' - ' + titleCacheArtists.join(", ")).substring(0,500);
+
+
+	let ogcache = {};
+	try
+	{
+		ogcache = await getOgCache(data, albumHyperlinkCache) || {};
+	}
+	catch(e){};
 
 	// insert the track
 
@@ -800,7 +815,8 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 	let title = (data.title || "").trim();
 
 	let sameTitle = [];
-	let sameHyperlink = []
+	let sameHyperlink = [];
+	let albumHyperlink = [];
 	let unknownArtists = [];
 
 
@@ -845,6 +861,16 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 			sameHyperlink.push({value: tag.value, id: row.id, name: row.name});
 			potentialDuplicateIDs.add(row.id);
 		}
+
+		let albumHyperlinkResults = await db.query("SELECT * FROM track_tags_metadata WHERE property='album' AND meta_property='hyperlink' AND meta_value=$1", [tag.value])
+
+		for(let row of albumHyperlinkResults.rows)
+		{
+			hasWarnings = true;
+			console.log(row)
+			albumHyperlink.push({value: tag.value, albumName: row.value});
+		}
+
 	}
 
 	// check title against previously released songs by this artist
@@ -872,7 +898,6 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		}
 	}
 
-	
 
 	// check title - exact mathes
 
@@ -904,7 +929,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		}
 	}
 
-	res.json({status: 200, warnings: hasWarnings, sameTitle, sameHyperlink, unknownArtists});
+	res.json({status: 200, warnings: hasWarnings, sameTitle, sameHyperlink, unknownArtists, albumHyperlink});
 	
 });
 

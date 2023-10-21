@@ -50,10 +50,20 @@
 				<div class='indent'>{item}</div>
 			{/each}
 		{/if}
+		{#if warnings.albumHyperlink.length}
+			<div>This track has a hyperlink that is associated with an album. Instead of adding it to the track, add the album tag instead</div>
+			{#each warnings.albumHyperlink as item}
+				<div class='indent'>{item.albumName}</div>
+			{/each}
+		{/if}
 	</div>
 {/if}
 
 <style>
+
+	.indent {
+		padding-left: 20px;
+	}
 
 	.tag-warnings
 	{
