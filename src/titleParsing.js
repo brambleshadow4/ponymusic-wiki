@@ -10,7 +10,10 @@ let aliases = {
 	"FillyInTheBox": "Filly in the Box",
 	"ThunderShyOfficial-2": "ThunderShy",
 	"ThunderShyOfficial-2 AI": "ThunderShy",
+	"ThunderShyOfficial-2 Ai": "ThunderShy",
 	"Canto": "CantoAcrylic",
+	"TunedPonyMusic and MLP Stuff": "TunedPonyMusic",
+	"TunedPonyMusic and MLP Stuff AI": "TunedPonyMusic",
 }
 
 
@@ -19,6 +22,13 @@ function parseTitle(title)
 	let parsedTitle = title.replace(/<\/?(span|a)[^>]*>/g,"");
 	//let parseRule = localStorage.parseRule;
 	let tags = [];
+
+	let parsedTitleLowerCase = parsedTitle.toLowerCase();
+
+	if(parsedTitleLowerCase.indexOf("vip") > -1 
+		|| parsedTitleLowerCase.indexOf("remix") > -1 
+		|| parsedTitleLowerCase.indexOf("cover") > -1)
+		tags.push({property:"tag",value:"x-needs-remix-linking", text:"x-needs-remix-linking"});
 
 
 	title = title.replace(/【Music】/g,"");

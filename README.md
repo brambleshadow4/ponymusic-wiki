@@ -55,7 +55,7 @@ CREATE ROLE octavia WITH LOGIN
 NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION VALID UNTIL 'infinity';
 GRANT CONNECT ON DATABASE ponymusic TO octavia;
 GRANT USAGE ON SCHEMA public TO octavia;
-GRANT SELECT ON tracks, track_tags TO octavia;
+GRANT SELECT ON tracks, track_tags, track_tags_metadata TO octavia;
 ```
 
 In postgresql.conf:

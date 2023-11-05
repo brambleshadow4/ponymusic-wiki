@@ -3,10 +3,12 @@
 	import AlbumImportTrack from "./AlbumImportTrack.svelte";
 	import TagGroupInput from "./TagGroupInput.svelte";
 	import {addTagToTrack} from "./helpers.js";
-	let album = {}; // title
-	let albumTags = [];
-	let releaseDate = "";
+
+	let album = {tags:[]}; // title
 	let importProgress = "";
+
+	let exportData = [];
+
 
 	function parseFile(ev)
 	{
@@ -14,54 +16,63 @@
 	    let reader = new FileReader();
 
 		reader.onload = (evt) => {
-			let albumData = JSON.parse(evt.target.result);
-
-			releaseDate = albumData.release_date;
-
+			album = JSON.parse(evt.target.result);
+			album.tags = [];
 			let i = 0;
-			for(let track of albumData.tracks)
+			for(let track of album.tracks)
 			{	
 				if(track.tags == undefined)
 					track.tags = [];
-
-				i++;
-				for(let tag of albumTags)
-				{
-					let tagCopy = JSON.parse(JSON.stringify(tag));
-					if(tagCopy.number)
-					{
-						tagCopy.number = i;
-					}
-
-					addTagToTrack(track, tagCopy);
-				}
 			}
 
-			album = albumData;
-
-		   //console.log(evt.target.result);
+			album = album;
 		};
 		reader.readAsText(files[0])
+	}
+
+	function setTrackData(event)
+	{
+		let {no, skip, track} = event.detail;
+
+
+		if(skip)
+			delete exportData[no];
+		else
+			exportData[no] = track;
 	}
 
 	async function doImport()
 	{
 		let num = 0;
 		
-		for(let track of album.tracks)
+		for(let i=0; i<exportData.length; i++)
 		{
-			importProgress = num + "/" + album.tracks.length;
-			num++;
-			if(track.skip)
+			importProgress = i + "/" + album.tracks.length;
+			if(!exportData[i])
 				continue;
 
-			await saveSingleTrack(track);
+			await saveSingleTrack(exportData[i]);
 		}
+
+		importProgress = "Adding album hyperlink";
+
+		let response = await (await fetch("/api/setTagMetadata", {
+			method: "PUT",
+			headers: {"Content-Type": "text/json"},
+			body: JSON.stringify({
+				session: sessionStorage.session,
+				property: "album",
+				value: album.title,
+				is_delete: false,
+				meta_property: "hyperlink",
+				meta_value: album.hyperlink,
+			})
+		})).json();
 
 		importProgress = "";
 
-		let albumName = album.tracks[0].tags.filter(x => x.property == "album")[0].value;
-		window.open("/album/" + albumName, "_blank");
+
+		window.open("/album/" + album.title, "_blank");
 	}
 
 	async function saveSingleTrack(track)
@@ -69,7 +80,7 @@
 		var data = {
 			id: "new",
 			title: track.title,
-			release_date: releaseDate,
+			release_date: album.release_date,
 			tags: track.tags,
 			session: sessionStorage.session
 		}
@@ -120,7 +131,7 @@ if(dateText)
 
 var dl = document.createElement("a");
 document.body.appendChild(dl);
-var json = JSON.stringify({album: albumTitle, release_date: dateText, tracks: data},"","\t"),
+var json = JSON.stringify({title: albumTitle, release_date: dateText, tracks: data, hyperlink: window.location.href},"","\t"),
 blob = new Blob([json], {type: "octet/stream"});
 dl.href = window.URL.createObjectURL(blob);
 dl.download = "albumData.json";
@@ -134,15 +145,20 @@ dl.click();
 
 <div><input type="file" on:change={parseFile} /></div>
 
-<TagGroupInput bind:value={albumTags} />
+
 
 {#if album.tracks}
 	<div>
-		<label>Release:</label> <input type="date" bind:value={releaseDate} />
+		<label>Release:</label> <input type="date" bind:value={album.release_date} />
 	</div>
+	<div>
+		<label>Album Tag:</label> <input type="text" bind:value={album.title} />
+	</div>
+	<TagGroupInput bind:value={album.tags} />
+
 	<div>Tracks:</div>
-	{#each album.tracks as track}
-		<AlbumImportTrack bind:value={track} releaseDate={releaseDate} />
+	{#each album.tracks as track, i}
+		<AlbumImportTrack no={i} albumInfo={album} bind:value={track} on:setTrackData={setTrackData} />
 	{/each}
 
 	<div><button on:click={doImport} disabled={importProgress!=""}>Import</button> {#if importProgress}{importProgress}{/if}</div>

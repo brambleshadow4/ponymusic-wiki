@@ -12,7 +12,7 @@ import Semaphore from './semaphore.js';
 import {parseTitle, processArtistAliases} from "../src/titleParsing.js";
 
 
-let LIMIT = 60;
+let LIMIT = 1000;
 let SESSION = process.env.PROD_SESSION || "";
 
 
@@ -21,6 +21,8 @@ let promptQueue = new Semaphore(1);
 
 //let HOST = "http://localhost:8000";
 let HOST = "https://ponymusic.wiki";
+
+let albumURLs = new Set();
 
 let localDb = new Pool();
 
@@ -52,6 +54,12 @@ async function main()
 	// pick data source
 
 	await Promise.all(tracks.map(processTrack));
+
+	console.log("album URLS:")
+	for(let link of albumURLs)
+	{
+		console.log(link)
+	}
 }
 
 function loadFromLuckRock()
@@ -155,14 +163,6 @@ function stall(ms)
 }
 
 
-
-
-async function processData(data)
-{
-	await Promise.all(tracks.map(processTrack));
-}
-
-
 async function processTrack(track)
 {
 	await trackQueue.whenResourceIsAvailable(async () =>{
@@ -171,6 +171,9 @@ async function processTrack(track)
 			return;
 
 		let url = track.tags.filter(x => x.property == "hyperlink")[0].value;
+
+		if(url.value == "")
+			return;
 
 		let isBandcampURL =  url.indexOf("bandcamp.com") != -1;
 		let isYoutubeURL = url.indexOf("youtube.com") != -1;
@@ -182,6 +185,10 @@ async function processTrack(track)
 		if(result.rows.length > 0)
 			return;
 
+		let result2 = await localDb.query("SELECT * FROM track_tags_metadata WHERE property='album' AND meta_property='hyperlink' AND meta_value=$1", [url]);
+
+		if(result2.rows.length > 0)
+			return;
 
 		let stuff = parseTitle(track.title);
 		track.title = stuff.title;
@@ -230,15 +237,20 @@ async function processTrack(track)
 		if(trackWarnings.sameHyperlink.length > 0)
 			return;
 
+		if(trackWarnings.albumHyperlink.length > 0)
+			return;
+
 		if(isBandcampURL && url.indexOf("/track/") == -1)
 		{
-			console.log("URL doesn't look like a track URL");
-			console.log(track);
+			albumURLs.add(url);
+			//console.log(track);
 			
 			return;
 		}
 
-		if(!isYoutubeURL && !isBandcampURL)
+		let isSoundCloudURL = url.indexOf("soundcloud.com") > -1;
+
+		if(!isYoutubeURL && !isBandcampURL && !isSoundCloudURL)
 		{
 			console.log("weird URL");
 			console.log(track);
@@ -272,6 +284,7 @@ async function processTrack(track)
 
 			if(trackWarnings.warnings)
 			{
+				return;
 				await openTrackInBrowser(track);
 			}
 			else
