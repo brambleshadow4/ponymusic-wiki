@@ -867,7 +867,6 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		for(let row of albumHyperlinkResults.rows)
 		{
 			hasWarnings = true;
-			console.log(row)
 			albumHyperlink.push({value: tag.value, albumName: row.value});
 		}
 
@@ -950,7 +949,6 @@ app.put("/api/setTagMetadata", processJSON, auth(PERM.EDIT_TAG_METADATA), async 
 	if(!validPair){
 		res.statusCode = 400;
 		res.json({status: 400});
-		console.log("bad pair")
 		return;
 	}
 
@@ -978,6 +976,43 @@ app.put("/api/setTagMetadata", processJSON, auth(PERM.EDIT_TAG_METADATA), async 
 
 	res.json({status: 200})
 });
+
+app.post("/api/checkURLs", processJSON, async (req,res) => {
+
+	if (typeof req.body != "object" || !req.body.length)
+	{
+		res.statusCode = 400;
+		res.json({status: 400});
+		return;
+	}
+
+	let vals = await Promise.all(req.body.map(x => checkURL(x)));
+	let response = []
+	for(let i=0; i<vals.length; i++)
+	{
+		response.push([req.body[i], vals[i]]);
+	}
+
+	res.json(response);
+});
+
+async function checkURL(url)
+{
+	let result = await db.query("SELECT * FROM track_tags WHERE property='hyperlink' AND value=$1 LIMIT 1",[url]);
+	if(result.rows.length){
+		return {track_id: result.rows[0].track_id};
+	}
+
+	result = await db.query("SELECT * FROM track_tags_metadata WHERE meta_property='hyperlink' AND meta_value=$1 LIMIT 1",[url]);
+
+	if(result.rows.length)
+	{
+		// if we support other hyperlink types in future, may need to change this.
+		return {album: result.rows[0].value}
+	}
+
+	return null;
+}
 
 app.put("/api/setUserFlag", processJSON, auth(PERM.USER_FLAGS), async (req, res) =>
 {

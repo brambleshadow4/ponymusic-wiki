@@ -2,24 +2,6 @@
 <h2>Bookmarklet</h2>
 <p>The current approach is the use of a bookmarklet, which is a piece of javascript that you can add to the bookmark bar of your browser. When you click the bookmarklet, it scrapes the page for a few pieces of information, then sends it over to ponymusic.wiki where you can correct any spellings and then add it quickly.</p>
 
-<h3>Bookmarklet Tags</h3>
-
-<p>These will be added to the track when you use the bookmarklet. For album tags, the track number will increase automatically when adding a track</p>
-
-<TagGroupInput bind:value={tags} on:change={saveTags}/>
-
-<h3>Name Overrides</h3>
-
-<p>Some artists may have different names on their youTube/bandcamp. Adding it here will automatically change its name (or remove the tag if left blank).</p>
-
-<div id='name-override-list'>
-	<span style="display:inline-block; width: 2.5in">Arist name</span><span>Replace w/</span>
-	{#each nameOverrides as pair}
-		<div><input type="text" value={pair[0]} on:input={updateNameOverrides}/><input type="text" value={pair[1]} on:input={updateNameOverrides}/></div>
-	{/each}
-	<div><input type="text" on:input={updateNameOverrides}/><input type="text" on:input={updateNameOverrides}/></div>
-</div>
-
 <h3>Parse Rules</h3>
 
 <p>The youTube/bandcamp title often contains names of artists/genres of the track. This setting controls how that information is parsed</p>
@@ -67,6 +49,46 @@ if(title){
 }</textarea></div>
 
 
+<h2>Check URLs</h2>
+<p>Check if URLs are stored somewhere in the database or not. Paste each URL on its own line</p>
+<table>
+	<tr>
+		<th>Enter URLs</th>
+		<th>In database</th>
+		<th>Not in Database</th>
+	</tr>
+	<tr>
+		<td width="33%">
+			<textarea rows="15" bind:this={urlInput} on:change={checkURLs}></textarea>
+		</td>
+		<td width="33%">
+			<div class='inDB'>
+				{#each urlInDatabase as item}
+					{#if item.track_id}
+						<div>
+							<a href={"/track/" + item.track_id}>{item.track_id}</a>
+							<span>{item.url}</span> 
+						</div>
+					{/if}
+					{#if item.album}
+						<div>
+							<a href={"/album/" + item.album}>{item.album}</a>
+							<span>{item.url}</span> 
+						</div>
+					{/if}
+				{/each}
+			</div>
+			
+		</td>
+		<td width="33%">
+			<textarea rows="15" bind:value={urlOutput}></textarea>
+		</td>
+	</tr>
+</table>
+	
+
+
+
 <h2>YouTube Channels</h2>
 
 <p>TODO, eventually we'll want to have a way of scanning brony youtubers and automatically checking which URLs have been added already and which ones haven't</p>
@@ -85,6 +107,15 @@ if(title){
 		width: 2.5in;
 	}
 
+	.inDB{
+		padding-left: 10px;
+		padding-right: 10px;
+		overflow-y: auto;
+		height: 250px;
+		font-size: 10pt;
+		word-wrap: wrap;
+	}
+
 </style>
 
 <script>
@@ -98,10 +129,9 @@ if(title){
 	let enteringTag = false;
 	let tags = [];
 	let nameOverrides = [];
-	try{
-		nameOverrides = JSON.parse(localStorage.nameOverrides);
-	}
-	catch(e){}
+	let urlInput = null;
+	let urlOutput = "";
+	let urlInDatabase = [];
 
 	let parseRule = Number(localStorage.parseRule || 1);
 	localStorage.parseRule = parseRule;
@@ -118,59 +148,33 @@ if(title){
 
 	onMount(mount);
 
-	function saveTags()
+	async function checkURLs()
 	{
-		localStorage.autoImportTags = JSON.stringify(tags);
-	}
+		let urls = urlInput.value.split(/\r?\n/g);
 
-	function updateNameOverrides()
-	{
-		let inputs = document.getElementById("name-override-list").getElementsByTagName('input');
+		let request = await fetch("/api/checkURLs", {
+			method: "POST",
+			headers: {"Content-Type": "text/json"},
+			body: JSON.stringify(urls)
+		});
 
-		let newList = [];
-		let focusItem = -1;
+		let data = await request.json();
 
-		for(let i=0; i<inputs.length; i+= 2)
+		urlOutput = "";
+		urlInDatabase = [];
+		for(let row of data)
 		{
-			let nameInput = inputs[i];
-			let replaceInput = inputs[i+1];
-			let pair = [nameInput.value, replaceInput.value];
-		
-	
-			if(pair[0])
-			{
-				newList.push(pair);
-			}
+			let [url, result] = row;
 
-			if(document.activeElement == nameInput){
-				focusItem = i;
-			}
-			else if (document.activeElement == replaceInput){
-				focusItem = i+1
+			if(result == null)
+				urlOutput += url + "\r\n";
+			else{
+				result.url = url;
+				urlInDatabase.push(result);
 			}
 		}
 
-		nameOverrides = newList;
+		//urlOutput =JSON.stringify(data,"","\t");
 
-		localStorage.nameOverrides = JSON.stringify(newList.map(x => [x[0].trim(), x[1].trim()]));
-
-		inputs = document.getElementById("name-override-list").getElementsByTagName('input');
-
-		setTimeout(function(){
-
-			inputs[inputs.length-2].value = "";
-			inputs[inputs.length-1].value = "";
-
-			console.log(focusItem)
-
-			if(inputs[focusItem]){
-				let x = inputs[focusItem];
-				setTimeout(() => x.focus(), 0)
-			}
-		}, 0)
-
-		
-
-		console.log(nameOverrides);
 	}
 </script>
