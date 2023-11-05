@@ -1,11 +1,13 @@
-const fs = require('fs');
-const csv = require('jquery-csv');
-const open = require('open');
-const rl = require("readline-sync");
-const fetch = require("node-fetch-commonjs");
-const {Pool} = require('pg');
+import fs from 'fs';
+import csv from 'jquery-csv';
+import open from 'open';
+import rl from "readline-sync";
+import fetch from "node-fetch-commonjs";
+import pg from "pg";
+let {Pool} = pg;
 
-let HOST = "https://ponymusic.wiki"; sessionID = "" // DO NOT COMMIT AN ACTUAL ID HERE!
+let HOST = "https://ponymusic.wiki";
+let sessionID = "" // DO NOT COMMIT AN ACTUAL ID HERE!
 
 doConversion();
 
@@ -24,7 +26,7 @@ async function doConversion()
 	let response = await db.query(`
 		SELECT * 
 		FROM tracks LEFT JOIN track_tags ON tracks.id = track_tags.track_ID
-		WHERE property='album' AND value='Aura - Tw3Lv3'
+		WHERE property='album' AND value='Ice Cream'
 		AND hidden=false
 	`)
 
@@ -49,7 +51,7 @@ async function doConversion()
 
 		// remove a hole in an album.
 
-		let ALBUM = "Aura - Tw3Lv3";
+		/*let ALBUM = "Aura - Tw3Lv3";
 		let holeNumber = 7;
 
 		for(let i=0; i<track.tags.length; i++)
@@ -61,7 +63,7 @@ async function doConversion()
 				affected = true;
 				break;
 			}
-		}
+		}*/
 
 		// add a hole to an album
 
@@ -80,11 +82,11 @@ async function doConversion()
 		}*/
 
 
-		// rename bad album tags
+		// rename one album with another
 
-		/*
-		let OLD_ALBUM = `Moonlight Vapours`
-		let NEW_ALBUM = "Ponies at Dawn Moonlight Vapours"
+		
+		let OLD_ALBUM = `Ice Cream`
+		let NEW_ALBUM = "ASOS: Ice Cream"
 
 		for(let i=0; i<track.tags.length; i++)
 		{
@@ -92,10 +94,15 @@ async function doConversion()
 			{
 				track.tags.push({property: "album", "value":NEW_ALBUM, "number": track.tags[i].number});
 				track.tags.splice(i,1);
+				affected = true;
 				break;
 			}
 		}
-		*/
+		
+
+		// Add a tag
+		track.tags.push({property: "tag", "value":"ASOS"});
+		affected = true;
 
 		// replace bad dates
 		//if(track.release_date == "2022-12-10T00:00:00.000Z")
