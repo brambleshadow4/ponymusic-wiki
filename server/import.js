@@ -96,10 +96,14 @@ function loadFromLuckRock()
 
 				let newArtist = artist.replace(remixPattern,"");
 
-				if(remixPattern.exec(artist))
+				console.log(newArtist);
+
+				if (newArtist.endsWith(" AI"))
 				{
-					tags.push({property:"tag", value:"x-needs-remixcover-linking", text: "x-needs-remixcover-linking"});
+					tags.push({property:"tag", value:"AI", text:"AI"});
+					newArtist = newArtist.substring(0, newArtist.length-3);
 				}
+
 
 				tags = tags.concat(artistToArtistTags(newArtist));
 
@@ -284,7 +288,7 @@ async function processTrack(track)
 
 			if(trackWarnings.warnings)
 			{
-				return;
+				//return;
 				await openTrackInBrowser(track);
 			}
 			else

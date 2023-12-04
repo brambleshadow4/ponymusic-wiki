@@ -28,7 +28,7 @@ function parseTitle(title)
 	if(parsedTitleLowerCase.indexOf("vip") > -1 
 		|| parsedTitleLowerCase.indexOf("remix") > -1 
 		|| parsedTitleLowerCase.indexOf("cover") > -1)
-		tags.push({property:"tag",value:"x-needs-remix-linking", text:"x-needs-remix-linking"});
+		tags.push({property:"tag",value:"x-needs-remixcover-linking", text:"x-needs-remixcover-linking"});
 
 
 	title = title.replace(/【Music】/g,"");
