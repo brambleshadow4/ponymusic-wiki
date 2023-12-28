@@ -16,6 +16,11 @@
 
 <div><textarea rows="5" bind:this={compiled}></textarea></div>
 
+<h3>The Bandcamp Album Import Bookmarklet</h3>
+
+<div><textarea rows="5" bind:this={compiled2}></textarea></div>
+
+
 <p>It generally isn't a good idea to run code arbitrary code that you don't trust, including bookmarklets (though we kind of do it all the time). </p>
 
 <h3>Source code</h3>
@@ -48,6 +53,43 @@ if(title){
 }`
 }</textarea></div>
 
+
+<div><textarea rows="10" bind:this={source2}>{
+`let albumTitle = document.querySelector('h2.trackTitle').innerHTML.trim();
+let rows = document.querySelectorAll('.track_row_view .title');
+let data = [];
+for(let i=0; i<rows.length;i++)
+{
+	let title = rows[i].querySelector(".track-title").innerHTML;
+	title = title.replace(/&amp;/g, "&");
+	let link = rows[i].querySelector("a").href;
+	if(link.startsWith("/"))
+		link = location.origin + link;
+	data.push({url: link, title});
+}
+let dateText = document.querySelector(".tralbumData.tralbum-credits").innerHTML;
+dateText = /released (\w+ \d+, \d\d\d\d)/.exec(dateText);
+if(dateText){
+	let d = new Date(dateText[1]);
+	if (d.toISOString().substring(10) != "T00:00:00.000Z") {
+		d = new Date(d.getTime() - d.getTimezoneOffset()*1000*60);
+	}
+	dateText = d.toISOString().substring(0,10);
+}
+var dl = document.createElement("a");
+document.body.appendChild(dl);
+var json = JSON.stringify({
+	title: albumTitle, 
+	release_date: dateText,
+	tracks: data, 
+	hyperlink: window.location.href
+},"","\t");
+var blob = new Blob([json], {type: "octet/stream"});
+dl.href = window.URL.createObjectURL(blob);
+dl.download = "albumData.json";
+dl.click();
+`
+}</textarea></div>
 
 <h2>Check URLs</h2>
 <p>Check if URLs are stored somewhere in the database or not. Paste each URL on its own line</p>
@@ -124,7 +166,7 @@ if(title){
 	import {tagComp} from "./helpers.js";
 	import RadioGroup from "./RadioGroup.svelte";
 
-	let compiled, source, ref, tagProperty, tagValue, tagNumber;
+	let compiled, compiled2, source, source2, ref, tagProperty, tagValue, tagNumber;
 
 	let enteringTag = false;
 	let tags = [];
@@ -143,8 +185,10 @@ if(title){
 
 	function mount(){
 
-		compiled.value = "javascript:" + source.value.replace(/\n|\t/g, "");
+		compiled.value = "javascript:(function(){" + source.value.replace(/\n|\t/g, "") + "})()";
+		compiled2.value = "javascript:(function(){" + source2.value.replace(/\n|\t/g, "") + "})()";
 	}
+
 
 	onMount(mount);
 

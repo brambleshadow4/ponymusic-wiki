@@ -310,7 +310,8 @@
 			return;
 		}
 
-		if(id == "new"){
+		if(id == "new")
+		{
 			id = response.id;
 		}
 
@@ -480,7 +481,6 @@
 		{
 			scrapedTitle = params['title'].replace(/<\/?(span|a)[^>]*>/g,"");
 			let result = parseTitle(params['title']);
-			console.log(result);
 
 			track.title = result.title;
 			for(let tag of result.tags)
@@ -509,7 +509,12 @@
 			}
 			else
 			{
-				track.release_date = new Date(rawDate).toISOString().substring(0,10);
+				let d = new Date(rawDate);
+				if (d.toISOString().substring(10) != "T00:00:00.000Z")
+				{
+					d = new Date(d.getTime() - d.getTimezoneOffset()*1000*60)
+				}
+				track.release_date = d.toISOString().substring(0,10)
 			}
 		}
 
@@ -527,16 +532,11 @@
 				addTag(tag);
 			}
 		}
-
-		console.log(track.tags)
-
 		getTrackWarnings();
 	}
 
 	function mergeTrack(mergeToID)
 	{
-		console.log("are we merging?")
-
 		track.id = mergeToID;
 		track.release_date = dateInput.value || track.release_date;
 		sessionStorage["merge_data"] = JSON.stringify(track);
