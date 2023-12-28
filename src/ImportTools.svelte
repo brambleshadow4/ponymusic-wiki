@@ -18,6 +18,8 @@
 
 <h3>The Bandcamp Album Import Bookmarklet</h3>
 
+<p>Use this to grab data off of bandcamp, and then use the <a href="/album-import">album import page</a> to load it into PMW.
+
 <div><textarea rows="5" bind:this={compiled2}></textarea></div>
 
 
