@@ -16,9 +16,9 @@
 			case "artist":
 			case "featured artist":
 			case "original artist":
-				return "/artist/" + tag.value;
+				return "/artist/" + encodeURIComponent(tag.value);
 			case "album":
-				return "/album/" + tag.value;
+				return "/album/" + encodeURIComponent(tag.value);
 			case "cover":
 			case "remix":
 				return "/remix/" + tag.value + "-" + encodeURIComponent(tag.text);

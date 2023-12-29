@@ -69,10 +69,10 @@ function sqlEscapeString(s)
 		console.log(s);
 	}
 
-	s = s.replace(/\\/g, "\\\\");
+	//s = s.replace(/\\/g, "\\\\");
 	s = s.replace(/'/g, "''");
-	s = s.replace(/%/g,"\\%");
-	s = s.replace(/\n/g,"\\n");
+	// s = s.replace(/%/g,"\\%"); This escape doesn't work
+	//s = s.replace(/\n/g,"\\n");
 
 	return "'" + s + "'";
 }
