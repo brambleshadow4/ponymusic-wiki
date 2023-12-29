@@ -372,8 +372,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let page = Number(req.query.page) || 0; 
 	
 	let limitCount = PAGE_COUNT;
-	let offset = page*PAGE_COUNT;
-	
+	let offset = page*PAGE_COUNT;	
 
 	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","album","genre","pl","tag","release_date","status","title","remixcover"]));
 	let albumNoSelect = "";
@@ -1255,10 +1254,8 @@ function trim2(s)
 
 function sqlEscapeString(s)
 {
-	s = s.replace(/\\/g, "\\\\");
 	s = s.replace(/'/g, "''");
-	s = s.replace(/%/g,"\\%")
-	// pipes are fine within a string
+	// pipes, percents, \ are fine within a string
 
 	return "'" + s + "'";
 }

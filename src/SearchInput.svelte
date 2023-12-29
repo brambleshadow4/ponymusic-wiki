@@ -46,16 +46,14 @@
 	{
 
 		let {property, value, id} = serachItem;
-
-		console.log(serachItem)
 		if(property)
 		{
 			switch(property)
 			{
-				case "artist": window.location.href = "/artist/" + value; return;
-				case "album": window.location.href = "/album/" + value; return;
-				case "genre": window.location.href = "/genre/" + value; return;
-				case "tag": window.location.href = "/tag/" + value; return;
+				case "artist": window.location.href = "/artist/" + encodeURIComponent(value); return;
+				case "album": window.location.href = "/album/" + encodeURIComponent(value); return;
+				case "genre": window.location.href = "/genre/" + encodeURIComponent(value); return;
+				case "tag": window.location.href = "/tag/" + encodeURIComponent(value); return;
 			}
 		}
 		else if (id)
