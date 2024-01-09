@@ -70,7 +70,7 @@ for(let i=0; i<rows.length;i++)
 	data.push({url: link, title});
 }
 let dateText = document.querySelector(".tralbumData.tralbum-credits").innerHTML;
-dateText = /released (\w+ \d+, \d\d\d\d)/.exec(dateText);
+dateText = /released (\\w+ \\d+, \\d\\d\\d\\d)/.exec(dateText);
 if(dateText){
 	let d = new Date(dateText[1]);
 	if (d.toISOString().substring(10) != "T00:00:00.000Z") {
@@ -85,7 +85,7 @@ var json = JSON.stringify({
 	release_date: dateText,
 	tracks: data, 
 	hyperlink: window.location.href
-},"","\t");
+},"","\\t");
 var blob = new Blob([json], {type: "octet/stream"});
 dl.href = window.URL.createObjectURL(blob);
 dl.download = "albumData.json";
