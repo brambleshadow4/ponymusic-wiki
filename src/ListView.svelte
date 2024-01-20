@@ -87,7 +87,7 @@
 		if(tab != no)
 		{
 			tab = no;
-			load({});
+			load(filters);
 		}
 	}
 
