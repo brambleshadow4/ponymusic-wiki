@@ -7,6 +7,7 @@
 	import LoginButton from "./LoginButton.svelte";
 	import ImportTools from "./ImportTools.svelte";
 	import AlbumImport from "./AlbumImport.svelte";
+	import ApiDocumentation from "./ApiDocumentation.svelte"
 	import {buildFilterQuery} from "./helpers.js";
 	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
@@ -258,6 +259,7 @@
 		<a class='smalllink' href="/about">About</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
+		<a class='smalllink' href="/docs">API Documentation</a>
 		<a class='smalllink' href="/export-data">Download the Data</a>
 	</nav>
 
@@ -281,6 +283,7 @@
 		<a class='smalllink' href="/about">About</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
+		<a class='smalllink' href="/docs">API Documentation</a>
 		<a class='smalllink' href="/export-data">Download the Data</a>
 	</div>
 	{/if}
@@ -377,8 +380,11 @@
 		</div>
 	{:else if path=="/import-tools"}
 		<div class='main'>
-			
 			<ImportTools />
+		</div>
+	{:else if path=="/docs"}
+		<div class='main'>
+			<ApiDocumentation />
 		</div>
 	{:else if path=="/export-data"}
 		<div class='main'>

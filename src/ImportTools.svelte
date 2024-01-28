@@ -1,31 +1,18 @@
 <h1>Import Tools</h1>
-<h2>Bookmarklet</h2>
-<p>The current approach is the use of a bookmarklet, which is a piece of javascript that you can add to the bookmark bar of your browser. When you click the bookmarklet, it scrapes the page for a few pieces of information, then sends it over to ponymusic.wiki where you can correct any spellings and then add it quickly.</p>
 
-<h3>Parse Rules</h3>
 
-<p>The youTube/bandcamp title often contains names of artists/genres of the track. This setting controls how that information is parsed</p>
+<h2 id="Import_Single_Track">Importing a single track</h2>
+<p>PMW offers a bookmarklet, which is a piece of javascript that you can add as a bookmark to your browser. When you it, it scrapes the page for a few pieces of information, and will then open thrack in ponymusic.wiki where you can correct any spellings and then add it quickly.</p>
 
-<RadioGroup 
-	checked={parseRule}
-	options={["No Parsing", "<artist1>, <artist2> & <artist3> - Track Title (feat. <featuredArtist>)[<genre>]"]} 
-	on:change={(e) => {localStorage.parseRule = e.detail}}
-	/>
+<p>The bookmarklet works for YouTube, Bandcamp, and Soundcloud pages</p>
 
-<h3>The Bookmarklet code</h3>
+<div><img src="./bookmarklet.png" /></div>
+
+<p>Below you'll find the code to use as the URL for the bookmarklet. <strong>It is generally unsafe to run code you don't understand from someone you don't trust</strong>. The source code is offered as well if you'd like to review it.</p>
 
 <div><textarea rows="5" bind:this={compiled}></textarea></div>
-
-<h3>The Bandcamp Album Import Bookmarklet</h3>
-
-<p>Use this to grab data off of bandcamp, and then use the <a href="/album-import">album import page</a> to load it into PMW.
-
-<div><textarea rows="5" bind:this={compiled2}></textarea></div>
-
-
-<p>It generally isn't a good idea to run code arbitrary code that you don't trust, including bookmarklets (though we kind of do it all the time). </p>
-
 <h3>Source code</h3>
+
 <div><textarea  rows="10" bind:this={source}>{
 `url = encodeURIComponent(window.location);
 
@@ -55,6 +42,28 @@ if(title){
 }`
 }</textarea></div>
 
+
+<h3>Parse Rules</h3>
+
+<p>The youTube/bandcamp title often contains names of artists/genres of the track. This setting controls how that information is parsed</p>
+
+<RadioGroup 
+	checked={parseRule}
+	options={["No Parsing", "<artist1>, <artist2> & <artist3> - Track Title (feat. <featuredArtist>)[<genre>]"]} 
+	on:change={(e) => {localStorage.parseRule = e.detail}}
+	/>
+
+<h2 id="Import_Bandcamp_Album">Importing a Bandcamp album</h2>
+
+<p>Pony Music Wiki offers another bookmarklet which will scrape a bandcamp page into a JSON file which can be uploaded to our <a href="/album-import">album import page</a>. <strong>New accounts are limited to 10 edits a day, so please reach out to brambleshadow4 to remove this restriction if you'd like to upload albums</strong></p>
+
+<p>Below you'll find the code to use as the URL for the album bookmarklet. <strong>It is generally unsafe to run code you don't understand from someone you don't trust</strong>. The source code is offered as well if you'd like to review it.</p>
+
+
+<div><textarea rows="5" bind:this={compiled2}></textarea></div>
+
+
+<h3>Source code</h3>
 
 <div><textarea rows="10" bind:this={source2}>{
 `let albumTitle = document.querySelector('h2.trackTitle').innerHTML.trim();
@@ -93,8 +102,8 @@ dl.click();
 `
 }</textarea></div>
 
-<h2>Check URLs</h2>
-<p>Check if URLs are stored somewhere in the database or not. Paste each URL on its own line</p>
+<h2 id="Check_URLs">Check URLs</h2>
+<p>If you have an existing list of URLs from another data set, you can copy them in here to quickly check if they are tracked in ponymuisc.wiki.  Each URL should be on its own line.</p>
 <table>
 	<tr>
 		<th>Enter URLs</th>
@@ -130,13 +139,6 @@ dl.click();
 	</tr>
 </table>
 	
-
-
-
-<h2>YouTube Channels</h2>
-
-<p>TODO, eventually we'll want to have a way of scanning brony youtubers and automatically checking which URLs have been added already and which ones haven't</p>
-
 <style>
 
 	h2 + p, h1 + p, p + h2, h1 + h2, h2 + p,h3+p, p+h3{

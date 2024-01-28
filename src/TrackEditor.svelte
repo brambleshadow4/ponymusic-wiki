@@ -97,10 +97,6 @@
 			if(mergeData.id == track.id)
 				mode = 1;	
 
-			console.log(mergeData)
-
-			console.log(track.release_date);
-
 			if(!track.release_date || track.release_date > mergeData.release_date)
 			{
 				track.release_date = mergeData.release_date;
@@ -206,6 +202,11 @@
 		if(tag.property == "hyperlink" || tag.property == "artist" || tag.property == "featured artist")
 		{
 			getTrackWarnings();
+		}
+
+		if(tag.property == "remix" || tag.property == "cover")
+		{
+			removeTag({"property":"tag","value":"x-needs-remixcover-linking"})();
 		}
 	};
 
