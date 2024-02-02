@@ -182,6 +182,12 @@ app.post("/restoreSession", processJSON, async (req,res) =>
 	res.json({status: 400})
 })
 
+app.get("/interviews", function(req,res){
+
+	res.redirect("https://drive.google.com/drive/u/0/folders/1iNpIDNLvLezQDQ_brqmX00QpeRRCMKk1");
+	return;
+})
+
 
 app.post("/api/tagAutofill", processJSON, async (req,res) =>
 {
