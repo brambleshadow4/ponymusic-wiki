@@ -134,7 +134,6 @@
 	async function addAlbumLink()
 	{
 		let thisAlbum = view.tabs[0].filter({}).album.include[0];
-		console.log(thisAlbum)
 
 		let link = prompt("Album hyperlink")
 		if(!link)
@@ -198,10 +197,7 @@
 		window.location.reload();
 	}
 
-
-
 	let columnDefs = view.tabs[0].columns;
-
 	let rowButtons = [];
 
 	if(view.api == "/api/view/tracks" && hasPerm(PERM.USER_FLAGS))
@@ -232,13 +228,11 @@
 	{:else if view.htmlTitle}
 		{@html view.htmlTitle}
 	{/if}
-
 	
 	<div class='tag-info'>
 
 		{#if albumHyperlinks}
 
-		
 			{#each albumHyperlinks as link}
 				<a href={link}>{link}</a>
 				{#if hasPerm(PERM.EDIT_TAG_METADATA)}
@@ -262,7 +256,6 @@
 		{/if}
 	</div>
 	
-
 	<div class='action-links'>
 		{#if view.hasButtonNewTrack}<a href="#new" on:click={()=>{openTrack({detail: {id:"new"}})}}>+ Add a track</a>{/if}
 		{#if view.hasButtonRandomTrack}<a href="#random" on:click={requestRandom}><img class='icon' src="/random.svg"/> Random Track</a>{/if}
@@ -278,7 +271,6 @@
 	{/if}
 	
 	{#if loaded}
-
 		<Grid 
 			columns={columnDefs}
 			data={data}

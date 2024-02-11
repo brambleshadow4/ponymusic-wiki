@@ -55,6 +55,12 @@ export function buildFilterQuery(filters, sort, page, includeSession)
 		params.push("session=" + localStorage.session);
 	}
 
+	if(includeSession && localStorage.SHOW_ALL_TRACKS == "1")
+	{
+		params.push("all=1");
+	}
+
+
 	for(let property in filters)
 	{
 		if(filters[property].noFilter){

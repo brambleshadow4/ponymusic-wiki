@@ -17,9 +17,7 @@ import loader from "./server/loaderLib.js";
 import {PERM, ROLE, auth, reqHasPerm, getSession} from "./server/auth.js";
 import {getOgCache, getOgPropertiesFromURL, areTitlesIdentical} from './server/helpers.js';
 
-
 const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl","cover","remix","original artist"];
-
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -329,7 +327,19 @@ app.get("/api/view/albums", queryProcessing, async(req,res) =>
 	let userID = ses && ses.user_id;
 	let page = Number(req.query.page) || 0; 
 	let offset = page*PAGE_COUNT;
-	
+
+	let clause1 = "AND tracks.hidden=false"
+	let clause2 = `WHERE (
+		SELECT COUNT(*) FROM track_tags_metadata
+		WHERE property='album' AND value=tb.album AND meta_property = 'physical release only'
+	) = 0`
+
+	if(req.query.all)
+	{
+		clause1 = "";
+		clause2 = "";
+	}
+
 	let query = `
 	SELECT *, (
 		SELECT COALESCE(string_agg(value, CHR(30)), '') FROM (
@@ -355,20 +365,20 @@ app.get("/api/view/albums", queryProcessing, async(req,res) =>
 		FROM (
 			SELECT tracks.id, release_date, value as album
 			FROM tracks FULL OUTER JOIN track_tags ON tracks.id=track_tags.track_id
-			WHERE property='album' AND tracks.hidden=false
+			WHERE property='album' ${clause1}
 		) as tb
+		${clause2}
 		GROUP BY album
 		ORDER BY album
 	) as tc
 	ORDER BY release_date DESC
 	LIMIT ${PAGE_COUNT} OFFSET ${offset}`;
-
+	
 	let {rows} = await db.query(query,[]);
 	let countRequest = await db.query(`SELECT COUNT(DISTINCT(value)) FROM track_tags WHERE property='album'`, []);
 	let total = countRequest.rows[0].count;
 
 	res.json({rows, pages: Math.ceil(total/PAGE_COUNT), total});
-
 })
 
 app.get("/api/view/tracks", queryProcessing, async(req,res) =>
@@ -399,8 +409,6 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 		
 		response.albumHyperlinks = albumMetadata.rows.filter(x => x.meta_property == "hyperlink").map(x => x.meta_value);
 		response.albumPhysicalReleaseOnly = albumMetadata.rows.filter(x => x.meta_property == 'physical release only').length > 0 ;
-
-
 	}
 
 	if(req.query.sort && req.query.sort[0] == "^random")
@@ -1083,6 +1091,11 @@ async function buildWhereClause(req, allowedFilters)
 
 	let whereClause = "";
 	let whereClauses = ["hidden=false"];
+
+	if(req.query.all)
+	{
+		whereClauses = [];
+	}
 
 	let simpleFilters = ["artist","featured_artist","album","genre","pl","tag","remixcover"];
 	

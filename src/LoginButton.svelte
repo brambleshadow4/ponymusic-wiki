@@ -27,9 +27,6 @@
 			}
 
 			clearSession();
-
-			
-
 			window.location.reload(true);
 		}
 		else
@@ -70,6 +67,7 @@
 
 			if(data.status == 200)
 			{
+				console.log("Successfully logged in")
 				avatar = data.avatar;
 
 				localStorage.session = data.session;
@@ -96,6 +94,7 @@
 			}
 			else if(data.status == 400)
 			{
+				console.log("Session invalid, clearing")
 				clearSession();
 			}
 

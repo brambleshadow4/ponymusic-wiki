@@ -6,7 +6,6 @@
 
 	let album = {tags:[]}; // title
 	let importProgress = "";
-
 	let exportData = [];
 
 

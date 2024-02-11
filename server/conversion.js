@@ -28,7 +28,6 @@ async function doConversion()
 		FROM tracks LEFT JOIN track_tags ON tracks.id = track_tags.track_ID
 		WHERE property='artist' AND value='4EverfreeBrony'
 		AND hidden=false
-		
 	`)
 
 	let affectedIDs = response.rows.map(x => x.id);

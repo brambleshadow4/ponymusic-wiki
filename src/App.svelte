@@ -9,17 +9,19 @@
 	import AlbumImport from "./AlbumImport.svelte";
 	import ApiDocumentation from "./ApiDocumentation.svelte"
 	import {buildFilterQuery} from "./helpers.js";
+	import RadioGroup from "./RadioGroup.svelte";
 	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
 	$: path = window.location.pathname;
 
 	let mobileLayout = (window.innerWidth < 800);
-
 	let mobileNavOpen = false;
 
 	let tab = 0;
 	let loadedTrackID = "";
 	let loadedFilter = "";
+
+	let showAllTracks =  Number(localStorage.SHOW_ALL_TRACKS || 0);
 
 	let filters = {};
 
@@ -52,8 +54,6 @@
 	}
 
 	loadFilters();
-
-	
 
 	if(window.location.pathname.startsWith("/track/"))
 	{
@@ -331,14 +331,8 @@
 
 			<p>The Pony Music Wiki is designed to be just that—a community database of all pony music known to Equestria. Anypony is allowed to add missing tracks and make corrections to ensure the wiki has the most up-to-date list of music, that way the burden of responsibility never falls on just a single pony. Like Wikipedia, the wiki also comes with tools to quickly revert any bad changes made by accident or malice. The wiki does not host music files but rather links out to the artist's original upload, be it on Bandcamp or YouTube or Soundcloud. This allows the community to create a more complete database without having to upload an artist's song without their permission. If you are looking for a pony website to upload your tracks to, <a href="https://pony.fm">pony.fm</a> or <a href="https://projectvinyl.net/">Project Vinyl</a> might better suit your needs.</p>
 
-
 			<h2 id="rules-and-guidelines">Rules and Guidelines</h2>
 			<p>There are a few rules to help maintain the peace</p>
-
-			<ol>
-				<li>Fuck Nazis. Your music is not welcome. Get out.</li>
-				<li>Fuck pedophiles and other sexual predators. Your music is not welcome. Get out.</li>
-			</ol>
 
 			<p>There are also several guidelines to help everypony work together in maintaining this database</p>
 
@@ -353,8 +347,24 @@
 				<li>The primary reason to delete a track is if it's a duplicate or it's clearly not a pony song.</li>
 				<li>If someone makes a bad edit, assume it's an honest mistake and revert it.</li>
 				<li>Guidelines are subject to change as the site evolves</li>
-
 			</ol>
+
+			<h2>Hidden Tracks</h2>
+
+			<RadioGroup 
+				checked={showAllTracks}
+				options={["Default Filtering", "View Hidden Tracks"]} 
+				on:change={(e) => {localStorage.SHOW_ALL_TRACKS = e.detail}}
+				/>
+
+			<p style="margin: 10px 0px;">Tracks and albums may be hidden for the following reasons:</p>
+				<ol><li>No link to track or the album (usually because it was released on a physical CD)</li>
+				<li>Not related to My Little Pony</li>
+				<li>The artist has been ousted from the fandom for extremely bad behavior (e.g. being a nazi, pedophile, etc.)</li></ol>
+
+			<p>These hidden tracks can be viewed by visiting their URLs directly or by turning on this setting</p>
+
+			
 
 			<h2>Upcoming features (updated 4 September 2022), coming eventually</h2>
 
@@ -371,9 +381,7 @@
 		</div>
 	
 	{:else if path=="/edits"}
-	
 		<EditList on:openTrack={openTrack}/>
-	
 	{:else if path=="/pony-refs"}
 		<div class='main'>
 			<PonyRefs />
