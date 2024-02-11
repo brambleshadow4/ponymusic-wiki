@@ -26,8 +26,9 @@ async function doConversion()
 	let response = await db.query(`
 		SELECT * 
 		FROM tracks LEFT JOIN track_tags ON tracks.id = track_tags.track_ID
-		WHERE property='album' AND value='Ice Cream'
+		WHERE property='artist' AND value='4EverfreeBrony'
 		AND hidden=false
+		
 	`)
 
 	let affectedIDs = response.rows.map(x => x.id);
@@ -82,17 +83,17 @@ async function doConversion()
 		}*/
 
 
-		// rename one album with another
+		// replace one tag  with another
 
-		
-		let OLD_ALBUM = `Ice Cream`
-		let NEW_ALBUM = "ASOS: Ice Cream"
+		let TAG = "artist"
+		let OLD_VALUE = `4everfreebrony`
+		let NEW_VALUE = "4EverfreeBrony"
 
 		for(let i=0; i<track.tags.length; i++)
 		{
-			if(track.tags[i].property == "album" && track.tags[i].value == OLD_ALBUM)
+			if(track.tags[i].property == TAG && track.tags[i].value == OLD_VALUE)
 			{
-				track.tags.push({property: "album", "value":NEW_ALBUM, "number": track.tags[i].number});
+				track.tags.push({property: TAG, "value":NEW_VALUE, "number": track.tags[i].number});
 				track.tags.splice(i,1);
 				affected = true;
 				break;
@@ -101,8 +102,8 @@ async function doConversion()
 		
 
 		// Add a tag
-		track.tags.push({property: "tag", "value":"ASOS"});
-		affected = true;
+		//track.tags.push({property: "tag", "value":"ASOS"});
+		//affected = true;
 
 		// replace bad dates
 		//if(track.release_date == "2022-12-10T00:00:00.000Z")

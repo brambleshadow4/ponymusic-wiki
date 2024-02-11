@@ -600,7 +600,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		let {rows} = await db.query("SELECT COUNT(*) as count from track_history WHERE user_id=$1 AND timestamp > (NOW() - interval '1 day')", [userID]);
 		if(rows[0].count >= DAILY_RATE_LIMIT)
 		{
-			res.json({status:400, error: "You have reached the daily limit for edits you can perform. If you would like for the rate limit to be removed, contact a moderator"});
+			res.json({status:400, error: "You have reached the daily limit for edits you can perform. If you would like for the rate limit to be removed, contact a moderator (brambleshadow4)"});
 			return;
 		}
 	}
@@ -728,6 +728,18 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		}
 		else
 		{
+			// replace artist name with correct casing.
+			if (tag.property == "artist" || tag.property == "featured artist")
+			{
+				let valueCasing = (await db.query("SELECT DISTINCT value FROM track_tags WHERE LOWER($1)=LOWER(value)", [tag.value])).rows.map(x => x.value);
+				
+				if(valueCasing.indexOf(tag.value) == -1 && valueCasing.length) 
+				{
+					tag.value = valueCasing[0];
+				}
+			}
+
+
 			info = await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, $2, $3)", [id, tag.property, tag.value]);
 
 
