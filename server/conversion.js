@@ -33,7 +33,6 @@ async function doConversion()
 
 	let affectedIDs = response.rows.map(x => x.id);
 
-
 	for(let id of affectedIDs)
 	{
 		counter++;

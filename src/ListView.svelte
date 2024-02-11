@@ -19,6 +19,7 @@
 	let total = 0;
 	let tab = 0;
 	let albumHyperlinks = null;
+	let albumPhysicalReleaseOnly = false; // if the album was never available to purchase online
 
 	let queryCache = "";
 	let loaded = false;
@@ -42,7 +43,6 @@
 			}	
 		}
 
-
 		if(view.tabs[tab].filter)
 		{
 			filters = view.tabs[tab].filter(filters);
@@ -59,6 +59,8 @@
 
 		if(response.albumHyperlinks)
 			albumHyperlinks = response.albumHyperlinks;
+		if(response.albumPhysicalReleaseOnly)
+			albumPhysicalReleaseOnly = response.albumPhysicalReleaseOnly;
 
 		loaded = true;
 	}
@@ -174,9 +176,29 @@
 			})
 		})).json();
 
-		console.log("what")
 		window.location.reload();
 	}
+
+	async function togglePhysicalRelease()
+	{
+		let thisAlbum = view.tabs[0].filter({}).album.include[0];
+
+		let response = await (await fetch("/api/setTagMetadata", {
+			method: "PUT",
+			headers: {"Content-Type": "text/json"},
+			body: JSON.stringify({
+				session: sessionStorage.session,
+				property: "album",
+				value: thisAlbum,
+				is_delete: albumPhysicalReleaseOnly,
+				meta_property: "physical release only",
+				meta_value: "1",
+			})
+		})).json();
+		window.location.reload();
+	}
+
+
 
 	let columnDefs = view.tabs[0].columns;
 
@@ -211,8 +233,12 @@
 		{@html view.htmlTitle}
 	{/if}
 
-	{#if albumHyperlinks}
-		<div class='tag-info'>
+	
+	<div class='tag-info'>
+
+		{#if albumHyperlinks}
+
+		
 			{#each albumHyperlinks as link}
 				<a href={link}>{link}</a>
 				{#if hasPerm(PERM.EDIT_TAG_METADATA)}
@@ -223,8 +249,19 @@
 			{#if hasPerm(PERM.EDIT_TAG_METADATA)}
 				<button on:click={addAlbumLink}>Add Link</button>
 			{/if}
-		</div>
-	{/if}
+
+			{#if hasPerm(PERM.EDIT_TAG_METADATA)}
+				<div class='checkbox-group'>
+					<input type='checkbox' id='phyiscal-release-checkbox' bind:checked={albumPhysicalReleaseOnly} on:click={togglePhysicalRelease}/>
+					<label for='phyiscal-release-checkbox'>Phyical release only</label>
+				</div>
+			{:else}
+				<span>Physical release only</span>
+			{/if}
+
+		{/if}
+	</div>
+	
 
 	<div class='action-links'>
 		{#if view.hasButtonNewTrack}<a href="#new" on:click={()=>{openTrack({detail: {id:"new"}})}}>+ Add a track</a>{/if}
@@ -320,6 +357,18 @@
 	{
 		margin-right: 20px;
 	}
+
+	.checkbox-group
+	{
+		display: inline-block;
+	}
+
+	label {
+		display: inline-block;
+		cursor: pointer;
+	}
+
+
 
 </style>
 

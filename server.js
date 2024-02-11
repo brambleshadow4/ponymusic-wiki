@@ -395,8 +395,12 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 			orderBy = "ORDER BY album_no ASC";
 		}
 
-		let albumHyperlinks = await db.query("SELECT * FROM track_tags_metadata WHERE property='album' AND value=$1 AND meta_property='hyperlink'",[req.query.album[0]]);
-		response.albumHyperlinks = albumHyperlinks.rows.map(x => x.meta_value);
+		let albumMetadata = await db.query("SELECT * FROM track_tags_metadata WHERE property='album' AND value=$1",[req.query.album[0]]);
+		
+		response.albumHyperlinks = albumMetadata.rows.filter(x => x.meta_property == "hyperlink").map(x => x.meta_value);
+		response.albumPhysicalReleaseOnly = albumMetadata.rows.filter(x => x.meta_property == 'physical release only').length > 0 ;
+
+
 	}
 
 	if(req.query.sort && req.query.sort[0] == "^random")
@@ -960,7 +964,12 @@ app.put("/api/setTagMetadata", processJSON, auth(PERM.EDIT_TAG_METADATA), async 
 	let metaProperty = req.body.meta_property;
 	let metaValue = req.body.meta_value;
 
-	if(property == "album" && metaProperty == "hyperlink")
+	let propertyCombo = property.replace(/\//g, "") + "/" + metaProperty.replace(/\//g, "")  
+
+
+	if(propertyCombo == "album/hyperlink")
+		validPair = true;
+	if (propertyCombo == "album/physical release only")
 		validPair = true;
 
 	if(!validPair){
