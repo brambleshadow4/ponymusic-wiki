@@ -795,9 +795,14 @@
 
 			{#if hasPerm(PERM.USER_FLAGS)}
 				<div class="userFlagButtons">
-					{#each [["Heard it","/notes.png"],["Listen Later","/later.png"],["Skip","/rest.png"]] as pair,i}
+					{#each [["Heard it","/notes.png"],["Listen Later","/later.png"],["Skip","/rest.png"],["Star", "/star-unfilled.svg", "/star-filled.svg"]] as pair,i}
 						<span class={"userFlagButton" + (i+1 == activeUserFlag ? " selected" : "")} on:click={() => changeUserFlag(i+1)}>
-							<img class='icon' src={pair[1]}/>
+
+							{#if pair[2] && i+1==activeUserFlag}
+								<img class='icon' src={pair[2]}/>
+							{:else}
+								<img class='icon' src={pair[1]}/>
+							{/if}
 							<span>{pair[0]}</span>
 						</span>
 					{/each}

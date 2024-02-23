@@ -159,6 +159,7 @@ function statusIcon(s)
 {
 	switch(s)
 	{
+		case 4: return "/star-filled.svg";
 		case 3: return "/rest.png";
 		case 2: return "/later.png";
 		case 1: return "/notes.png";

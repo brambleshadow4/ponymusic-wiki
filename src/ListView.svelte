@@ -205,7 +205,8 @@
 		rowButtons = [
 			["Heard it", "/notes.png"],
 			["Listen Later","/later.png"],
-			["Skip","/rest.png"]
+			["Skip","/rest.png"],
+			["Star","/star-unfilled.svg"]
 		]
 	}
 
