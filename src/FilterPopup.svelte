@@ -182,6 +182,14 @@
 				icon: "/rest.png",
 				parent: groups
 			},
+			{
+				name: "Star",
+				level: 1,
+				checked: 4,
+				value: "4",
+				icon: "/star-filled.svg",
+				parent: groups
+			},
 		];
 
 		groups.children = children;

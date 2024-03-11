@@ -6,9 +6,7 @@
 	export let data = [];
 	export let page = [0,1];
 	export let selectedId = -1;
-
 	export let total = 0;
-
 	export let rowButtons = [];
 
 	const RESIZE_MARGIN = 10;
