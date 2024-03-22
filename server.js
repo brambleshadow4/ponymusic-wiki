@@ -285,36 +285,51 @@ app.get("/api/view/artists", queryProcessing, async(req,res) =>
 	let offset = page*PAGE_COUNT;
 	
 	let query = `
-	SELECT *, (
+	-- lawful good --
+
+SELECT tableb.*,
+	tracks.id, tracks.title, tracks.release_date
+FROM (
+	SELECT *, 
+	-- Combined Genres --
+	(
 		SELECT COALESCE(string_agg(value, CHR(30)), '') FROM (
-			SELECT DISTINCT(value)
+		SELECT DISTINCT(value)
+		FROM track_tags
+		WHERE track_id IN (
+			SELECT track_id
 			FROM track_tags
-			WHERE track_id IN (
-				SELECT track_id
-				FROM track_tags
-				WHERE property='artist' AND value=tablea.artist
-			) AND property='genre') as td
-		) as genre
+			WHERE (property='artist' OR property='featured artist') AND value=tablea.artist
+		) AND property='genre') as td
+	) as genre,
+	-- most recent track -- 
+	(
+		SELECT id FROM tracks
+		WHERE id IN (
+			SELECT track_id
+			FROM track_tags
+			WHERE (property='artist' OR property='featured artist') AND value=tablea.artist
+		)
+		ORDER BY release_date DESC
+		LIMIT 1
+		) as latest_id
 	FROM (
-		SELECT tracks.id, title,release_date, value as artist,
-			ROW_NUMBER() OVER (PARTITION BY value ORDER BY release_date DESC) as row_number,
-			(SELECT value FROM user_flags WHERE track_id=tracks.id AND user_flags.user_id='${userID}' AND flag='status') as status
-		FROM tracks FULL OUTER JOIN track_tags ON tracks.id=track_tags.track_id
-		WHERE property='artist' AND tracks.hidden=false
-	) as tablea
-	LEFT JOIN (
-		SELECT COUNT(value) as tracks, value as artist
+		SELECT 
+		COUNT(value) as tracks,
+		value as artist
+
 		FROM track_tags LEFT JOIN tracks on track_tags.track_id = tracks.id
-		WHERE track_tags.property='artist' AND tracks.hidden=false
-		GROUP BY artist
-	) as tableb
-	ON tablea.artist=tableb.artist
-	WHERE tablea.row_number = 1
+		WHERE (track_tags.property='artist' OR track_tags.property='featured artist') AND tracks.hidden=false
+		GROUP BY artist) as tablea
+	) as tableb INNER JOIN tracks ON tableb.latest_id = tracks.id
 	ORDER BY release_date DESC
 	LIMIT ${PAGE_COUNT} OFFSET ${offset}`;
 
-	let {rows} = await db.query(query,[]);
-	let countRequest = await db.query(`SELECT COUNT(DISTINCT(value)) FROM track_tags WHERE property='artist'`, []);
+	let [{rows}, countRequest] = await Promise.all([
+		db.query(query,[]),
+		db.query(`SELECT COUNT(DISTINCT(value)) FROM track_tags WHERE property='artist'`, [])
+	]);
+
 	let total = countRequest.rows[0].count;
 
 	res.json({rows, pages: Math.ceil(total/PAGE_COUNT), total});

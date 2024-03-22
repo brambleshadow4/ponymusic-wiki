@@ -213,7 +213,6 @@ let ArtistList = {
 		{
 			name: "(default)",
 			columns: [
-				Columns.StatusNF,
 				Columns.ArtistNF,
 				Columns.GenreNF,
 				{name: "Tracks", width: "50", property: "tracks"},
