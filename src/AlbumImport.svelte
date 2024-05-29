@@ -55,16 +55,16 @@
 
 		importProgress = "Adding album hyperlink";
 
-		let response = await (await fetch("/api/setTagMetadata", {
+		let response = await (await fetch("/api/updateProperty", {
 			method: "PUT",
 			headers: {"Content-Type": "text/json"},
 			body: JSON.stringify({
 				session: sessionStorage.session,
-				property: "album",
-				value: album.title,
+				type: "album",
+				id: album.title,
 				is_delete: false,
-				meta_property: "hyperlink",
-				meta_value: album.hyperlink,
+				property: "hyperlink",
+				value: album.hyperlink,
 			})
 		})).json();
 

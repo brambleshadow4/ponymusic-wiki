@@ -139,16 +139,16 @@
 		if(!link)
 			return
 
-		let response = await (await fetch("/api/setTagMetadata", {
+		let response = await (await fetch("/api/updateProperty", {
 			method: "PUT",
 			headers: {"Content-Type": "text/json"},
 			body: JSON.stringify({
 				session: sessionStorage.session,
-				property: "album",
-				value: thisAlbum,
+				type: "album",
+				id: thisAlbum,
 				is_delete: false,
-				meta_property: "hyperlink",
-				meta_value: link,
+				property: "hyperlink",
+				value: link,
 			})
 		})).json();
 
@@ -162,16 +162,16 @@
 		if(!confirm("Are you sure you want to delete this link?"))
 			return
 
-		let response = await (await fetch("/api/setTagMetadata", {
+		let response = await (await fetch("/api/updateProperty", {
 			method: "PUT",
 			headers: {"Content-Type": "text/json"},
 			body: JSON.stringify({
 				session: sessionStorage.session,
-				property: "album",
-				value: thisAlbum,
+				type: "album",
+				id: thisAlbum,
 				is_delete: true,
-				meta_property: "hyperlink",
-				meta_value: oldLink,
+				property: "hyperlink",
+				value: oldLink,
 			})
 		})).json();
 
@@ -182,16 +182,16 @@
 	{
 		let thisAlbum = view.tabs[0].filter({}).album.include[0];
 
-		let response = await (await fetch("/api/setTagMetadata", {
+		let response = await (await fetch("/api/updateProperty", {
 			method: "PUT",
 			headers: {"Content-Type": "text/json"},
 			body: JSON.stringify({
 				session: sessionStorage.session,
-				property: "album",
-				value: thisAlbum,
+				type: "album",
+				id: thisAlbum,
 				is_delete: albumPhysicalReleaseOnly,
-				meta_property: "physical release only",
-				meta_value: "1",
+				property: "physical release only",
+				value: "1",
 			})
 		})).json();
 		window.location.reload();

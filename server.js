@@ -345,8 +345,8 @@ app.get("/api/view/albums", queryProcessing, async(req,res) =>
 
 	let clause1 = "AND tracks.hidden=false"
 	let clause2 = `WHERE (
-		SELECT COUNT(*) FROM track_tags_metadata
-		WHERE property='album' AND value=tb.album AND meta_property = 'physical release only'
+		SELECT COUNT(*) FROM tag_metadata
+		WHERE type='album' AND id=tb.album AND property = 'physical release only'
 	) = 0`
 
 	if(req.query.all)
@@ -420,10 +420,9 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 			orderBy = "ORDER BY album_no ASC";
 		}
 
-		let albumMetadata = await db.query("SELECT * FROM track_tags_metadata WHERE property='album' AND value=$1",[req.query.album[0]]);
-		
-		response.albumHyperlinks = albumMetadata.rows.filter(x => x.meta_property == "hyperlink").map(x => x.meta_value);
-		response.albumPhysicalReleaseOnly = albumMetadata.rows.filter(x => x.meta_property == 'physical release only').length > 0 ;
+		let albumMetadata = await getPropertyObject("album", req.query.album[0]);		
+		response.albumHyperlinks = albumMetadata.properties.filter(x => x[0] == "hyperlink").map(x => x[1]);
+		response.albumPhysicalReleaseOnly = albumMetadata.properties.filter(x => x[0] == 'physical release only').length > 0 ;
 	}
 
 	if(req.query.sort && req.query.sort[0] == "^random")
@@ -634,7 +633,6 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 	let id = data.id;
 
-	
 
 	var info = {};
 	let deleted = false;
@@ -665,12 +663,8 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 		if(tag.property == "album")
 		{
-			let {rows} = await db.query("SELECT * from track_tags_metadata WHERE property='album' AND value=$1 AND meta_property='hyperlink'", [tag.value]);
-			for(let link of rows)
-			{
-				albumHyperlinkCache.push(link.meta_value);
-			}
-
+			let albumMetadata = await getPropertyObject("album", tag.value);
+			albumHyperlinkCache = albumHyperlinkCache.concat(albumMetadata.properties.filter(x => x[0] == "hyperlink"));
 		}
 
 		tag.value = trim2(tag.value);
@@ -906,7 +900,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 			potentialDuplicateIDs.add(row.id);
 		}
 
-		let albumHyperlinkResults = await db.query("SELECT * FROM track_tags_metadata WHERE property='album' AND meta_property='hyperlink' AND meta_value=$1", [tag.value])
+		let albumHyperlinkResults = await db.query("SELECT * FROM tag_metadata WHERE type='album' AND property='hyperlink' AND value=$1", [tag.value])
 
 		for(let row of albumHyperlinkResults.rows)
 		{
@@ -976,18 +970,18 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 	
 });
 
-app.put("/api/setTagMetadata", processJSON, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
+app.put("/api/updateProperty", processJSON, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
 
 	let userID = (await getSession(req)).user_id;
-
+	console.log("hit this spot")
 	let validPair = false;
 
-	let value = req.body.value;
+	let recType = req.body.type;
+	let id = req.body.id;
 	let property = req.body.property;
-	let metaProperty = req.body.meta_property;
-	let metaValue = req.body.meta_value;
+	let value = req.body.value;
 
-	let propertyCombo = property.replace(/\//g, "") + "/" + metaProperty.replace(/\//g, "")  
+	let propertyCombo = recType.replace(/\//g, "") + "/" + property.replace(/\//g, "")  
 
 
 	if(propertyCombo == "album/hyperlink")
@@ -1002,29 +996,70 @@ app.put("/api/setTagMetadata", processJSON, auth(PERM.EDIT_TAG_METADATA), async 
 	}
 
 
-	if(!value || value == "" || !metaValue || metaValue=="")
+	if(!id || id == "" || !value || value=="")
 	{
 		res.statusCode = 400;
 		res.json({status: 400});
 		return;
 	}
+
+	let props = await getPropertyObject(recType, id);
+	console.log(props);
 	
 	if(req.body.is_delete)
 	{
-		await db.query("DELETE FROM track_tags_metadata WHERE property=$1 AND value=$2 AND meta_property=$3 AND meta_value=$4", 
-			[property, value, metaProperty, metaValue]);
+		for(let i=0; i < props.properties.length; i++)
+		{
+			let [p, val] = props.properties[i];
+			if(p == property && val == value)
+			{
+				props.properties.splice(i, 1);
+				i--;
+			}
+		}
+
+		await db.query("DELETE FROM tag_metadata WHERE type=$1 AND id=$2 AND property=$3 AND value=$4", 
+			[recType, id, property, value]);
 	}
 	else
 	{
-		await db.query("INSERT INTO track_tags_metadata (property, value, meta_property, meta_value) VALUES ($1, $2, $3, $4) ", 
-			[property, value, metaProperty, metaValue]);
+		props.properties.push([property, value]);
+		await db.query("INSERT INTO tag_metadata (type, id, property, value) VALUES ($1, $2, $3, $4) ", 
+			[recType, id, property, value]);
+
 	}
 
-	await db.query("INSERT INTO track_tags_metadata_history (property, value, meta_property, meta_value, user_id, is_delete, timestamp) VALUES ($1, $2, $3, $4, $5, $6, NOW()) ", 
-		[property, value, metaProperty, metaValue, userID, !!req.body.is_delete]);
+	delete props.id;
+	delete props.type;
+
+	await db.query("INSERT INTO tag_metadata_history (type, id, value, user_id, timestamp) VALUES ($1, $2, $3, $4, NOW()) ", 
+		[recType, id, props, userID]);
 
 	res.json({status: 200})
 });
+
+async function getPropertyObject(recType, id)
+{
+	let data = await db.query("SELECT * FROM tag_metadata WHERE type=$1 AND id=$2", [recType, id]);
+
+	let propObject = {
+		type: recType,
+		id,
+		properties: []
+	}
+
+	if(data.rows)
+	{
+		for(let row of data.rows)
+		{
+			propObject.properties.push([row.property, row.value]);
+		}
+	}
+
+	
+
+	return propObject;
+}
 
 app.post("/api/checkURLs", processJSON, async (req,res) => {
 
@@ -1052,7 +1087,7 @@ async function checkURL(url)
 		return {track_id: result.rows[0].track_id};
 	}
 
-	result = await db.query("SELECT * FROM track_tags_metadata WHERE meta_property='hyperlink' AND meta_value=$1 LIMIT 1",[url]);
+	result = await db.query("SELECT * FROM tags_metadata WHERE property='hyperlink' AND value=$1 LIMIT 1",[url]);
 
 	if(result.rows.length)
 	{
