@@ -283,8 +283,6 @@ async function processTrack(track)
 		{
 			if (LIMIT <= 0)
 				return;
-			else
-				console.log(LIMIT);
 
 			if(trackWarnings.warnings)
 			{
@@ -319,7 +317,9 @@ async function addTrackDirectly(track)
 	if(respObj.status != 200)
 	{
 		console.error(respObj.error);
+
 		console.log(track);
+		process.exit();
 	}
 }
 
