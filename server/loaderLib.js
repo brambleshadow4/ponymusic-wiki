@@ -93,8 +93,8 @@ async function doExport()
 	textArr.push(await exportTable("track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"}));
 	textArr.push(await exportTable("track_history", {track_id: "number", user_id: "string", value:"json", timestamp: "date"}));
 	textArr.push(await exportTable("user_flags", {track_id: "number", user_id: "string", flag:"string", value:"number"}));
-	textArr.push(await exportTable("tracK_tags_metadata", {property: "string", value:"string", meta_property:"string", meta_value:"string"}));
-	textArr.push(await exportTable("tracK_tags_metadata_history", {user_id: "string", timestamp: "date", is_delete:"bool", property:"string", value:"string", meta_property:"string", meta_value:"string"}));
+	textArr.push(await exportTable("tag_metadata", {type: "string", id:"string", property:"string", value:"string"}));
+	textArr.push(await exportTable("tag_metadata_history", {user_id: "string", timestamp: "date", type:"string", id:"string", value:"json"}));
 
 	textArr.push("SELECT SETVAL(pg_get_serial_sequence('tracks', 'id'), (SELECT (MAX(track_id) + 1) FROM track_history));");
 	
@@ -105,6 +105,7 @@ async function doExport()
 	publicCopyArr.push(publicTables());
 	publicCopyArr.push(await exportTable("tracks", {id: "number", title: "string", release_date: "date", ogcache: "json", titlecache:"string"}));
 	publicCopyArr.push(await exportTable("track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"}));
+	publicCopyArr.push(await exportTable("tag_metadata", {type: "string", id:"string", property:"string", value:"string"}));
 
 	fs.writeFileSync("./public/export/export.sql", publicCopyArr.join(""));
 }
@@ -184,5 +185,15 @@ function publicTables()
 		number INTEGER
 	);
 
-	CREATE INDEX IF NOT EXISTS property_index ON track_tags(property, value);`;
+	CREATE TABLE IF NOT EXISTS tag_metadata (
+		type VARCHAR(255) NOT NULL,
+		id TEXT NOT NULL,
+		property VARCHAR(255) NOT NULL,
+		value TEXT NOT NULL
+	);
+
+	CREATE INDEX IF NOT EXISTS property_index ON track_tags(property, value);
+	CREATE INDEX IF NOT EXISTS object_index ON tag_metadata(type, id);
+	CREATE INDEX IF NOT EXISTS property_index ON tag_metadata(property, value);
+	`;
 }
