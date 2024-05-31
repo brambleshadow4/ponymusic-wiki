@@ -5,11 +5,12 @@
 	import EditList from "./EditList.svelte";
 	import PonyRefs from "./PonyRefs.svelte";
 	import LoginButton from "./LoginButton.svelte";
-	import ImportTools from "./ImportTools.svelte";
+	import ImportTools from "./pages/ImportTools.svelte";
 	import AlbumImport from "./AlbumImport.svelte";
-	import ApiDocumentation from "./ApiDocumentation.svelte"
+	import ApiDocumentation from "./pages/ApiDocumentation.svelte"
 	import {buildFilterQuery} from "./helpers.js";
 	import RadioGroup from "./RadioGroup.svelte";
+	import Community from "./pages/Community.svelte";
 	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
 	$: path = window.location.pathname;
@@ -113,7 +114,7 @@
 		top: 0;
 		bottom: 0;
 		left: 0;
-		width: 200px;
+		width: 250px;
 		background-color: #101010;
 	}
 
@@ -156,7 +157,7 @@
 		position: fixed;
 		top: 0;
 		bottom: 0;
-		left: 200px;
+		left: 250px;
 		right: 0;
 	}
 
@@ -256,6 +257,7 @@
 		<a href="/">Tracks</a>
 		<a href="/artists">Artists</a>
 		<a href="/albums">Albums</a>
+		<a href="/community">Community</a>
 		<a class='smalllink' href="/about">About</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
@@ -280,6 +282,7 @@
 		<a href="/">Tracks</a>
 		<a href="/artists">Artists</a>
 		<a href="/albums">Albums</a>
+		<a href="/community">Community</a>
 		<a class='smalllink' href="/about">About</a>
 		<a class='smalllink' href="/edits">Recent Edits</a>
 		<a class='smalllink' href="/import-tools">Import Tools</a>
@@ -405,6 +408,8 @@
 		</div>
 	{:else if path == "/album-import"}
 		<div class='main'><AlbumImport /></div>
+	{:else if path == "/community"}
+		<div class='main'><Community /></div>
 	{/if}
 </div>
 

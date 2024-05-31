@@ -166,9 +166,9 @@ dl.click();
 
 <script>
 	import { onMount } from 'svelte';
-	import TagGroupInput from "./TagGroupInput.svelte";
-	import {tagComp} from "./helpers.js";
-	import RadioGroup from "./RadioGroup.svelte";
+	import TagGroupInput from "../TagGroupInput.svelte";
+	import {tagComp} from "../helpers.js";
+	import RadioGroup from "../RadioGroup.svelte";
 
 	let compiled, compiled2, source, source2, ref, tagProperty, tagValue, tagNumber;
 
