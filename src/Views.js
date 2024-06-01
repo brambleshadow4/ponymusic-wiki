@@ -71,6 +71,26 @@ let ArtistView = {
 				filterCopy.featured_artist = {include: [artistName]};
 				return filterCopy
 			}
+		},
+		{
+			name: "Remixed/Covered by Other Musicians",
+			columns: [
+				Columns.Status,
+				{name: "Remix/Cover Musician", width: "200", property: "remix_artist", linkTo:"/artist/*", filtered: false},
+				Columns.Title,
+				Columns.Album,
+				Columns.Refs,
+				Columns.Genre,
+				Columns.Tags,
+				Columns.Released
+			],
+
+			filter: function(filters) {
+				let artistName = decodeURIComponent(location.pathname.replace("/artist/","").trim());
+				let filterCopy = JSON.parse(JSON.stringify(filters));
+				filterCopy.original_artist = {include: [artistName]};
+				return filterCopy
+			}
 		}
 	],
 }

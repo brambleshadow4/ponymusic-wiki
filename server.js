@@ -405,7 +405,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let limitCount = PAGE_COUNT;
 	let offset = page*PAGE_COUNT;	
 
-	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","album","genre","pl","tag","release_date","status","title","remixcover"]));
+	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","original_artist","album","genre","pl","tag","release_date","status","title","remixcover"]));
 	let albumNoSelect = "";
 	let orderBy = "ORDER BY release_date DESC";	
 
@@ -435,6 +435,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let query = `
 		SELECT id, title, release_date,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') FROM track_tags WHERE track_id=id AND (property='artist' OR property='original artist')) AS artist,
+			(SELECT COALESCE(string_agg(value, CHR(30)), '') FROM track_tags WHERE track_id=id AND property='artist') AS remix_artist,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') FROM track_tags WHERE track_id=id AND property='featured artist') AS featured_artist, 
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') FROM track_tags WHERE track_id=id AND property='hyperlink') AS hyperlink,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') FROM track_tags WHERE track_id=id AND property='genre') AS genre,
@@ -973,7 +974,6 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 app.put("/api/updateProperty", processJSON, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
 
 	let userID = (await getSession(req)).user_id;
-	console.log("hit this spot")
 	let validPair = false;
 
 	let recType = req.body.type;
@@ -1004,7 +1004,6 @@ app.put("/api/updateProperty", processJSON, auth(PERM.EDIT_TAG_METADATA), async 
 	}
 
 	let props = await getPropertyObject(recType, id);
-	console.log(props);
 	
 	if(req.body.is_delete)
 	{
@@ -1147,7 +1146,7 @@ async function buildWhereClause(req, allowedFilters)
 		whereClauses = [];
 	}
 
-	let simpleFilters = ["artist","featured_artist","album","genre","pl","tag","remixcover"];
+	let simpleFilters = ["artist","featured_artist","album","genre","pl","tag","remixcover","original_artist"];
 	
 	for(let key of simpleFilters)
 	{
@@ -1157,6 +1156,11 @@ async function buildWhereClause(req, allowedFilters)
 		if(key=="featured_artist")
 		{
 			prop = "featured artist";
+		}
+
+		if(key=="original_artist")
+		{
+			prop = "original artist";
 		}
 
 		if(!allowedFilters.has(key))
@@ -1213,9 +1217,8 @@ async function buildWhereClause(req, allowedFilters)
 		}
 	}
 
-
 	if(whereClauses.length)
-	{
+	{	
 		return "WHERE " + whereClauses.join(" AND ") + " ";
 	}
 	else{
@@ -1231,10 +1234,10 @@ function buildWhereClausePart(property, valueList, negate)
 	let clauses = [];
 
 	let propertyClause = `property='${property}'`;
-	if(property == "artist")
+	/*if(property == "artist")
 	{
 		propertyClause = `(property='artist' OR property='original artist')`;
-	}
+	}*/
 
 	if(property == "remixcover")
 	{

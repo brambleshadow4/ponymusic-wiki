@@ -46,6 +46,7 @@
 		if(view.tabs[tab].filter)
 		{
 			filters = view.tabs[tab].filter(filters);
+			columnDefs = view.tabs[tab].columns;
 		}
 
 		columnDefs = columnDefs;
