@@ -13,6 +13,7 @@
 
 	$: pathSlug = window.location.pathname.split("/").slice(1);
 
+
 	const dispatch = createEventDispatcher();
 
 	let filterHash = "";
@@ -64,6 +65,8 @@
 
 				if(obj.status == 400)
 					return;
+
+				console.log(obj)
 
 				viewProperties = obj;
 			});
@@ -232,6 +235,13 @@
 		]
 	}
 
+	function prop(viewProperties, name)
+	{
+		console.log("checking props")
+		if(!viewProperties.properties) return [];
+		return viewProperties.properties.filter(x => x[0] == name).map(x => x[1]);
+	}
+
 	// on:click={()=>{openTrack(song.id)}}
 
 </script>
@@ -248,14 +258,22 @@
 
 	{#if view.makeTitle}
 		<h1>
-			{view.makeTitle()}
-			
+			{view.makeTitle()}	
 		</h1>
 	{:else if view.htmlTitle}
 		{@html view.htmlTitle}
 	{:else if view.title}
 		<h1>
 			{view.title.replace("{1}", decodeURIComponent(pathSlug[1]))}
+
+			{#if viewProperties}
+				{#each ["twitter","bandcamp","youtube","ponyfm","personalsite","applemusic","soundcloud","spotify"] as site}
+					{#if prop(viewProperties, site)[0]}
+						<a href={prop(viewProperties, site)[0]}><img class='logo' src={"/logo/"+site+".png"}/></a>
+					{/if}
+				{/each}
+			{/if}
+
 			{#if view.propertiesObjectType && hasPerm(PERM.EDIT_TAG_METADATA)}
 				<img class='edit-button' src="/edit-round-line-icon.svg" height="15" on:click={() => dispatch("openObjectEditor", viewProperties)}>
 			{/if}
@@ -289,6 +307,7 @@
 			{/if}
 
 		{/if}
+
 	</div>
 	
 	<div class='action-links'>
@@ -323,6 +342,11 @@
 </div>
 
 <style>
+
+	.logo {
+		height: 20px;
+		margin-right: 2px;
+	}
 
 	.frame{
 		height: 100%;

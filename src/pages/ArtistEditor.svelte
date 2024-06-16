@@ -168,10 +168,10 @@
 
 		<PropertyEditor bind:data={data} display="Alternate spelling" property="alternate spelling" allowMultiple={true} />
 
-		<h2>Related artists</h2>
+		<!--h2>Related artists</h2>
 
 		<PropertyEditor bind:data={data} display="Related Alias" property="alias" allowMultiple={true} />
-		<PropertyEditor bind:data={data} display="Member of" property="memberof" allowMultiple={true}  />
+		<PropertyEditor bind:data={data} display="Member of" property="memberof" allowMultiple={true}  /-->
 		
 	
 		<h2>Profiles</h2>
