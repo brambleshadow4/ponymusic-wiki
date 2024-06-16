@@ -9,6 +9,9 @@
 	export let selectedId = "";
 	export let filters = {};
 	export let view = {};
+	export let viewProperties = {type: "none", id: "", properties: []};
+
+	$: pathSlug = window.location.pathname.split("/").slice(1);
 
 	const dispatch = createEventDispatcher();
 
@@ -23,6 +26,8 @@
 
 	let queryCache = "";
 	let loaded = false;
+
+	$: pathSlug = window.location.pathname.split("/").slice(1);
 
 	async function load(filters)
 	{	
@@ -50,6 +55,22 @@
 		}
 
 		columnDefs = columnDefs;
+
+		if(view.propertiesObjectType)
+		{
+			fetch(`/api/getObject?type=${view.propertiesObjectType}&id=${pathSlug[1]}`).then(async function(response){
+
+				let obj = await response.json();
+
+				if(obj.status == 400)
+					return;
+
+				viewProperties = obj;
+			});
+		}
+
+
+
 
 		let query = buildFilterQuery(filters, view.tabs[tab].sort || [], page[0], true);
 		queryCache = query;
@@ -226,12 +247,24 @@
 <div class='frame'>
 
 	{#if view.makeTitle}
-		<h1>{view.makeTitle()}</h1>
+		<h1>
+			{view.makeTitle()}
+			
+		</h1>
 	{:else if view.htmlTitle}
 		{@html view.htmlTitle}
+	{:else if view.title}
+		<h1>
+			{view.title.replace("{1}", decodeURIComponent(pathSlug[1]))}
+			{#if view.propertiesObjectType && hasPerm(PERM.EDIT_TAG_METADATA)}
+				<img class='edit-button' src="/edit-round-line-icon.svg" height="15" on:click={() => dispatch("openObjectEditor", viewProperties)}>
+			{/if}
+		</h1>
 	{/if}
+
 	
 	<div class='tag-info'>
+
 
 		{#if albumHyperlinks}
 
@@ -355,6 +388,12 @@
 	.checkbox-group
 	{
 		display: inline-block;
+	}
+
+	.edit-button {
+		height: 20px;
+		vertical-align: 20%;
+		curosr:pointer;
 	}
 
 	label {

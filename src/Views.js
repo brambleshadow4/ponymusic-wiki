@@ -27,10 +27,8 @@ let DefaultView = {
 let ArtistView = {
 	api: "/api/view/tracks",
 	hasButtonRandomTrack: true,
-	makeTitle: function(){
-		let artistName = decodeURIComponent(location.pathname.replace("/artist/","").trim());
-		return "Artist: " + artistName;
-	},
+	title: "Artist: {1}",
+	propertiesObjectType: "artist",
 	tabs: [
 		{
 			name: "Releases",
@@ -98,10 +96,7 @@ let ArtistView = {
 let AlbumView = {
 	api: "/api/view/tracks",
 	hasButtonRandomTrack: true,
-	makeTitle: function(){
-		let albumName = decodeURIComponent(location.pathname.replace("/album/","").trim());
-		return "Album: " + albumName;
-	},
+	title: "Album: {1}",
 	tabs: [
 		{
 			name: "(default)",
@@ -129,10 +124,7 @@ let AlbumView = {
 
 let TagView = {
 	api: "/api/view/tracks",
-	makeTitle: function(){
-		let tagName = decodeURIComponent(location.pathname.replace("/tag/","").trim());
-		return "Tag: " + tagName;
-	},
+	title: "Tag: {1}",
 	hasButtonNewTrack: true,
 	hasButtonRandomTrack: true,
 	tabs: [
@@ -161,10 +153,7 @@ let TagView = {
 
 let GenreView = {
 	api: "/api/view/tracks",
-	makeTitle: function(){
-		let genreName = decodeURIComponent(location.pathname.replace("/genre/","").trim());
-		return "Genre: " + genreName;
-	},
+	title: "Genre: {1}",
 	hasButtonNewTrack: true,
 	hasButtonRandomTrack: true,
 	tabs: [

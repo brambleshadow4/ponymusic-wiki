@@ -971,6 +971,98 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 	
 });
 
+
+var ALLOWED_PROPERTIES = new Set([
+	"album/hyperlink",
+	"album/physical release only",
+	"artist/alias",
+	"artist/alternate spelling",
+	"artist/memberof",
+	"artist/twitter",
+	"artist/bandcamp",
+	"artist/youtube",
+	"artist/soundcloud",
+	"artist/personalsite",
+	"artist/applemusic",
+	"artist/spotify",
+	"artist/ponyfm",
+
+
+])
+
+app.get("/api/getObject", async (req,res) => {
+
+	let typ = req.query.type;
+	let id =  req.query.id;
+
+	let obj = await getPropertyObject(typ, id);
+
+	return res.json(obj);
+});
+
+
+app.put("/api/updateObject", processJSON, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
+
+	let userID = (await getSession(req)).user_id;
+
+	if(!req.body){
+		res.json({status: 400, error: "no body"});
+		return;
+	}
+	let rec = {
+
+		type: req.body.type,
+		id: req.body.id,
+		properties: req.body.properties
+	}
+
+	if (!Array.isArray(rec.properties))
+	{
+
+		res.json({status: 400, error: "properties object on payload is not an array"});
+		return;
+	}
+	
+	try {
+
+		for(let [prop, value] of rec.properties)
+		{
+			let propertyCombo = rec.type + "/" + prop;
+			if (!ALLOWED_PROPERTIES.has(propertyCombo))
+			{
+				res.json({status: 400, error: "bad property " + propertyCombo});
+				return;
+			}
+		}
+	}
+	catch(e)
+	{
+		res.json({status: 400});
+		return;
+	}
+
+	await db.query("DELETE FROM tag_metadata WHERE type=$1 AND id=$2", [rec.type, rec.id]);
+
+	for(let [prop, value] of rec.properties)
+	{
+		await db.query("INSERT INTO tag_metadata (type, id, property, value) VALUES ($1, $2, $3, $4) ", 
+			[rec.type, rec.id, prop, value]);
+	}
+
+	let id = rec.id;
+	let type = rec.type;
+
+	delete rec.id;
+	delete rec.type;
+
+	await db.query("INSERT INTO tag_metadata_history (type, id, value, user_id, timestamp) VALUES ($1, $2, $3, $4, NOW()) ", 
+		[type, id, rec, userID]);
+
+	res.json({status: 200})
+
+});
+
+
 app.put("/api/updateProperty", processJSON, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
 
 	let userID = (await getSession(req)).user_id;
@@ -983,13 +1075,7 @@ app.put("/api/updateProperty", processJSON, auth(PERM.EDIT_TAG_METADATA), async 
 
 	let propertyCombo = recType.replace(/\//g, "") + "/" + property.replace(/\//g, "")  
 
-
-	if(propertyCombo == "album/hyperlink")
-		validPair = true;
-	if (propertyCombo == "album/physical release only")
-		validPair = true;
-
-	if(!validPair){
+	if(!ALLOWED_PROPERTIES.has(propertyCombo)){
 		res.statusCode = 400;
 		res.json({status: 400});
 		return;

@@ -96,8 +96,6 @@ function loadFromLuckRock()
 
 				let newArtist = artist.replace(remixPattern,"");
 
-				console.log(newArtist);
-
 				if (newArtist.endsWith(" AI"))
 				{
 					tags.push({property:"tag", value:"AI", text:"AI"});
@@ -189,7 +187,7 @@ async function processTrack(track)
 		if(result.rows.length > 0)
 			return;
 
-		let result2 = await localDb.query("SELECT * FROM track_tags_metadata WHERE property='album' AND meta_property='hyperlink' AND meta_value=$1", [url]);
+		let result2 = await localDb.query("SELECT * FROM tag_metadata WHERE type='album' AND property='hyperlink' AND value=$1", [url]);
 
 		if(result2.rows.length > 0)
 			return;

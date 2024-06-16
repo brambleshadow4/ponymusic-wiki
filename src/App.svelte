@@ -1,5 +1,6 @@
 <script>
 	import TrackEditor from "./TrackEditor.svelte";
+	import ArtistEditor from "./pages/ArtistEditor.svelte";
 	import ListView from "./ListView.svelte";
 	import FilterPopup from "./FilterPopup.svelte";
 	import EditList from "./EditList.svelte";
@@ -14,17 +15,23 @@
 	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
 	$: path = window.location.pathname;
+	$: pathSlug = window.location.pathname.split("/").slice(1);
 
 	let mobileLayout = (window.innerWidth < 800);
 	let mobileNavOpen = false;
 
 	let tab = 0;
 	let loadedTrackID = "";
+	let editProperties = null;
 	let loadedFilter = "";
 
 	let showAllTracks =  Number(localStorage.SHOW_ALL_TRACKS || 0);
 
 	let filters = {};
+
+	let viewProperties = {};
+
+
 
 	function loadFilters()
 	{
@@ -56,7 +63,7 @@
 
 	loadFilters();
 
-	if(window.location.pathname.startsWith("/track/"))
+	if(location.pathname.startsWith("/track"))
 	{
 		let x = location.pathname.substring("/track/".length);
 		if(x == "new")
@@ -83,6 +90,11 @@
 		{
 			history.replaceState({}, undefined, previousURL)
 		}
+	}
+
+	function openObjectEditor(event)
+	{
+		editProperties = event.detail;
 	}
 
 	function openFilter(event)
@@ -295,31 +307,31 @@
 <div class='main-container'>
 	
 
-	{#if path == "/" || path == "" || path.startsWith("/track/")}
+	{#if pathSlug[0] == "" || pathSlug[0] == "track"}
 		<ListView view={DefaultView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
-	{:else if path == "/artists"}
+	{:else if pathSlug[0] == "artists"}
 		<ListView view={ArtistList} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 		
-	{:else if path == "/albums"}
-		<ListView view={AlbumList} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+	{:else if pathSlug[0] == "albums"}
+		<ListView view={AlbumList} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} on:openObjectEditor={openObjectEditor} />
 
-	{:else if path.startsWith("/album/")}
+	{:else if pathSlug[0] == "album"}
 		<ListView view={AlbumView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
-	{:else if path.startsWith("/artist/")}
-		<ListView view={ArtistView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+	{:else if pathSlug[0] == "artist"}
+		<ListView view={ArtistView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} on:openObjectEditor={openObjectEditor} bind:viewProperties={viewProperties} />
 
-	{:else if path.startsWith("/genre/")}
+	{:else if pathSlug[0] == "genre"}
 		<ListView view={GenreView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
-	{:else if path.startsWith("/tag/")}
+	{:else if pathSlug[0] == "tag"}
 		<ListView view={TagView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
-	{:else if path.startsWith("/remix/")}
+	{:else if pathSlug[0] == "remix"}
 		<ListView view={RemixCoverView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
-	{:else if path == "/about"}
+	{:else if pathSlug[0] == "about"}
 		<div class='main'>
 
 			<blockquote>
@@ -418,9 +430,18 @@
 
 	<div class='sidebar'>
 
-		<TrackEditor id={loadedTrackID} on:close={openTrack} />
+		<TrackEditor id={loadedTrackID} on:close={openTrack}/>
 	</div>
 {/if}
+
+{#if editProperties}
+	<div class='shield' on:click={()=>{editProperties = null;}}></div>
+
+		<div class='sidebar'>
+
+			<ArtistEditor data={editProperties} on:close={() => {editProperties = null;}} />
+		</div>
+	{/if}
 
 {#if loadedFilter}
 	<div class='shield'>
