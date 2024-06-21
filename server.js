@@ -1172,12 +1172,12 @@ async function checkURL(url)
 		return {track_id: result.rows[0].track_id};
 	}
 
-	result = await db.query("SELECT * FROM tags_metadata WHERE property='hyperlink' AND value=$1 LIMIT 1",[url]);
+	result = await db.query("SELECT * FROM tag_metadata WHERE property='hyperlink' AND value=$1 LIMIT 1",[url]);
 
 	if(result.rows.length)
 	{
 		// if we support other hyperlink types in future, may need to change this.
-		return {album: result.rows[0].value}
+		return {album: result.rows[0].id}
 	}
 
 	return null;
