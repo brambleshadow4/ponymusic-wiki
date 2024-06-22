@@ -17,6 +17,9 @@
 		reader.onload = (evt) => {
 			album = JSON.parse(evt.target.result);
 			album.tags = [];
+
+			album.title = trim2(album.title);
+
 			let i = 0;
 			for(let track of album.tracks)
 			{	
@@ -27,6 +30,11 @@
 			album = album;
 		};
 		reader.readAsText(files[0])
+	}
+
+	function trim2(s)
+	{
+		return s.trim().replace(/\u200B/g,"");
 	}
 
 	function setTrackData(event)
