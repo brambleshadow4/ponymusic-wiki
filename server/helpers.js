@@ -30,8 +30,9 @@ async function getOgCache(track, albumHyperlinks)
 		
 		let bandcampLinks = links.filter(x => /https:\/\/[a-zA-Z0-9]+\.bandcamp\.com.*/.exec(x));
 		let soundcloudLinks = links.filter(x => x.startsWith("https://soundcloud.com"));
+		let ponyfmLinks = links.filter(x => /^https:\/\/pony\.fm\/tracks\/(\d+)-/.exec(x));
 
-		linkOfChoice = bandcampLinks[0] || soundcloudLinks[0] || links[0]
+		linkOfChoice = bandcampLinks[0] || soundcloudLinks[0] || ponyfmLinks[0] || links[0];
 
 		if(linkOfChoice)
 			break;
@@ -41,21 +42,27 @@ async function getOgCache(track, albumHyperlinks)
 
 	//console.log(properties);
 
+	let ponyfmMatch = /^https:\/\/pony\.fm\/tracks\/(\d+)-/.exec(linkOfChoice);
+	if(ponyfmMatch) {
+		console.log("pony.fm embed");
+		let track_id = +ponyfmMatch[1];
+		return {embed: `https://pony.fm/t${track_id}/embed`, width: 560, height: 150};
+	}
 	if(linkOfChoice.indexOf("bandcamp.com") > -1)
 	{
 		console.log("og bandcamp");
 
-		return {embed:properties["og:video"], width: 560, height: 130};
+		return {embed: properties["og:video"], width: 560, height: 130};
 	}
 	else if (linkOfChoice.indexOf("soundcloud.com") > -1)
 	{
 		console.log("og soundcloud");
-		return {embed:properties["twitter:player"], width: 500, height: 500};
+		return {embed: properties["twitter:player"], width: 500, height: 500};
 	}
 	else if(properties["twitter:player"])
 	{
 		console.log("generic player");
-		return {embed:properties["twitter:player"], width: 500, height: 500};
+		return {embed: properties["twitter:player"], width: 500, height: 500};
 	}
 	else if (properties["og:audio"])	
 	{
