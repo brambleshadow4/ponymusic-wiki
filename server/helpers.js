@@ -1,6 +1,8 @@
 import fetch from 'node-fetch';
 import fs from 'fs';
 
+
+
 async function getOgCache(track, albumHyperlinks)
 {
 	if(!albumHyperlinks)
@@ -32,6 +34,12 @@ async function getOgCache(track, albumHyperlinks)
 		let soundcloudLinks = links.filter(x => x.startsWith("https://soundcloud.com"));
 		let ponyfmLinks = links.filter(x => /^https:\/\/pony\.fm\/tracks\/(\d+)-/.exec(x));
 
+		if(ponyfmLinks.length)
+		{
+			let ponyfmID = /^https:\/\/pony\.fm\/tracks\/(\d+)-/.exec(ponyfmLinks[0])[1];
+			ponyfmLinks[0] = `https://pony.fm/t${ponyfmID}/embed`
+		}
+
 		linkOfChoice = bandcampLinks[0] || soundcloudLinks[0] || ponyfmLinks[0] || links[0];
 
 		if(linkOfChoice)
@@ -39,15 +47,7 @@ async function getOgCache(track, albumHyperlinks)
 	}
 
 	let properties = await getOgPropertiesFromURL(linkOfChoice);
-
-	//console.log(properties);
-
-	let ponyfmMatch = /^https:\/\/pony\.fm\/tracks\/(\d+)-/.exec(linkOfChoice);
-	if(ponyfmMatch) {
-		console.log("pony.fm embed");
-		let track_id = +ponyfmMatch[1];
-		return {embed: `https://pony.fm/t${track_id}/embed`, width: 560, height: 150};
-	}
+	
 	if(linkOfChoice.indexOf("bandcamp.com") > -1)
 	{
 		console.log("og bandcamp");
@@ -64,6 +64,10 @@ async function getOgCache(track, albumHyperlinks)
 		console.log("generic player");
 		return {embed: properties["twitter:player"], width: 500, height: 500};
 	}
+	else if(linkOfChoice.startsWith("https://pony.fm") && properties.status == 200)
+	{	
+		return {embed: linkOfChoice, width: 560, height: 150};
+	}
 	else if (properties["og:audio"])	
 	{
 		console.log("og audio");
@@ -78,12 +82,18 @@ async function getOgCache(track, albumHyperlinks)
 
 async function getOgPropertiesFromURL(url, options)
 {
-	let pageSRC = await (await fetch(url)).text();
+	let response = await fetch(url);
+
+	let pageSRC = await response.text();
+
+	if(response.status != 200)
+		return {status: response.status}
+
 	pageSRC = pageSRC.replace(/\n|\r|\t/g," ");
 
 	let pattern = /<meta(\s+[-_A-Za-z0-9]+?="[^"]*"|\s+[-_A-Za-z0-9]+?='[^']*')*\/?>/g;
 	let match;
-	let properties = {};
+	let properties = {status: response.status};
 
 	while(match = pattern.exec(pageSRC))
 	{
