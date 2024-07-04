@@ -978,7 +978,7 @@ var ALLOWED_PROPERTIES = new Set([
 
 	"artist/aliasgroup",
 	"artist/alternate spelling",
-	"artist/member",
+	"artist/group member",
 	"artist/twitter",
 	"artist/bandcamp",
 	"artist/youtube",
@@ -1153,6 +1153,15 @@ async function getPropertyObject(recType, id)
 		for(let row of aliases.rows)
 		{
 			propObject.derived_properties.push(['alias', row.id]);
+		}
+
+		let groups = await db.query(
+			`SELECT id FROM tag_metadata
+			WHERE type='artist' AND property='group member' AND value=$1`, [id])
+
+		for(let row of groups.rows)
+		{
+			propObject.derived_properties.push(['member of', row.id]);
 		}
 	}
 

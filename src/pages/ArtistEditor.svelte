@@ -176,7 +176,8 @@
 		<PropertyEditor bind:data={data} display="Alias Group" property="aliasgroup" />
 
 
-		<!--PropertyEditor bind:data={data} display="Members" property="member" allowMultiple={true}  /-->
+		<p>For bands or other groups which are made up of multiple artists, list their member's aliases here</p>
+		<PropertyEditor bind:data={data} display="Group Members" property="group member" allowMultiple={true}  />
 		
 	
 		<h2>Profiles</h2>

@@ -311,10 +311,30 @@
 		{/if}
 
 		{#if prop(viewProperties, "alias")[0]}
-			<span>Aliases: </span>
-			{#each prop(viewProperties, "alias") as alias}
-				<a class='link-list-link' href={"/artist/"+encodeURIComponent(alias)}>{alias}</a>
-			{/each}
+			<div>
+				<span>Aliases: </span>
+				{#each prop(viewProperties, "alias") as alias}
+					<a class='link-list-link' href={"/artist/"+encodeURIComponent(alias)}>{alias}</a>
+				{/each}
+			</div>
+		{/if}
+
+		{#if prop(viewProperties, "group member")[0]}
+			<div>
+				<span>Members: </span>
+				{#each prop(viewProperties, "group member") as alias}
+					<a class='link-list-link' href={"/artist/"+encodeURIComponent(alias)}>{alias}</a>
+				{/each}
+			</div>
+		{/if}
+
+		{#if prop(viewProperties, "member of")[0]}
+			<div>
+				<span>Member of: </span>
+				{#each prop(viewProperties, "member of") as alias}
+					<a class='link-list-link' href={"/artist/"+encodeURIComponent(alias)}>{alias}</a>
+				{/each}
+			</div>
 		{/if}
 
 	</div>
