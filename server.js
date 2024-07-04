@@ -680,7 +680,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		}
 	}
 
-	titleCache = (title + ' - ' + titleCacheArtists.join(", ")).substring(0,500);
+	titleCache = (`"${title}" by ${titleCacheArtists.join(", ")}`).substring(0,500);
 
 
 	let ogcache = {};
