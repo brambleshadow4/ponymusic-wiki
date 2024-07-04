@@ -9,7 +9,7 @@
 	export let selectedId = "";
 	export let filters = {};
 	export let view = {};
-	export let viewProperties = {type: "none", id: "", properties: []};
+	export let viewProperties = {type: "none", id: "", properties: [], derived_properties: []};
 
 	$: pathSlug = window.location.pathname.split("/").slice(1);
 
@@ -237,9 +237,11 @@
 
 	function prop(viewProperties, name)
 	{
-		console.log("checking props")
 		if(!viewProperties.properties) return [];
-		return viewProperties.properties.filter(x => x[0] == name).map(x => x[1]);
+		let normalPops = viewProperties.properties.filter(x => x[0] == name).map(x => x[1]);
+		if(normalPops.length)
+			return normalPops
+		return viewProperties.derived_properties.filter(x => x[0] == name).map(x => x[1]);
 	}
 
 	// on:click={()=>{openTrack(song.id)}}
@@ -306,6 +308,13 @@
 				<span>Physical release only</span>
 			{/if}
 
+		{/if}
+
+		{#if prop(viewProperties, "alias")[0]}
+			<span>Aliases: </span>
+			{#each prop(viewProperties, "alias") as alias}
+				<a class='link-list-link' href={"/artist/"+encodeURIComponent(alias)}>{alias}</a>
+			{/each}
 		{/if}
 
 	</div>
@@ -392,6 +401,10 @@
 	h1{
 		padding-top: 0px;
 		margin: 0px;
+	}
+
+	.link-list-link + .link-list-link:before {
+		content: ", ";
 	}
 
 	.icon

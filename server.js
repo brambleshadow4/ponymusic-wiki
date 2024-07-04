@@ -975,9 +975,10 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 var ALLOWED_PROPERTIES = new Set([
 	"album/hyperlink",
 	"album/physical release only",
-	"artist/alias",
+
+	"artist/aliasgroup",
 	"artist/alternate spelling",
-	"artist/memberof",
+	"artist/member",
 	"artist/twitter",
 	"artist/bandcamp",
 	"artist/youtube",
@@ -986,8 +987,6 @@ var ALLOWED_PROPERTIES = new Set([
 	"artist/applemusic",
 	"artist/spotify",
 	"artist/ponyfm",
-
-
 ])
 
 app.get("/api/getObject", async (req,res) => {
@@ -1130,7 +1129,8 @@ async function getPropertyObject(recType, id)
 	let propObject = {
 		type: recType,
 		id,
-		properties: []
+		properties: [],
+		derived_properties: [],
 	}
 
 	if(data.rows)
@@ -1138,6 +1138,21 @@ async function getPropertyObject(recType, id)
 		for(let row of data.rows)
 		{
 			propObject.properties.push([row.property, row.value]);
+		}
+	}
+
+	if(recType == 'artist')
+	{
+		let aliases = await db.query(
+			`SELECT id FROM tag_metadata 
+			WHERE type='artist' AND property='aliasgroup' AND value=(
+				SELECT value FROM tag_metadata
+				WHERE type='artist' AND id=$1 AND property='aliasgroup'
+				LIMIT 1
+			)`, [id])
+		for(let row of aliases.rows)
+		{
+			propObject.derived_properties.push(['alias', row.id]);
 		}
 	}
 
