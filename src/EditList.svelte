@@ -3,6 +3,7 @@
 	import {createEventDispatcher} from "svelte";
 	import Spinner from "./Spinner.svelte";
 	import Grid from "./Grid.svelte";
+	import ObjectDiff from "./components/ObjectDiff.svelte";
 
 	let dispatch = createEventDispatcher();
 
@@ -10,68 +11,52 @@
 	let page = [0,50]
 	let loading = false;
 
+	let boundTimestamp = "";
+
+
+
+	let queryKeys = (window.location.search || "").substring(1).split("&");
+	let query = {};
+	for(let k in queryKeys)
+	{
+		let [a,b] = queryKeys[k].split("=");
+		query[decodeURIComponent(a)] = decodeURIComponent(b);
+	}
+
+	if(query["timestamp"])
+	{
+		boundTimestamp = query["timestamp"];
+	}
+
 	async function load(filters)
 	{
 		loading = true;
-		let data = await (await fetch("/api/history?page="+page[0])).json();
+		let data = await (await fetch("/api/history?timestamp="+boundTimestamp)).json();
 
 		edits = data.rows;
-		page = [page[0], data.pages];
 
 		loading = false;
 	}
 
 	load();
 
-	function openTrack(editEntry)
+	function onTimestampChange(e)
 	{
-		dispatch("openTrack", editEntry.track_id);
-	}
-
-	function onPageChange(e)
-	{
-		if(e.detail > page[0])
-		{
-			page[0]++;
-			page = page;
-			load();
-		}
-		else
-		{
-			page[0]--;
-			page = page;
-			load();
-		}
-	}
-
-	function incPage()
-	{
-		page++;
+		window.history.replaceState("", "", "?timestamp="+boundTimestamp)
 		load();
 	}
 
-	function decPage()
+	function loadOlder()
 	{
-		page = Math.max(page-1, 0);
+		let lastEdit = edits[edits.length-1];
+
+
+
+		boundTimestamp = lastEdit.timestamp;
+
+
+		window.history.replaceState("", "", "?timestamp="+boundTimestamp)
 		load();
-	}
-
-	function trackTitle(item)
-	{
-		if(item.track_title)
-			return [item.track_title]
-		else 
-			return ["deleted(" + item.track_id + ")"];
-	}
-
-	function deletedClass(item)
-	{
-		if(item.track_title)
-			return ""
-		
-		else 
-			return "deleted"
-		
 	}
 
 </script>
@@ -80,37 +65,44 @@
 
 	<h1>Recent Edits</h1>
 
+	<div>
+		<label>Jump to timestamp:</label> <input bind:value={boundTimestamp} type="datetime-local" id="lookback" name="lookback-time" on:change={onTimestampChange}>
+	</div>
+
 	{#if loading}
 		<Spinner />
 	{:else}
 
 
-		<Grid 
-			data={edits}
-			columns={[
-				{width: "200", name: "Timestamp", property: "timestamp", transform: (x) => [new Date(x).toLocaleString()]},
-				{width: "200", name: "Edited by", property: "user_name"},
-				{width: "200", name: "Track", transform: trackTitle, classFn: deletedClass, linkFun: openTrack}
-			]}
-			page={page}
-			on:pagechange={onPageChange}
-		/>
+
+		{#each edits as edit}
+			<ObjectDiff value={edit} on:open />
+		{/each}
+
+		<button on:click={loadOlder}>View older edits</button>
 
 	{/if}
 </div>
 
 <style>
-
-	.frame{
+	.main {
+		padding-left: .5in;
+		overflow-y: auto;
+		height: 100%;
+	}
+	/*.frame{
 		height: 100%;
 		display: flex;
 		flex-direction: column;
 		padding-left: .5in;
-	}
+	}*/
 	@media only screen and (max-width: 800px){
 		.frame {padding-left: 5px}
 	}
 
+	label {
+		display: inline-block;
+	}
 
 </style>
 

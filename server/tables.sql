@@ -43,15 +43,18 @@ CREATE INDEX IF NOT EXISTS property_index ON tag_metadata(property, value);
 CREATE TABLE IF NOT EXISTS track_history (
 	track_id INTEGER,
 	user_id VARCHAR(355),
-	timestamp TIMESTAMP,
+	timestamp TIMESTAMP WITH TIME ZONE,
 	value JSONB
 );
+
+CREATE INDEX IF NOT EXISTS track_index ON track_history(track_id);
+CREATE INDEX IF NOT EXISTS editor_index ON track_history(user_id);
 
 CREATE TABLE IF NOT EXISTS tag_metadata_history (
 	type VARCHAR(255) NOT NULL,
 	id TEXT NOT NULL,
 	user_id VARCHAR(355),
-	timestamp TIMESTAMP,
+	timestamp TIMESTAMP WITH TIME ZONE,
 	value JSONB
 );
 
@@ -72,7 +75,7 @@ CREATE TABLE IF NOT EXISTS user_flags (
 CREATE TABLE IF NOT EXISTS sessions (
 	session VARCHAR(255) PRIMARY KEY,
 	user_id VARCHAR(255),
-	expire_time TIMESTAMP
+	expire_time TIMESTAMP WITH TIME ZONE
 );
 
 

@@ -292,26 +292,26 @@ SELECT tableb.*,
 FROM (
 	SELECT *, 
 	-- Combined Genres --
-	(
-		SELECT COALESCE(string_agg(value, CHR(30)), '') FROM (
-		SELECT DISTINCT(value)
-		FROM track_tags
-		WHERE track_id IN (
-			SELECT track_id
+		(
+			SELECT COALESCE(string_agg(value, CHR(30)), '') FROM (
+			SELECT DISTINCT(value)
 			FROM track_tags
-			WHERE (property='artist' OR property='featured artist') AND value=tablea.artist
-		) AND property='genre') as td
-	) as genre,
+			WHERE track_id IN (
+				SELECT track_id
+				FROM track_tags
+				WHERE (property='artist' OR property='featured artist') AND value=tablea.artist
+			) AND property='genre') as td
+		) as genre,
 	-- most recent track -- 
-	(
-		SELECT id FROM tracks
-		WHERE id IN (
-			SELECT track_id
-			FROM track_tags
-			WHERE (property='artist' OR property='featured artist') AND value=tablea.artist
-		)
-		ORDER BY release_date DESC
-		LIMIT 1
+		(
+			SELECT id FROM tracks
+			WHERE id IN (
+				SELECT track_id
+				FROM track_tags
+				WHERE (property='artist' OR property='featured artist') AND value=tablea.artist
+			)
+			ORDER BY release_date DESC
+			LIMIT 1
 		) as latest_id
 	FROM (
 		SELECT 
@@ -320,7 +320,8 @@ FROM (
 
 		FROM track_tags LEFT JOIN tracks on track_tags.track_id = tracks.id
 		WHERE (track_tags.property='artist' OR track_tags.property='featured artist') AND tracks.hidden=false
-		GROUP BY artist) as tablea
+		GROUP BY artist
+	) as tablea
 	) as tableb INNER JOIN tracks ON tableb.latest_id = tracks.id
 	ORDER BY release_date DESC
 	LIMIT ${PAGE_COUNT} OFFSET ${offset}`;
@@ -495,15 +496,37 @@ app.get("/api/history/track/*", async(req,res) =>
 
 app.get('/api/history', async(req,res) =>
 {
-	let page = Number(req.query.page) || 0; 
-	let offset = page*PAGE_COUNT;
+	let timestamp = req.query.timestamp;
+	if(isNaN(new Date(timestamp).getTime()))
+	{
+		var whereClause = "";
+		timestamp = "";
+	}
+	else
+	{
+		var whereClause = "WHERE timestamp < '" + timestamp + "'";
+	}
 
-	let {rows} = await db.query(
-		`SELECT track_history.timestamp, track_history.track_id, track_history.user_id, users.name as user_name, tracks.title as track_title
-		FROM track_history LEFT JOIN users ON user_id = users.id LEFT JOIN tracks on track_id = tracks.id 
-		ORDER BY timestamp DESC
-		LIMIT ${PAGE_COUNT} OFFSET ${offset}`
-	, []);
+
+	
+
+	let {rows} = await db.query(`SELECT * FROM (
+		SELECT 'track' as type, CAST(track_id as VARCHAR) as id, 
+	 	(SELECT title FROM tracks WHERE id=track_id) as title,
+	 	(SELECT name FROM users WHERE id=user_id) as user,
+		timestamp, value,
+	 	(SELECT value FROM track_history WHERE track_id=trackhis.track_id AND timestamp < trackhis.timestamp ORDER BY timestamp DESC LIMIT 1) as previous_value
+	 	FROM track_history as trackhis
+
+		UNION ALL
+		
+		SELECT type,id, '' as title, (SELECT name FROM users WHERE id=user_id) as user,timestamp, value,
+		(SELECT value FROM tag_metadata_history WHERE type=revisions.type AND id=revisions.id AND timestamp < revisions.timestamp ORDER BY timestamp DESC LIMIT 1) as previous_value
+		FROM tag_metadata_history as revisions
+	) as combined_revisions
+	${whereClause}
+	ORDER BY timestamp DESC
+	LIMIT 100`, [])
 
 	let countRequest = await db.query(`SELECT COUNT(*) as count FROM track_history`,[]);
 
@@ -530,6 +553,14 @@ app.get("/api/track/*", async(req,res) =>
 		return;
 	}
 
+	let response = await getTrackObject(id, userID);
+
+	
+	res.json(response);
+});
+
+async function getTrackObject(id, userID)
+{
 	let trackRows = (await db.query("SELECT * FROM tracks WHERE id=$1", [id])).rows;
 	let tagRows = (await db.query("SELECT * FROM track_tags WHERE track_id=$1", [id])).rows;
 
@@ -540,10 +571,13 @@ app.get("/api/track/*", async(req,res) =>
 
 	let response = trackRows[0];
 
+
+
+	response.release_date = response.release_date.toISOString().substring(0,10);
+
 	if(!response)
 	{
-		res.json({status: 200, deleted:true});
-		return;
+		return {status: 200, deleted:true}
 	}
 
 	response.tags = [];
@@ -591,8 +625,9 @@ app.get("/api/track/*", async(req,res) =>
 		response.userFlags = {status: userFlags[0].status}; 
 	}
 
-	res.json(response);
-});
+	return response;
+
+}
 
 
 app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
@@ -795,8 +830,10 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		}
 	}
 
+	let hiddenResp = await db.query("SELECT hidden FROM tracks WHERE id=$1", [id]);
+	let hidden = hiddenResp.rows[0].hidden;
 	
-	info = await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, release_date, tags: data.tags}]);
+	info = await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, hidden, release_date, tags: data.tags}]);
 
 	if (info.err) {
 		res.json({status:400, error: "error 5"});
@@ -829,12 +866,15 @@ app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =
 	if(data.hide)
 	{
 		await db.query("UPDATE tracks SET hidden=true WHERE id=$1", [id]);
-		await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {hidden:true}]);
+		let track = await getTrackObject(id, "");
+
+		await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title: track.title, hidden:true, release_date: track.release_date, tags: track.tags}]);
 	}
 	else if(data.unhide)
 	{
 		await db.query("UPDATE tracks SET hidden=false WHERE id=$1", [id]);
-		await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {hidden:false}]);
+		let track = await getTrackObject(id, "");
+		await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title: track.title, hidden:false, release_date: track.release_date, tags: track.tags}]);
 	}
 	else
 	{

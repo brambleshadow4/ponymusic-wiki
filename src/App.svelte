@@ -33,6 +33,8 @@
 
 
 
+
+
 	function loadFilters()
 	{
 		if(location.search)
@@ -89,6 +91,34 @@
 		else
 		{
 			history.replaceState({}, undefined, previousURL)
+		}
+	}
+
+	async function genericOpenCallback(event)
+	{
+		if(event.detail.type == "track")
+		{
+			openTrack({detail: event.detail.id});
+		}
+		if(event.detail.type == "artist")
+		{
+			let props = event.detail.editProperties;
+
+			if(!props)
+			{
+				let response = await fetch(`/api/getObject?type=${event.detail.type}&id=${encodeURIComponent(event.detail.id)}`)
+
+				let obj = await response.json();
+
+				if(obj.status == 400)
+					return;
+
+				editProperties = obj;
+			}
+			else
+			{
+				editProperties = event.detail.editProperties;
+			}
 		}
 	}
 
@@ -396,7 +426,7 @@
 		</div>
 	
 	{:else if path=="/edits"}
-		<EditList on:openTrack={openTrack}/>
+		<EditList on:open={genericOpenCallback}/>
 	{:else if path=="/pony-refs"}
 		<div class='main'>
 			<PonyRefs />

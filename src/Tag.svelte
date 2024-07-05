@@ -49,10 +49,10 @@
 			return text;
 		}
 		if(tag.property == "tag"){
-			return tag.text;
+			return (tag.text||tag.value);
 		}
 
-		return tag.property + ":" + tag.text;
+		return tag.property + ":" + (tag.text||tag.value);
 		
 	}	
 
