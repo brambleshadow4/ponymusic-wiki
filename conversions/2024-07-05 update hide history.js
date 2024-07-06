@@ -14,7 +14,7 @@ run();
 
 async function convertOne(id)
 {
-	let response = await db.query("SELECT * FROM track_history WHERE track_id=$1 ORDER BY timestamp ASC",[id]);
+	let response = await db.query("SELECT track_id, user_id, date_trunc('milliseconds', timestamp) as timestamp, value FROM track_history WHERE track_id=$1 ORDER BY timestamp ASC",[id]);
 	console.log(response.rows)
 
 	if(! (process.argv[2] == "--apply"))
@@ -42,7 +42,8 @@ async function convertOne(id)
 
 		}
 
-		await db.query("UPDATE track_history SET value=$1 WHERE track_id=$2 AND timestamp=$3",[row.value, id, row.timestamp]);
+		let result = await db.query("UPDATE track_history SET value=$1 WHERE track_id=$2 AND date_trunc('milliseconds',timestamp)=$3",[row.value, id, row.timestamp]);
+		//console.log(result)
 	}
 
 }
