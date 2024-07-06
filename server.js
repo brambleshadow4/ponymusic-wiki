@@ -497,14 +497,33 @@ app.get("/api/history/track/*", async(req,res) =>
 app.get('/api/history', async(req,res) =>
 {
 	let timestamp = req.query.timestamp;
+
+	let clauses = [];
+
+
 	if(isNaN(new Date(timestamp).getTime()))
 	{
-		var whereClause = "";
 		timestamp = "";
 	}
 	else
 	{
-		var whereClause = "WHERE timestamp < '" + timestamp + "'";
+		clauses.push("timestamp < '"+ timestamp + "'");
+	}
+	
+
+	let type = req.query.type;
+	let id = req.query.id; 
+
+	if(type == "track")
+	{
+		clauses.push('type=\'track\'');
+		clauses.push('id=\'' + id.replace(/'/g, "''").replace(/\\/g,"\\\\") + "'");
+	}
+
+	let whereClause = "";
+	if(clauses.length)
+	{
+		whereClause = "WHERE " + clauses.join(" AND ");
 	}
 
 
@@ -573,12 +592,14 @@ async function getTrackObject(id, userID)
 
 
 
-	response.release_date = response.release_date.toISOString().substring(0,10);
 
 	if(!response)
 	{
 		return {status: 200, deleted:true}
 	}
+
+	response.release_date = response.release_date.toISOString().substring(0,10);
+
 
 	response.tags = [];
 
@@ -642,7 +663,9 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	let userID = ses.user_id;
 
 	let title = trim2(data.title || "")
-	let release_date = data.release_date.trim();
+
+
+	let release_date = (data.release_date || "").trim();
 
 
 	if(isNaN(new Date(release_date).getTime()))

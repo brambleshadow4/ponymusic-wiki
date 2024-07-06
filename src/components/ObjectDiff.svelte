@@ -7,7 +7,8 @@
 	import {createEventDispatcher} from "svelte";
 
 	export let value = {};
-
+	export let noTitle = false;
+	export let noIndent = false;
 
 	let dispatch = createEventDispatcher();
 	let current = value.value;
@@ -83,7 +84,13 @@
 
 		for(let tag of current.tags)
 		{
+			if(tag.property == "original artist")
+				continue;
+
 			let count = previous.tags.filter(x => tagComp(tag, x) == 0).length;
+
+
+
 			if(count == 0){
 				tagsAdded.push(tag);
 			}
@@ -91,6 +98,9 @@
 
 		for(let tag of previous.tags)
 		{
+			if(tag.property == "original artist")
+				continue;
+			
 			let count = current.tags.filter(x => tagComp(tag, x) == 0).length;
 			if(count == 0){
 				tagsRemoved.push(tag);
@@ -134,6 +144,10 @@
 	td {min-width: 1in}
 
 	table {margin-left: .5in}
+	.noIndent table {
+		margin-left: 0px;
+	}
+
 
 	.hidden
 	{
@@ -143,6 +157,10 @@
 		margin-top: 10px;
 		margin-left: .5in;
 		padding: 5px;
+	}
+
+	.noIndent .hidden {
+		margin-left: 0px;
 	}
 
 	.deleted
@@ -155,19 +173,31 @@
 		padding: 5px;
 	}
 
+	.noIndent .deleted {
+		margin-left: 0px;
+	}
+
+
 	.indent {
 		margin-left: .5in;
 	}
 
+	.noIndent .indent {
+		margin-left: 0px;
+	}
+
 </style>
-<div class='diff'>
-	<div class='summary'>{value.user} – {new Date(value.timestamp).toLocaleString()} –
-		{#if value.type == "track"}
-			🎶 <a on:click={open}>{trackTitle(value)}</a>
-		{:else if value.type == "artist"}
-			🎨 <a on:click={open}>{value.id}</a>
-		{:else if value.type == "album"}
-			💿 <a on:click={open}>{value.id}</a>
+<div class={'diff ' + (noIndent ? "noIndent" : "")}>
+	<div on:click={(e) => dispatch("click",e)} class='summary'>{value.user} – {new Date(value.timestamp).toLocaleString()}
+
+		{#if !noTitle} –
+			{#if value.type == "track"}
+				🎶 <a on:click={open}>{trackTitle(value)}</a>
+			{:else if value.type == "artist"}
+				🎨 <a on:click={open}>{value.id}</a>
+			{:else if value.type == "album"}
+				💿 <a on:click={open}>{value.id}</a>
+			{/if}
 		{/if}
 	</div>
 
