@@ -12,6 +12,8 @@
 		properties: []
 	}
 
+	let error = "";
+
 	async function saveChanges()
 	{
 		console.log('attempting to save changes')
@@ -30,6 +32,10 @@
 		if(responseObj.status == 200)
 		{
 			dispatch("close")
+		}
+		if(responseObj.error)
+		{
+			error = responseObj.error;
 		}
 	}
 
@@ -190,6 +196,10 @@
 		<PropertyEditor bind:data={data} display="Apple Music" property="applemusic" />
 		<PropertyEditor bind:data={data} display="Spotify" property="spotify" />
 		<PropertyEditor bind:data={data} display="PonyFM" property="ponyfm" />
+
+		{#if error}
+			<p>Error: {error}</p>
+		{/if}
 
 		<button on:click={saveChanges}>Save changes</button>
 	{:else if mode == 2}

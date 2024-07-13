@@ -199,7 +199,11 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 	var pattern = "%" + sqlEscapeStringNoQuotes(req.body.value).toLowerCase() + "%";
 
 	if(property == "artist" || property == "featured artist") {
-		var {rows, err} = await db.query("SELECT DISTINCT value FROM track_tags WHERE (property = 'artist' OR property = 'featured artist') and LOWER(value) LIKE $1 ORDER BY value ASC", [pattern]);
+		var {rows, err} = await db.query(`
+			SELECT DISTINCT value, '' as spelling FROM track_tags WHERE (property = 'artist' OR property = 'featured artist') and LOWER(value) LIKE $1
+			UNION 
+			SELECT DISTINCT id,value FROM tag_metadata WHERE type='artist' AND property='alternate spelling' AND LOWER (value) LIKE $1
+			ORDER BY value,spelling ASC`, [pattern]);
 		
 	}
 	else if(property == "cover" || property == "remix")
@@ -220,7 +224,7 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 		var {rows} = await db.query("SELECT DISTINCT value FROM track_tags WHERE property = $1 and LOWER(value) LIKE $2 ORDER BY value ASC", [property, pattern]);
 	}
 
-	let strippedRows = rows.map(x => {return {text: x.value, value: x.value, property}});
+	let strippedRows = rows.map(x => {return {text: x.value, value: x.value, property, spelling: x.spelling}});
 
 	res.json(strippedRows);
 });
@@ -244,6 +248,7 @@ app.get("/api/search", queryProcessing, async (req,res) =>
 		db.query("SELECT * FROM tracks WHERE LOWER(title) LIKE $1 AND hidden=false LIMIT 10", [strongPattern]),
 		db.query("SELECT DISTINCT property,value FROM track_tags WHERE LOWER(value) LIKE $1 AND property NOT IN ('featured artist', 'original artist','hyperlink') ORDER BY value ASC LIMIT 10", [weakPattern]),
 		db.query("SELECT * FROM tracks WHERE LOWER(title) LIKE $1 AND hidden=false LIMIT 10", [weakPattern]),
+		db.query("SELECT 'artist' as property, id as value FROM tag_metadata WHERE property='alternate spelling' AND LOWER(value) LIKE $1 LIMIT 10", [weakPattern])
 	]
 
 	let queryResults = await Promise.all(queries);
@@ -252,6 +257,7 @@ app.get("/api/search", queryProcessing, async (req,res) =>
 	returns = returns.concat(queryResults[1].rows.map(x => {return {id:x.id, display: x.titlecache}}));
 	returns = returns.concat(queryResults[2].rows.map(x => {return {property:x.property, value:x.value, display: x.property + ": " + x.value}}))
 	returns = returns.concat(queryResults[3].rows.map(x => {return {id:x.id, display: x.titlecache}}));
+	returns = returns.concat(queryResults[4].rows.map(x => {return {property: 'artist', value: x.value, display: "artist: " + x.value}}));
 
 	let keys = new Set();
 
@@ -733,7 +739,11 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 			var goodTag;
 			if(tag.property=='featured artist' || tag.property=='artist')
 			{
-				goodTag = await db.query("SELECT DISTINCT value FROM track_tags WHERE (property='artist' OR property='featured artist') AND LOWER(value)=LOWER($1)", [tag.value]);
+				goodTag = await db.query(`
+					SELECT DISTINCT value FROM track_tags WHERE (property='artist' OR property='featured artist') AND LOWER(value)=LOWER($1)
+					UNION
+					SELECT id FROM tag_metadata WHERE type='artist' AND property='alternate spelling' AND LOWER(value)=LOWER($1)
+					`, [tag.value]);
 			}
 			else
 			{
@@ -1018,7 +1028,12 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		if(tag.property != "artist" && tag.property != "featured artist")
 			continue;
 
-		info = await db.query("SELECT * FROM track_tags WHERE ((property='artist' OR property='featured artist') AND LOWER(value)=LOWER($1)) LIMIT 1", [tag.value])
+		info = await db.query(`
+			SELECT value FROM track_tags WHERE ((property='artist' OR property='featured artist') AND LOWER(value)=LOWER($1)) 
+			UNION
+			SELECT id FROM tag_metadata WHERE type='artist' AND property='alternate spelling' AND LOWER(value)=LOWER($1)
+			LIMIT 1
+			`, [tag.value])
 
 		if(info.rows.length == 0)
 		{
@@ -1077,7 +1092,6 @@ app.put("/api/updateObject", processJSON, auth(PERM.EDIT_TAG_METADATA), async (r
 
 	if (!Array.isArray(rec.properties))
 	{
-
 		res.json({status: 400, error: "properties object on payload is not an array"});
 		return;
 	}
@@ -1099,6 +1113,27 @@ app.put("/api/updateObject", processJSON, auth(PERM.EDIT_TAG_METADATA), async (r
 		res.json({status: 400});
 		return;
 	}
+
+	// make sure alternate spelling is unique across the database
+	for(let [prop, value] of rec.properties)
+	{
+		if(prop == "alternate spelling")
+		{
+			let isUnique = await db.query(
+				`SELECT value FROM track_tags WHERE (property='artist' OR property='featured artist') AND LOWER(value)=LOWER($1) AND LOWER(value) != LOWER($2)
+				UNION
+				SELECT id FROM tag_metadata WHERE property='alternate spelling' AND type='artist' AND LOWER(value)=LOWER($1) AND LOWER(id) != LOWER($2)
+				LIMIT 1`, [value, rec.id]
+			);
+
+			if(isUnique.rows.length > 0)
+			{
+				res.json({status: 400, error: "Alternate spelling \"" + value+ "\" is already associated with artist " + isUnique.rows[0].value });
+				return;
+			}
+		}
+	}
+
 
 	await db.query("DELETE FROM tag_metadata WHERE type=$1 AND id=$2", [rec.type, rec.id]);
 
@@ -1132,7 +1167,15 @@ app.put("/api/updateProperty", processJSON, auth(PERM.EDIT_TAG_METADATA), async 
 	let property = req.body.property;
 	let value = req.body.value;
 
-	let propertyCombo = recType.replace(/\//g, "") + "/" + property.replace(/\//g, "")  
+	let propertyCombo = recType.replace(/\//g, "") + "/" + property.replace(/\//g, "");
+
+	if(propertyCombo == "artist/alternate spelling")
+	{
+		// needs to do stronger checks than this. 
+		res.statusCode = 400;
+		res.json({status: 400});
+		return;
+	}
 
 	if(!ALLOWED_PROPERTIES.has(propertyCombo)){
 		res.statusCode = 400;

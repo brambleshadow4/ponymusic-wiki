@@ -26,7 +26,12 @@
 	{#if options.length && cool}
 		<div class='auto-complete'>
 		{#each options as item, i}
-			<div on:click={select(item)} on:mousedown={() => { inOptionList = true; }} class={'option ' + (i == optionListKeyboardSel ? "keyboardSelect" : "")}>{item.text}</div>
+			<div on:click={select(item)} on:mousedown={() => { inOptionList = true; }} class={'option ' + (i == optionListKeyboardSel ? "keyboardSelect" : "")}>
+				{item.text}
+				{#if item.spelling}
+					(aka {item.spelling})
+				{/if}
+			</div>
 		{/each}
 		</div>
 	{/if}
@@ -141,8 +146,23 @@
 		});
 
 		let matches = await data.json();
-		options = matches.slice(0,15);
 
+		let uniqueValues = new Set();
+
+		options = [];
+
+		for(let k of matches)
+		{
+			if(!uniqueValues.has(k.value))
+			{
+				uniqueValues.add(k.value)
+				options.push(k);
+			}
+			if(options.length >= 15)
+				break;
+		}
+
+		options = options
 	}
 
 	async function onNumberInput(e)
@@ -166,6 +186,8 @@
 	function select(tag)
 	{
 		inOptionList = false; 
+
+		delete tag.spelling;
 
 		value = tag.value;
 
