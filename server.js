@@ -112,7 +112,6 @@ app.get("/login", async (req,res) =>
 	}
 	catch (error)
 	{	
-		//console.log('Access Token Error', error.message);
 		res.redirect("/");
 		return;
 	}
@@ -731,9 +730,19 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		// Use whatever existing casing is in the database for the tag value.
 		if(tag.property != "hyperlink")
 		{
-			let goodTag = await db.query("SELECT value FROM track_tags WHERE property=$1 and value=LOWER($2)", [tag.property, tag.value]);
-			if(goodTag.rows.length){
+			var goodTag;
+			if(tag.property=='featured artist' || tag.property=='artist')
+			{
+				goodTag = await db.query("SELECT DISTINCT value FROM track_tags WHERE (property='artist' OR property='featured artist') AND LOWER(value)=LOWER($1)", [tag.value]);
+			}
+			else
+			{
+				goodTag = await db.query("SELECT DISTINCT value FROM track_tags WHERE property=$1 AND LOWER(value)=LOWER($2)", [tag.property, tag.value]);
+			}
+
+			if(goodTag.rows.length && goodTag.rows.filter(x => x.value == tag.value).length == 0){
 				tag.value = goodTag.rows[0].value;
+				tag.text = goodTag.rows[0].text;
 			}
 		}
 	}
@@ -808,18 +817,6 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		}
 		else
 		{
-			// replace artist name with correct casing.
-			if (tag.property == "artist" || tag.property == "featured artist")
-			{
-				let valueCasing = (await db.query("SELECT DISTINCT value FROM track_tags WHERE LOWER($1)=LOWER(value)", [tag.value])).rows.map(x => x.value);
-				
-				if(valueCasing.indexOf(tag.value) == -1 && valueCasing.length) 
-				{
-					tag.value = valueCasing[0];
-				}
-			}
-
-
 			info = await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, $2, $3)", [id, tag.property, tag.value]);
 
 
