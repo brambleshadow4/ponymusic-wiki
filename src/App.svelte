@@ -158,6 +158,7 @@
 		left: 0;
 		width: 250px;
 		background-color: #101010;
+		overflow-y: auto;
 	}
 
 	.nav-heading {
@@ -183,6 +184,8 @@
 		right: 0px;
 
 		z-index: 2;
+
+		overflow-y: auto;
 	}
 
 	nav a, .navopen a
