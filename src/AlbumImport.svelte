@@ -3,10 +3,22 @@
 	import AlbumImportTrack from "./AlbumImportTrack.svelte";
 	import TagGroupInput from "./TagGroupInput.svelte";
 	import {addTagToTrack} from "./helpers.js";
+	import {onMount} from "svelte";
+	import {PERM, hasPerm} from "./authClient.js";
 
 	let album = {tags:[]}; // title
 	let importProgress = "";
 	let exportData = [];
+	let compiled = null;
+	let source = null;
+
+
+
+
+	onMount(function(){
+
+		compiled.value = "javascript:(function(){" + source.value.replace(/\n|\t/g, "") + "})()";
+	});
 
 
 	function parseFile(ev)
@@ -148,9 +160,14 @@ dl.click();
 </script>
 
 <h1>Album Import</h1>
-<p>First, navigate to a bandcamp page, and use the album bookmarklet to download the data as a .json file</p>
 
-<div><input type="file" on:change={parseFile} /></div>
+{#if hasPerm(PERM.UNLIMITED_EDITS)}
+	<p>First, navigate to a bandcamp page, and use the album bookmarklet to download the data as a .json file</p>
+
+	<div><input type="file" on:change={parseFile} /></div>
+{:else}
+	<p>New accounts are limited to 10 edits a day. Please reach out to brambleshadow4 to remove this restriction if you'd like to upload albums</p>
+{/if}
 
 
 
@@ -169,8 +186,55 @@ dl.click();
 	{/each}
 
 	<div><button on:click={doImport} disabled={importProgress!=""}>Import</button> {#if importProgress}{importProgress}{/if}</div>
-{:else}
+{:else if hasPerm(PERM.UNLIMITED_EDITS)}
+	<h2 id="Import_Bandcamp_Album">Bandcamp Bookmarklet</h2>
 
+	<p>This bookmarklet which will scrape a bandcamp page into a JSON file which can be uploaded above. </p>
+
+	<p>Below you'll find the code to use as the URL for the album bookmarklet. <strong>It is generally unsafe to run code you don't understand from someone you don't trust</strong>. The source code is offered as well if you'd like to review it.</p>
+
+
+	<div><textarea rows="5" bind:this={compiled}></textarea></div>
+
+
+	<h3>Source code</h3>
+
+	<div><textarea rows="10" bind:this={source}>{
+	`let albumTitle = document.querySelector('h2.trackTitle').innerHTML.trim();
+	let rows = document.querySelectorAll('.track_row_view .title');
+	let data = [];
+	for(let i=0; i<rows.length;i++)
+	{
+		let title = rows[i].querySelector(".track-title").innerHTML;
+		title = title.replace(/&amp;/g, "&");
+		let link = rows[i].querySelector("a").href;
+		if(link.startsWith("/"))
+			link = location.origin + link;
+		data.push({url: link, title});
+	}
+	let dateText = document.querySelector(".tralbumData.tralbum-credits").innerHTML;
+	dateText = /released (\\w+ \\d+, \\d\\d\\d\\d)/.exec(dateText);
+	if(dateText){
+		let d = new Date(dateText[1]);
+		if (d.toISOString().substring(10) != "T00:00:00.000Z") {
+			d = new Date(d.getTime() - d.getTimezoneOffset()*1000*60);
+		}
+		dateText = d.toISOString().substring(0,10);
+	}
+	var dl = document.createElement("a");
+	document.body.appendChild(dl);
+	var json = JSON.stringify({
+		title: albumTitle, 
+		release_date: dateText,
+		tracks: data, 
+		hyperlink: window.location.href
+	},"","\\t");
+	var blob = new Blob([json], {type: "octet/stream"});
+	dl.href = window.URL.createObjectURL(blob);
+	dl.download = "albumData.json";
+	dl.click();
+	`
+	}</textarea></div>
 {/if}
 
 <style>
@@ -179,6 +243,13 @@ dl.click();
 	}
 	input, label {
 		display:inline-block;
+	}
+	textarea{
+		width: 100%;
+	}
+
+	p, ol, ul{
+		margin-top: 0px;
 	}
 
 </style>
