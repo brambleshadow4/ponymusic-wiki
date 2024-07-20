@@ -160,6 +160,19 @@
 		background-color: #101010;
 	}
 
+	.nav-heading {
+		color: white;
+		font-size: 30pt;
+		text-align: center;
+		border-bottom: solid 1px white;
+		display: block;
+		margin: 0px 10px 0px 10px;
+	}
+
+	a + .nav-heading {
+		margin-top: 20px;
+	}
+
 	.navopen {
 		background-color: #202020;
 
@@ -175,9 +188,9 @@
 	nav a, .navopen a
 	{
 		display: block;
-		font-size: 30pt;
+		font-size: 20pt;
 		text-align: center;
-		color: white;
+		color: #d9d9d9;
 	}
 
 	nav a:hover, .navopen a:hover
@@ -185,14 +198,6 @@
 		background-color: #AAAAAA;
 		text-decoration: none;
 	}
-
-	nav a.smalllink, .navopen a.smalllink
-	{
-		font-size: initial;
-		/*color: rgb(0,100,200);*/
-		/*text-decoration: underline;*/
-	}
-
 
 	.main-container
 	{
@@ -295,16 +300,20 @@
 
 
 {#if !mobileLayout}
-	<nav>	
+	<nav>
+		<span class='nav-heading'>Music</span>
 		<a href="/">Tracks</a>
 		<a href="/artists">Artists</a>
 		<a href="/albums">Albums</a>
 		<a href="/community">Community</a>
-		<a class='smalllink' href="/about">About</a>
-		<a class='smalllink' href="/edits">Recent Edits</a>
-		<a class='smalllink' href="/import-tools">Import Tools</a>
-		<a class='smalllink' href="/docs">API Documentation</a>
-		<a class='smalllink' href="/export-data">Download the Data</a>
+		<span class='nav-heading'>The Wiki</span>
+		<a href="/about">About</a>
+		<a href="/edits">Recent Edits</a>
+		<a href="/export-data">Download the Data</a>
+		<a href="/import-tools">Import Tools</a>
+		<a href="/album-import">Import Album</a>
+		<a href="/docs">API Documentation</a>
+		
 	</nav>
 
 	<LoginButton display="fixed"/>
@@ -314,22 +323,25 @@
 	<nav>
 		<div class='navbar'>
 			<img alt="menu icond" on:click={()=>{mobileNavOpen = !mobileNavOpen}} src="/menu.png" />
-			<span class='flex-main'>Ponymusic.wiki</span>
+			<span class='mobile-top flex-main'>Ponymusic.wiki</span>
 			<LoginButton display="inline"/>
 		</div>
 	</nav>
 
 	{#if mobileNavOpen}
 	<div class='navopen'>
+		<span class='nav-heading'>Music</span>
 		<a href="/">Tracks</a>
 		<a href="/artists">Artists</a>
 		<a href="/albums">Albums</a>
 		<a href="/community">Community</a>
-		<a class='smalllink' href="/about">About</a>
-		<a class='smalllink' href="/edits">Recent Edits</a>
-		<a class='smalllink' href="/import-tools">Import Tools</a>
-		<a class='smalllink' href="/docs">API Documentation</a>
-		<a class='smalllink' href="/export-data">Download the Data</a>
+		<span class='nav-heading'>The Wiki</span>
+		<a href="/about">About</a>
+		<a href="/edits">Recent Edits</a>
+		<a href="/export-data">Download the Data</a>
+		<a href="/import-tools">Import Tools</a>
+		<a href="/album-import">Import Album</a>
+		<a href="/docs">API Documentation</a>
 	</div>
 	{/if}
 {/if}
