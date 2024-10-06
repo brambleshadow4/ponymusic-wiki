@@ -29,7 +29,6 @@ const PERM = {
 	UNLIMITED_EDITS: "4",
 	USER_FLAGS: "5",
 	EDIT_TAG_METADATA: "6",
-
 }
 
 const lookup = {}

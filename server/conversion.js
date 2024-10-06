@@ -26,8 +26,8 @@ async function doConversion()
 	let response = await db.query(`
 		SELECT * 
 		FROM tracks LEFT JOIN track_tags ON tracks.id = track_tags.track_ID
-		WHERE property='artist' AND value='4EverfreeBrony'
-		AND hidden=false
+		WHERE property='artist' AND value='Scootaloo Raps'
+		--AND hidden=false
 	`)
 
 	let affectedIDs = response.rows.map(x => x.id);
@@ -84,8 +84,8 @@ async function doConversion()
 		// replace one tag  with another
 
 		let TAG = "artist"
-		let OLD_VALUE = `4everfreebrony`
-		let NEW_VALUE = "4EverfreeBrony"
+		let OLD_VALUE = `Scootaloo Raps`
+		let NEW_VALUE = "Smolder Raps"
 
 		for(let i=0; i<track.tags.length; i++)
 		{
