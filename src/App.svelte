@@ -315,6 +315,7 @@
 		<a href="/export-data">Download the Data</a>
 		<a href="/import-tools">Import Tools</a>
 		<a href="/album-import">Import Album</a>
+		<a href="/grid-import">Import CSV/Spreadsheet</a>
 		<a href="/docs">API Documentation</a>
 		
 	</nav>
@@ -344,6 +345,7 @@
 		<a href="/export-data">Download the Data</a>
 		<a href="/import-tools">Import Tools</a>
 		<a href="/album-import">Import Album</a>
+		<a href="/grid-import">Import CSV/Spreadsheet</a>
 		<a href="/docs">API Documentation</a>
 	</div>
 	{/if}
@@ -464,6 +466,8 @@
 			<p>For nerds who would like to access the database in real time and perform SQL queries, we also have a public, readonly login to the postgres database. Reach out to brambleshadow4 if you'd like to know the username and password</p>
 		</div>
 	{:else if path == "/album-import"}
+		<div class='main'><AlbumImport /></div>
+	{:else if paty == "/grid-import"}
 		<div class='main'><AlbumImport /></div>
 	{:else if path == "/community"}
 		<div class='main'><Community /></div>
