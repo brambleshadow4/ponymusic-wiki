@@ -12,9 +12,10 @@ async function main()
 	
 	console.clear();
 	console.log("+------Ponymusic.wiki LOADER------+");
-	console.log("|  1. DUMP                        |")         
-	console.log("|  2. LOAD                        |");
-	console.log("|  3. PULL FROM WIKI              |");
+	console.log("|  1. EXPORT SQL                  |")   
+	console.log("|  2. EXPORT EXCEL FILE           |")      
+	console.log("|  3. LOAD SQL                    |");
+	console.log("|  4. PULL FROM WIKI              |");
 	console.log("+---------------------------------+")
 
 	let x = await read(">");
@@ -24,12 +25,16 @@ async function main()
 		await loader.doExport();
 	}
 	
-	if(x == "2"){
+	if(x == "3"){
 		let filename = await read("File: ");
 		await loader.doLoad(filename);
 	}
 
-	if(x == "3"){
+	if(x == "2"){
+		await loader.doExcelExport();
+	}
+
+	if(x == "4"){
 		await loader.doPull();
 	}
 
