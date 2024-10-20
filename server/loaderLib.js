@@ -117,78 +117,119 @@ async function doExcelExport()
 {
 	console.log("exporting excel")
 	let workbook = new ExcelJS.Workbook();
-
-	let sheet = workbook.addWorksheet('Tracks');
-
-	sheet.views = [{
-		state: 'frozen',
-		ySplit: 1
-	}];
-
-	sheet.autoFilter = 'A1:M1';
-
 	let db = new Pool();
-	let data = await db.query(`
-		SELECT id2, title, release_date, hidden,
-			(SELECT COALESCE(string_agg(value, ', '), '') FROM track_tags WHERE track_id=id2 AND property='artist') AS artist,
-			(SELECT COALESCE(string_agg(value, ', '), '') FROM track_tags WHERE track_id=id2 AND property='featured artist') AS featured_artist, 
-			(SELECT COALESCE(string_agg(value, ', '), '') FROM track_tags WHERE track_id=id2 AND property='hyperlink') AS hyperlink,
-			(SELECT COALESCE(string_agg(value, ', '), '') FROM track_tags WHERE track_id=id2 AND property='genre') AS genre,
-			(SELECT COALESCE(string_agg(value, ', '), '') FROM track_tags WHERE track_id=id2 AND property='tag') AS tag,
-			(SELECT COALESCE(value, '') FROM track_tags WHERE track_id=id2 AND property='pl') AS pl,
-			(SELECT COALESCE(string_agg(titlecache, ', '), '') as remix_of FROM tracks WHERE id IN 
-				(SELECT value::int FROM track_tags WHERE track_id=id2 AND property='remix')),
-			(SELECT COALESCE(string_agg(id::varchar(10), ', '), '') as remix_of_id FROM tracks WHERE id IN 
-				(SELECT value::int FROM track_tags WHERE track_id=id2 AND property='remix')),
-				
-			(SELECT COALESCE(string_agg(titlecache, ', '), '') as cover_of FROM tracks WHERE id IN 
-				(SELECT value::int FROM track_tags WHERE track_id=id2 AND property='cover')),
-			(SELECT COALESCE(string_agg(id::varchar(10), ', '), '') as cover_of_id FROM tracks WHERE id IN 
-				(SELECT value::int FROM track_tags WHERE track_id=id2 AND property='cover'))
+	var sheet, data, excelRow
 
-		FROM 
-			(SELECT id as id2, title, release_date, hidden FROM tracks
-				ORDER BY release_date
-				ASC
-			) as innerTable
-	
+	// Tracks
+		sheet = workbook.addWorksheet('Tracks');
 
-		`);
+		sheet.views = [{
+			state: 'frozen',
+			ySplit: 1
+		}];
+
+		sheet.autoFilter = 'A1:M1';
+
+		
+		data = await db.query(`
+			SELECT id2, title, release_date, hidden,
+				(SELECT COALESCE(string_agg(value, ', '), '') FROM track_tags WHERE track_id=id2 AND property='artist') AS artist,
+				(SELECT COALESCE(string_agg(value, ', '), '') FROM track_tags WHERE track_id=id2 AND property='featured artist') AS featured_artist, 
+				(SELECT COALESCE(string_agg(value, ', '), '') FROM track_tags WHERE track_id=id2 AND property='hyperlink') AS hyperlink,
+				(SELECT COALESCE(string_agg(value, ', '), '') FROM track_tags WHERE track_id=id2 AND property='genre') AS genre,
+				(SELECT COALESCE(string_agg(value, ', '), '') FROM track_tags WHERE track_id=id2 AND property='tag') AS tag,
+				(SELECT COALESCE(value, '') FROM track_tags WHERE track_id=id2 AND property='pl') AS pl,
+				(SELECT COALESCE(string_agg(titlecache, ', '), '') as remix_of FROM tracks WHERE id IN 
+					(SELECT value::int FROM track_tags WHERE track_id=id2 AND property='remix')),
+				(SELECT COALESCE(string_agg(id::varchar(10), ', '), '') as remix_of_id FROM tracks WHERE id IN 
+					(SELECT value::int FROM track_tags WHERE track_id=id2 AND property='remix')),
+					
+				(SELECT COALESCE(string_agg(titlecache, ', '), '') as cover_of FROM tracks WHERE id IN 
+					(SELECT value::int FROM track_tags WHERE track_id=id2 AND property='cover')),
+				(SELECT COALESCE(string_agg(id::varchar(10), ', '), '') as cover_of_id FROM tracks WHERE id IN 
+					(SELECT value::int FROM track_tags WHERE track_id=id2 AND property='cover'))
+
+			FROM 
+				(SELECT id as id2, title, release_date, hidden FROM tracks
+					ORDER BY release_date
+					ASC
+				) as innerTable
+		
+
+			`);
 
 
-	let excelRow = sheet.getRow(1);
-	excelRow.getCell(1).value = "ID";
-	excelRow.getCell(2).value = "Release Date"
-	excelRow.getCell(3).value = "Artist"
-	excelRow.getCell(4).value = "Title"
-	excelRow.getCell(5).value = "Hyperlink"
-	excelRow.getCell(6).value = "Featured Artist"
-	excelRow.getCell(7).value = "Genre"
-	excelRow.getCell(8).value = "Tag"
-	excelRow.getCell(9).value = "Pony Refernces"
-	excelRow.getCell(10).value = "Remix of ID"
-	excelRow.getCell(11).value = "Remix of"
-	excelRow.getCell(12).value = "Cover of ID"
-	excelRow.getCell(13).value = "Cover of"
+		excelRow = sheet.getRow(1);
+		excelRow.getCell(1).value = "ID";
+		excelRow.getCell(2).value = "Release Date"
+		excelRow.getCell(3).value = "Artist"
+		excelRow.getCell(4).value = "Title"
+		excelRow.getCell(5).value = "Hyperlink"
+		excelRow.getCell(6).value = "Featured Artist"
+		excelRow.getCell(7).value = "Genre"
+		excelRow.getCell(8).value = "Tag"
+		excelRow.getCell(9).value = "Pony Refernces"
+		excelRow.getCell(10).value = "Remix of ID"
+		excelRow.getCell(11).value = "Remix of"
+		excelRow.getCell(12).value = "Cover of ID"
+		excelRow.getCell(13).value = "Cover of"
 
-	for(let i =0; i < data.rows.length; i++)
-	{
-		let row = data.rows[i];
-		excelRow = sheet.getRow(i+2);
-		excelRow.getCell(1).value = row.id2;
-		excelRow.getCell(2).value = row.release_date;
-		excelRow.getCell(3).value = row.artist;
-		excelRow.getCell(4).value = row.title;
-		excelRow.getCell(5).value = row.hyperlink;
-		excelRow.getCell(6).value = row.featured_artist;
-		excelRow.getCell(7).value = row.genre;
-		excelRow.getCell(8).value = row.tag;
-		excelRow.getCell(9).value = plMap(row.pl);
-		excelRow.getCell(10).value = row.remix_of_id;	
-		excelRow.getCell(11).value = row.remix_of;
-		excelRow.getCell(12).value = row.cover_of_id;	
-		excelRow.getCell(13).value = row.cover_of;		
-	}
+		for(let i =0; i < data.rows.length; i++)
+		{
+			let row = data.rows[i];
+			excelRow = sheet.getRow(i+2);
+			excelRow.getCell(1).value = row.id2;
+			excelRow.getCell(2).value = row.release_date;
+			excelRow.getCell(3).value = row.artist;
+			excelRow.getCell(4).value = row.title;
+			excelRow.getCell(5).value = row.hyperlink;
+			excelRow.getCell(6).value = row.featured_artist;
+			excelRow.getCell(7).value = row.genre;
+			excelRow.getCell(8).value = row.tag;
+			excelRow.getCell(9).value = plMap(row.pl);
+			excelRow.getCell(10).value = row.remix_of_id;	
+			excelRow.getCell(11).value = row.remix_of;
+			excelRow.getCell(12).value = row.cover_of_id;	
+			excelRow.getCell(13).value = row.cover_of;		
+		}
+
+		let trackCount = data.rows.length
+
+	// Albums
+		sheet = workbook.addWorksheet('Albums');
+
+		sheet.views = [{
+			state: 'frozen',
+			ySplit: 1
+		}];
+
+		sheet.autoFilter = 'A1:F1';
+
+		data = await db.query(`SELECT * FROM track_tags WHERE property='album'`);
+
+
+		excelRow = sheet.getRow(1);
+		excelRow.getCell(1).value = "Album";
+		excelRow.getCell(2).value = "Track No"
+		excelRow.getCell(3).value = "Track ID"
+		
+		excelRow.getCell(4).value = "Artist"
+		excelRow.getCell(5).value = "Title"
+		excelRow.getCell(6).value = "Hyperlink"
+
+		for(let i =0; i < data.rows.length; i++)
+		{
+			let row = data.rows[i];
+			excelRow = sheet.getRow(i+2);
+			excelRow.getCell(1).value = row.value;
+			excelRow.getCell(2).value = row.number;
+			excelRow.getCell(3).value = row.track_id;
+
+			excelRow.getCell(4).value= {formula: `_xlfn.XLOOKUP(C${i+2},Tracks!$A$2:$A$${trackCount+1},Tracks!$C$2:$C$${trackCount+1})`}
+			excelRow.getCell(5).value= {formula: `_xlfn.XLOOKUP(C${i+2},Tracks!$A$2:$A$${trackCount+1},Tracks!$D$2:$D$${trackCount+1})`}
+			excelRow.getCell(6).value= {formula: `_xlfn.XLOOKUP(C${i+2},Tracks!$A$2:$A$${trackCount+1},Tracks!$E$2:$E$${trackCount+1})`}
+			
+		}
 
 	await workbook.xlsx.writeFile("./public/export/pmw.xlsx");
 }
