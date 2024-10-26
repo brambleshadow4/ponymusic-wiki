@@ -12,6 +12,7 @@
 	import {buildFilterQuery} from "./helpers.js";
 	import RadioGroup from "./RadioGroup.svelte";
 	import Community from "./pages/Community.svelte";
+	import GridImport from "./pages/GridImport.svelte";
 	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
 	$: path = window.location.pathname;
@@ -467,8 +468,8 @@
 		</div>
 	{:else if path == "/album-import"}
 		<div class='main'><AlbumImport /></div>
-	{:else if paty == "/grid-import"}
-		<div class='main'><AlbumImport /></div>
+	{:else if path == "/grid-import"}
+		<div class='main'><GridImport /></div>
 	{:else if path == "/community"}
 		<div class='main'><Community /></div>
 	{/if}
