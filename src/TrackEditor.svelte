@@ -8,7 +8,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import {tagComp, setUserFlag} from "./helpers.js";
 	import {PERM, hasPerm} from "./authClient.js";
-	import {parseTitle, artistAlias} from "./titleParsing.js";
+	import {parseTitle} from "./titleParsing.js";
 	import { onMount } from 'svelte';
 
 	const dispatch = createEventDispatcher();
@@ -240,6 +240,7 @@
 		{
 			getWarningsChannelStatus = 1;
 			
+
 			var data = 
 			{
 				id,
@@ -432,18 +433,18 @@
 
 		if(params['artist'])
 		{
-			let artistList = params['artist'].split("\x1E");
-			artistList.forEach(x => {
-
-				let name = artistAlias(x);
-				if(name)
-					addTag({property:"artist", value: name, text: name});
-			});
+			params['artist']
+				.split("\x1E")
+				.map(x => x.trim())
+				.filter(x => x.length > 0)
+				.forEach(x => {
+					addTag({property:"artist", value: x, text: x});
+				});
 		}
 
 		if(params['genre'])
 		{
-			let genreList = params['genre'].split("\x1E");
+			let genreList = params['genre'].split("\x1E").map(x => x.trim());
 			genreList.forEach(x => addTag({property: "genre", value: x, text: x}));
 		}
 
@@ -533,6 +534,7 @@
 				addTag(tag);
 			}
 		}
+
 		getTrackWarnings();
 	}
 
