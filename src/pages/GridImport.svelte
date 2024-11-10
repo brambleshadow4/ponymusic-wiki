@@ -1,5 +1,6 @@
 <script>
 	import Grid from "../GenericGrid.svelte";
+	import RadioGroup from "../RadioGroup.svelte"
 
 	let columns = [{name: "Status"}];
 	let tableData = [];
@@ -14,35 +15,96 @@
 	}
 
 	let openedRow = null;
+	let sortMode = 0;
 
 
 
 	function getNodeText(node)
-    {
-        if(node.childNodes.length == 0)
-        {
-            return node.innerHTML || node.textContent;
-        }
-        else 
-        {
-            let texts = [];
-            for(let i =0; i < node.childNodes.length; i++)
-            {
-                texts.push(getNodeText(node.childNodes[i]));
-            }
-            return texts.filter(x => x.trim() != "").join("");
-        }
-    }
+	{
+		if(node.childNodes.length == 0)
+		{
+			return node.innerHTML || node.textContent;
+		}
+		else 
+		{
+			let texts = [];
+			for(let i =0; i < node.childNodes.length; i++)
+			{
+				texts.push(getNodeText(node.childNodes[i]));
+			}
+			return texts.filter(x => x.trim() != "").join("");
+		}
+	}
 
-    function updateAllRows()
-    {
-    	for(let row of tableData)
-    	{
-    		updateRowStatus(row)
-    	}
+	function sort()
+	{
+		if(sortMode == 0)
+		{
+			tableData.sort(function(a,b){
+				return a[0].order - b[0].order;
+			})
 
-    	tableData = tableData;
-    }
+			tableData = tableData;
+		}
+		else
+		{
+			function getGroup(track)
+			{
+				if(track[0].text == "loading...")
+					return 0;
+
+				if(track[0].backgroundColor == 'green')
+					return 1;
+
+				if(track[0].backgroundColor == "orange")
+				{
+					if(track[0].text == "Unknown Artist")
+						return 2
+					return 3;
+				}
+
+
+				if(track[0].backgroundColor == "red")
+				{
+					if(track[0].text == "Bad Data")
+						return 4;
+					return 5;
+				}
+
+				return 6;
+
+			}
+
+			let colorMap = {
+				"red": 3,
+				"orange": 2,
+				"green": 1,
+				"": 4,
+			}
+			tableData.sort(function(a,b){
+
+				let group1 = getGroup(a);
+				let group2 = getGroup(b);
+
+				if(group1 - group2 == 0)
+					return a[0].order - b[0].order
+
+				return group1 - group2;
+			})
+
+			tableData = tableData;
+		}
+	}
+
+	function updateAllRows()
+	{
+		for(let row of tableData)
+		{
+			updateRowStatus(row)
+		}
+
+		tableData = tableData;
+	}
 
 	async function readPasteData()
 	{
@@ -74,6 +136,7 @@
 				arr.push(getNodeText(tds[j]));
 			}
 
+			arr[0].order = newTableData.length;
 			newTableData.push(arr)
 
 		}
@@ -346,6 +409,9 @@
 		return ["green", "Ready"];
 	}
 
+	/**
+	 *  Updates the row status (includes displaying it while loading)
+	 */
 	async function updateRowStatus(row)
 	{
 		innerUpdateRowStatus(row, "", "loading...")
@@ -417,7 +483,7 @@
 	</div>
 
 	<div>
-		<button on:click={updateAllRows}>Refresh All</button><button on:click={importAllReady}>Import All</button>
+		<button on:click={updateAllRows}>Refresh All</button><button on:click={importAllReady}>Import All</button> <RadioGroup bind:checked={sortMode} on:change={sort} options={["Original order","Group by Status"]}/>
 	</div>
 {/if}
 
