@@ -102,6 +102,24 @@ function loadFromLuckRock()
 					newArtist = newArtist.substring(0, newArtist.length-3);
 				}
 
+				if (newArtist.endsWith(" Mashup"))
+				{
+					tags.push({property:"tag", value:"mashup", text:"mashup"});
+					newArtist = newArtist.substring(0, newArtist.length-" Mashup".length);
+				}
+
+				if (newArtist.endsWith(" Bootleg") || newArtist.endsWith(" bootleg"))
+				{
+					tags.push({property:"tag", value:"x-needs-remixcover-linking", text:"x-needs-remixcover-linking"});
+					newArtist = newArtist.substring(0, newArtist.length-" Bootleg".length);
+				}
+
+				if (newArtist.endsWith(" Parody") || newArtist.endsWith(" parody"))
+				{
+					tags.push({property:"tag", value:"parody", text:"parody"});
+					newArtist = newArtist.substring(0, newArtist.length-" parody".length);
+				}
+
 
 				tags = tags.concat(artistToArtistTags(newArtist));
 

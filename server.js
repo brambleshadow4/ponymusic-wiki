@@ -1621,15 +1621,8 @@ function queryProcessing(req, res, next)
 	next();
 }
 
-app.get("/export/db", queryProcessing, async (req,res) => {
-
-	let pullKey = "";
-
-	if(req.query.PULL_KEY && req.query.PULL_KEY[0])
-	{
-		pullKey = req.query.PULL_KEY[0]
-	}
-
+async function exportMiddleware(req, res, next)
+{
 	if(generateLock)
 	{
 		res.status(500).send("Generating File, try again later");
@@ -1645,10 +1638,26 @@ app.get("/export/db", queryProcessing, async (req,res) => {
 
 		console.log("EXPORTING DATA");
 
-		await loader.doExport();
+		await Promise.all([
+			loader.doExcelExport(), 
+			loader.doExport()]
+		);
+
 
 		generateLock = false;
-	}	
+	}
+
+	next();
+}
+
+app.get("/export/db", queryProcessing, exportMiddleware, async (req,res) => {
+
+	let pullKey = "";
+
+	if(req.query.PULL_KEY && req.query.PULL_KEY[0])
+	{
+		pullKey = req.query.PULL_KEY[0]
+	}
 
 	if(pullKey == process.env.PULL_KEY)
 	{
@@ -1658,6 +1667,12 @@ app.get("/export/db", queryProcessing, async (req,res) => {
 	{
 		res.redirect("/export/export.sql");
 	}
+
+});
+
+app.get("/export/xlsx", queryProcessing, exportMiddleware, async (req,res) => {
+
+	res.redirect("/export/pmw.xlsx");
 
 });
 

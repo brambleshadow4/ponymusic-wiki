@@ -22,6 +22,10 @@
 			case "cover":
 			case "remix":
 				return "/remix/" + tag.value + "-" + encodeURIComponent(tag.text);
+			case "tag":
+				return "/tag/" + encodeURIComponent(tag.text);
+			case "genre":
+				return "/genre/" + encodeURIComponent(tag.text);
 			default:
 				return "";
 		}
