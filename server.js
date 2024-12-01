@@ -1062,6 +1062,8 @@ var ALLOWED_PROPERTIES = new Set([
 	"artist/applemusic",
 	"artist/spotify",
 	"artist/ponyfm",
+	"artist/mastodon",
+	"artist/bluesky"
 ])
 
 app.get("/api/getObject", async (req,res) => {

@@ -269,7 +269,7 @@
 			{view.title.replace("{1}", decodeURIComponent(pathSlug[1]))}
 
 			{#if viewProperties}
-				{#each ["twitter","bandcamp","youtube","ponyfm","personalsite","applemusic","soundcloud","spotify"] as site}
+				{#each ["twitter","bandcamp","youtube","ponyfm","personalsite","applemusic","soundcloud","spotify","bluesky","mastodon"] as site}
 					{#if prop(viewProperties, site)[0]}
 						<a href={prop(viewProperties, site)[0]}><img class='logo' src={"/logo/"+site+".png"}/></a>
 					{/if}

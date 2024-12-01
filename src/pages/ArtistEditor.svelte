@@ -196,6 +196,8 @@
 		<PropertyEditor bind:data={data} display="Apple Music" property="applemusic" />
 		<PropertyEditor bind:data={data} display="Spotify" property="spotify" />
 		<PropertyEditor bind:data={data} display="PonyFM" property="ponyfm" />
+		<PropertyEditor bind:data={data} display="Blue Sky" property="bluesky" />
+		<PropertyEditor bind:data={data} display="Mastodon" property="mastodon" />
 
 		{#if error}
 			<p>Error: {error}</p>
