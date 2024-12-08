@@ -316,7 +316,7 @@
 		<a href="/export-data">Download the Data</a>
 		<a href="/import-tools">Import Tools</a>
 		<a href="/album-import">Import Album</a>
-		<a href="/grid-import">Bulk Import</a>
+		<!--<a href="/grid-import">Bulk Import</a>-->
 		<a href="/docs">API Documentation</a>
 		
 	</nav>
@@ -346,7 +346,7 @@
 		<a href="/export-data">Download the Data</a>
 		<a href="/import-tools">Import Tools</a>
 		<a href="/album-import">Import Album</a>
-		<a href="/grid-import">Bulk Import</a>
+		<!--a href="/grid-import">Bulk Import</a-->
 		<a href="/docs">API Documentation</a>
 	</div>
 	{/if}

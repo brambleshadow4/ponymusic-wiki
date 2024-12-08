@@ -145,8 +145,11 @@
 		console.log(tableData)
 	}
 
+	let importThreshold = 5;
+
 	async function importAllReady()
 	{
+		console.log("importAllReady");
 		for(let i=0; i < tableData.length; i++)
 		{
 			let row = tableData[i];
@@ -154,47 +157,62 @@
 			if(row[0].text != "Ready")
 				continue;
 
-			let [_, text] = await getTrackStatus(row);
+			importThreshold--;	
+			importOneRow(row);
 
-			if(text != "Ready")
-			{
-				updateRowStatus(row);
-				continue;
-			}
+			if(importThreshold <= 0)
+				return;
 
-			let track = convertRowToTrack(row)[0];
-
-			var data = {
-				id: "new",
-				title: track.title,
-				release_date: track.release_date,
-				tags: track.tags,
-				session: sessionStorage.session
-			}
-
-			var response = {};
-
-			try 
-			{
-				response = await (await fetch("/api/track", 
-				{
-					method: "POST",
-					headers: {"Content-Type": "text/json"},
-					body: JSON.stringify(data)
-				})).json();
-			}
-			catch(e){};
-
-			if(response.status != 200)
-			{	
-				innerUpdateRowStatus(row, "red", response.error);
-				tableData = tableData;
-			}
-			else
-			{
-				updateRowStatus(row);
-			}
 		}
+	}
+
+	async function importOneRow(row)
+	{
+		innerUpdateRowStatus(row, "", "loading...");
+
+		let [_, text] = await getTrackStatus(row);
+
+		if(text != "Ready")
+		{
+			updateRowStatus(row);
+			return;
+		}
+
+		let track = convertRowToTrack(row)[0];
+
+		var data = {
+			id: "new",
+			title: track.title,
+			release_date: track.release_date,
+			tags: track.tags,
+			session: sessionStorage.session
+		}
+
+		var response = {};
+
+		try 
+		{
+			response = await (await fetch("/api/track", 
+			{
+				method: "POST",
+				headers: {"Content-Type": "text/json"},
+				body: JSON.stringify(data)
+			})).json();
+		}
+		catch(e){};
+
+		if(response.status != 200)
+		{	
+			innerUpdateRowStatus(row, "red", response.error);
+			tableData = tableData;
+		}
+		else
+		{
+			updateRowStatus(row);
+		}
+		importThreshold++;
+		if(importThreshold > 0)
+			importAllReady();
 	}
 
 	function colHasKeywords(cell, keywords)
@@ -597,7 +615,7 @@
 		{
 			let data = parseCSV(evt.target.result);
 
-			tableData = data.map(x => [{text:""}, ...x]);
+			tableData = data.map((x,i) => [{text:"", order: i}, ...x]);
 			processData();
 		}
 		reader.onerror = function (evt) {
@@ -660,7 +678,18 @@
 	</div>
 
 	<div>
-		<button on:click={updateAllRows}>Refresh All</button><button on:click={importAllReady}>Import All</button> <RadioGroup bind:checked={sortMode} on:change={sort} options={["Original order","Group by Status"]}/>
+		<button on:click={updateAllRows}>Refresh All</button>
+		<button on:click={() => {importThreshold = 5; importAllReady()}}>Import All</button>
+		
+		<RadioGroup bind:checked={sortMode} on:change={sort} options={["Original order","Group by Status"]}/>
+		<span>
+			{#if tableData.filter(x => x[0].text == "loading...").length}
+				Loading data
+			{:else}
+				All Loaded
+			{/if}
+
+		</span>
 	</div>
 {/if}
 
