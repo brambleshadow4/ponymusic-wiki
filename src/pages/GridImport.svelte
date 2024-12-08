@@ -322,7 +322,6 @@
 
 	}
 	
-
 	async function getTrackStatus(row)
 	{
 		let [track, statusColor, statusText] = convertRowToTrack(row);
@@ -456,10 +455,161 @@
 
 	})
 
+	var fileInputEl = null;
+
+	function parseCSV(rawText)
+	{
+		let mode = 0;
+
+		let start = 0;
+		let ptr = 0;
+
+		let data = [];
+		let row = [];
+
+
+		while(true)
+		{
+			if(mode == 0) // starting a new string
+			{
+				if(rawText[ptr] == ",")
+				{
+					row.push(rawText.substring(start, ptr));
+					start = ptr+1;
+					ptr = start;
+				}
+				else if(rawText[ptr] == "\n")
+				{
+					row.push(rawText.substring(start, ptr));
+					data.push(row);
+					row = [];
+					start = ptr+1;
+					ptr = start;
+				}
+				else if(rawText[ptr] == "\"")
+				{
+					mode = 2;
+					start = ptr;
+					ptr++;
+				}
+				else if(rawText[ptr] == "" || rawText[ptr]=== undefined )
+				{
+					break;
+				}
+				else
+				{
+					mode = 1;
+					ptr++;
+				}
+			}
+			else if(mode == 1) // middle of a string, not in quotes
+			{
+				if(rawText[ptr] == ",")
+				{
+					row.push(rawText.substring(start, ptr));
+					start = ptr+1;
+					ptr = start;
+					mode = 0;
+				}
+				else if(rawText[ptr] == "\n" || rawText[ptr] == "" || rawText[ptr]=== undefined )
+				{
+					row.push(rawText.substring(start, ptr));
+					data.push(row);
+					row = [];
+					start = ptr+1;
+					ptr = start;
+					mode = 0;
+				}
+				else if(rawText[ptr] == '"')
+				{
+					throw new Error("Quote not escaped @" +ptr + " - " + rawText.substring(ptr-10, ptr) + " <--");
+				}
+				else
+				{
+					ptr++;
+				}
+			}
+			else if (mode ==2) // prcoessing a string in quotes
+			{
+				if(rawText[ptr] == "\"")
+				{
+					ptr++;
+					mode = 3;
+				}
+				else if(rawText[ptr] == "")
+				{
+					throw new Error("String ended before string was closed");
+				}
+				else
+				{
+					ptr++;
+				}
+			}
+			else if (mode == 3)
+			{
+				if(rawText[ptr] == "\"")
+				{
+					ptr++;
+					mode = 2;
+				}
+				else if(rawText[ptr] == ",")
+				{
+					let s = rawText.substring(start+1, ptr-1);
+					s = s.replace(/\"\"/g,"\"");
+					row.push(s);
+					ptr++;
+					start = ptr;
+					mode = 0;
+					
+				}
+				else if(rawText[ptr] == "\n" || rawText[ptr] == "")
+				{
+					let s = rawText.substring(start+1, ptr);
+					s = s.replace(/\"\"/g,"\"")
+					row.push(s);
+					data.push(row);
+					row = [];
+					ptr++;
+					start = ptr;
+					mode = 0;
+				}
+				else
+				{
+					throw new Error("Unexpected character after ending a string @" +ptr + " - " + rawText.substring(ptr-10, ptr) + "<--");
+				}
+			}
+		}
+
+		console.log(data);
+
+		return data;
+	}
+
+
+	function importFile()
+	{
+		if(!fileInputEl.files[0])
+			return;
+
+		var reader = new FileReader();
+		reader.readAsText(fileInputEl.files[0], "UTF-8");
+		reader.onload = function (evt)
+		{
+			let data = parseCSV(evt.target.result);
+
+			tableData = data.map(x => [{text:""}, ...x]);
+			processData();
+		}
+		reader.onerror = function (evt) {
+			console.log(evt)
+			console.err("Failed to read csv file")
+		}
+	}
+
 </script>
 
 <div>
-	<h1>Upload CSV file:</h1><span>Copy+Paste a table, or upload a CSV file</span><input type='file'>
+	<h1>Upload CSV file:</h1><span>Copy+Paste a table, or upload a CSV file</span><input bind:this={fileInputEl} type='file' on:input={importFile}>
 </div>
 
 {#if tableData.length}
@@ -499,7 +649,7 @@
 					{#each openedRow[0].trackWarnings.sameTitle as item}
 						<div class='indent'>
 							<a target="_blank" href={"/track/" + item.id}>{item.name}</a>
-							<button class='mini-button' on:click={()=>onMerge(item.id)}>Merge &gt;&gt;</button>
+							<button class='mini-button' >Merge &gt;&gt;</button>
 						</div>
 					{/each}
 				{/if}
