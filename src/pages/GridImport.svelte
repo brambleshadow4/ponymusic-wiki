@@ -606,6 +606,33 @@
 		}
 	}
 
+	function mergeRowToTrack(row, idToMergeTo)
+	{
+		let trackData = convertRowToTrack(row)[0];
+		trackData.id = idToMergeTo;
+		sessionStorage.merge_data = JSON.stringify(trackData);
+		window.open("/track/" + idToMergeTo,"_blank");
+		closeRowOnReturn();
+	}
+
+	function closeRowOnReturn()
+	{
+		let callbackObj = {};
+		callbackObj.fn = function(){
+
+			console.log("this is cool! " + new Date().toLocaleString());
+			window.removeEventListener("focus", callbackObj.fn);
+			updateRowStatus(openedRow); 
+			tableData = tableData;
+			openedRow = null; 
+
+			delete sessionStorage.merge_data;
+		}
+
+		window.addEventListener('focus', callbackObj.fn)
+	}
+
+
 </script>
 
 <div>
@@ -649,7 +676,7 @@
 					{#each openedRow[0].trackWarnings.sameTitle as item}
 						<div class='indent'>
 							<a target="_blank" href={"/track/" + item.id}>{item.name}</a>
-							<button class='mini-button' >Merge &gt;&gt;</button>
+							<button class='mini-button' on:click={() => mergeRowToTrack(openedRow, item.id)}>Merge &gt;&gt;</button>
 						</div>
 					{/each}
 				{/if}
@@ -679,6 +706,7 @@
 				let track = convertRowToTrack(openedRow)[0];
 				let url = "/track/new?trackPost="+encodeURIComponent(JSON.stringify(track));
 				window.open(url);
+				closeRowOnReturn();
 
 			}}>Edit</button>
 
