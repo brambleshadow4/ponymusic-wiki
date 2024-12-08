@@ -676,7 +676,10 @@
 			{/if}
 
 			<button on:click={() => {
-				
+				let track = convertRowToTrack(openedRow)[0];
+				let url = "/track/new?trackPost="+encodeURIComponent(JSON.stringify(track));
+				window.open(url);
+
 			}}>Edit</button>
 
 
