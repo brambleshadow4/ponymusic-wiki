@@ -543,6 +543,7 @@
 		track.id = mergeToID;
 		track.release_date = dateInput.value || track.release_date;
 		sessionStorage["merge_data"] = JSON.stringify(track);
+		delete sessionStorage["merge_data"];
 		window.location.href = "/track/" + mergeToID;
 	}
 

@@ -1,21 +1,3 @@
-let aliases = {
-	"Ponies at Dawn": "",
-	"LBP": "LoneBronyProductions",
-	"CantoAcrylicVA": "CantoAcrylic",
-	"FenPhoenix": "FenPony",
-	"Fen": "FenPony",
-	"El Brony Villero": "Brony Villero",
-	"El Brony Villero :v": "Brony Villero",
-	"Matthew Mosier Music": "Matthew Mosier",
-	"FillyInTheBox": "Filly in the Box",
-	"ThunderShyOfficial-2": "ThunderShy",
-	"ThunderShyOfficial-2 AI": "ThunderShy",
-	"ThunderShyOfficial-2 Ai": "ThunderShy",
-	"Canto": "CantoAcrylic",
-	"TunedPonyMusic and MLP Stuff": "TunedPonyMusic",
-	"TunedPonyMusic and MLP Stuff AI": "TunedPonyMusic",
-}
-
 
 function parseTitle(title)
 {
@@ -110,41 +92,7 @@ function parseTitle(title)
 }
 
 
-function artistAlias(name)
-{
-	if(aliases[name])
-		return aliases[name]
-	return name;
-}
 
-
-function processArtistAliases(track)
-{
-	for(let i=0; i<track.tags.length; i++)
-	{
-		let tag = track.tags[i];
-		if(tag.property != "artist" && tag.property != "featured artist")
-			continue;
-
-		let alias = artistAlias(tag.value)
-
-		if(!alias)
-		{
-			track.tags.splice(i,1);
-			i--;
-			continue;
-		}
-
-		if(tag.value != alias)
-		{
-			tag.value = alias;
-			tag.text = alias;
-		}
-	}
-}
-
-
-
-export {parseTitle, artistAlias, processArtistAliases};
+export {parseTitle};
 
 

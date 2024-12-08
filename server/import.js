@@ -9,7 +9,7 @@ import readline from 'readline';
 import pro from 'process';
 const {Pool, Client} = pg;
 import Semaphore from './semaphore.js';
-import {parseTitle, processArtistAliases} from "../src/titleParsing.js";
+import {parseTitle} from "../src/titleParsing.js";
 
 
 let LIMIT = 1000;
@@ -213,8 +213,6 @@ async function processTrack(track)
 		let stuff = parseTitle(track.title);
 		track.title = stuff.title;
 		track.tags = track.tags.concat(stuff.tags);
-
-		processArtistAliases(track);
 
 		let lower = track.title.toLowerCase();
 		if(lower.indexOf("remix") >= 0 || lower.indexOf("vip") >= 0 || lower.indexOf("flip") >=0 || lower.indexOf("bootleg") >=0 || lower.indexOf("cover") >=0)

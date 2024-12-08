@@ -12,6 +12,7 @@
 	import {buildFilterQuery} from "./helpers.js";
 	import RadioGroup from "./RadioGroup.svelte";
 	import Community from "./pages/Community.svelte";
+	import GridImport from "./pages/GridImport.svelte";
 	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
 	$: path = window.location.pathname;
@@ -315,6 +316,7 @@
 		<a href="/export-data">Download the Data</a>
 		<a href="/import-tools">Import Tools</a>
 		<a href="/album-import">Import Album</a>
+		<!--<a href="/grid-import">Bulk Import</a>-->
 		<a href="/docs">API Documentation</a>
 		
 	</nav>
@@ -344,6 +346,7 @@
 		<a href="/export-data">Download the Data</a>
 		<a href="/import-tools">Import Tools</a>
 		<a href="/album-import">Import Album</a>
+		<!--a href="/grid-import">Bulk Import</a-->
 		<a href="/docs">API Documentation</a>
 	</div>
 	{/if}
@@ -474,6 +477,8 @@
 		</div>
 	{:else if path == "/album-import"}
 		<div class='main'><AlbumImport /></div>
+	{:else if path == "/grid-import"}
+		<div class='main'><GridImport /></div>
 	{:else if path == "/community"}
 		<div class='main'><Community /></div>
 	{/if}

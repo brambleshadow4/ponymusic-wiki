@@ -14,7 +14,7 @@
 </script>
 
 
-<div>
+<div class='control'>
 	{#each options as option,i}
 		
 		<div class={i == checked ? "radioitem checked" : "radioitem"} on:click={() => handleClick(i)}>
@@ -27,6 +27,10 @@
 
 <style type="text/css">
 	
+.control {
+	display: inline-block;
+}
+
 .radioitem
 {
 	display: inline-block;
@@ -57,15 +61,16 @@
 {
 	display: inline-block;
 	width: 15px;
-	height: 15px;
+	/*height: 15px;
 	border: solid 1px black;
+	border-radius: 7.5px;
 	vertical-align: middle;
-	margin-left: 3px;
+	margin-left: 3px;*/
 }
 
 .radioitem.checked .checkbox
 {
-	border: solid 1px white;
+	/*border: solid 1px white;*/
 }
 
 .radioitem.checked .checkbox::before
@@ -73,7 +78,7 @@
 	position: relative;
 	bottom: 1px;
 	left: 1px;
-	content:  "✓";
+	content:  "\1F518\0FE0E";
 	text-align: center;
 	vertical-align: bottom;
 }

@@ -125,38 +125,6 @@
 
 		return 1;
 	}
-
-
-	/*
-let albumTitle = document.querySelector('h2.trackTitle').innerHTML.trim();
-
-let rows = document.querySelectorAll('.track_row_view .title');
-let data = [];
-
-for(let i=0; i<rows.length; i++)
-{
-	let title = rows[i].querySelector(".track-title").innerHTML;
-	title = title.replace(/&amp;/g, "&");
-	let link = rows[i].querySelector("a").href;
-	if(link.startsWith("/"))
-		link = location.origin + link;
-	data.push({url: link, title});
-}
-let dateText = document.querySelector(".tralbumData.tralbum-credits").innerHTML;
-
-dateText = /released (\w+ \d+, \d\d\d\d)/.exec(dateText);
-if(dateText)
-	dateText = new Date(dateText[1]).toISOString().substring(0,10);
-
-var dl = document.createElement("a");
-document.body.appendChild(dl);
-var json = JSON.stringify({title: albumTitle, release_date: dateText, tracks: data, hyperlink: window.location.href},"","\t"),
-blob = new Blob([json], {type: "octet/stream"});
-dl.href = window.URL.createObjectURL(blob);
-dl.download = "albumData.json";
-dl.click();
-
-	*/
 </script>
 
 <h1>Album Import</h1>
