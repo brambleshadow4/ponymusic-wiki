@@ -82,7 +82,7 @@
 		background-color: white;
 		padding-left: .5in;
 
-		height: calc(100vh - 33px);
+		height: calc(100% - 33px);
 
 		overflow-y: auto;
 
