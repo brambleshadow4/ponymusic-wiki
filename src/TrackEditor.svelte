@@ -482,7 +482,7 @@
 		if(params['title'])
 		{
 			scrapedTitle = params['title'].replace(/<\/?(span|a)[^>]*>/g,"");
-			let result = parseTitle(params['title']);
+			let result = parseTitle(scrapedTitle);
 
 			track.title = result.title;
 			for(let tag of result.tags)
