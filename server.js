@@ -941,6 +941,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 	let sameHyperlink = [];
 	let albumHyperlink = [];
 	let unknownArtists = [];
+	let canonicalArtistNames = {};
 
 
 	if(data.id == "new" || data.id === undefined){
@@ -1054,9 +1055,13 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 			hasWarnings = true;
 			unknownArtists.push(tag.value);
 		}
+		if(info.rows.length > 0 && tag.value != info.rows[0].value)
+		{
+			canonicalArtistNames[tag.value] = info.rows[0].value;
+		}
 	}
 
-	res.json({status: 200, warnings: hasWarnings, sameTitle, sameHyperlink, unknownArtists, albumHyperlink});
+	res.json({status: 200, warnings: hasWarnings, sameTitle, sameHyperlink, unknownArtists, albumHyperlink, canonicalArtistNames});
 	
 });
 

@@ -262,6 +262,37 @@
 
 			trackWarnings = response || {};
 
+			// if we find out two artist aliases are the same, remove one
+			let checkForDupes = false
+			let artistTags = track.tags.filter(x => x.property == "artist" || x.property == "featured artist");
+
+			for(let tag of artistTags)
+			{
+				if(trackWarnings.canonicalArtistNames[tag.value])
+				{
+					tag.value = trackWarnings.canonicalArtistNames[tag.value];
+					tag.text = tag.value;
+					checkForDupes = true;
+					getWarningsChannelStatus = 2; // need to recheck warnings now that the canonical name is being used.
+				}
+			}
+
+			if(checkForDupes)
+			{
+				for(let i=0; i < track.tags.length; i++)
+				{
+					let tag = track.tags[i];
+					let count = track.tags.filter(x => x.property == tag.property && x.value == tag.value && x.number == tag.number).length;
+					if(count > 1)
+					{
+						track.tags.splice(i, 1);
+						i--;
+					}
+				}
+
+				track.tags = track.tags;
+			}
+			
 			// handle subsequent requests.
 			if(getWarningsChannelStatus == 1)
 			{
