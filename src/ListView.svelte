@@ -302,7 +302,7 @@
 			{#if hasPerm(PERM.EDIT_TAG_METADATA)}
 				<div class='checkbox-group'>
 					<input type='checkbox' id='phyiscal-release-checkbox' bind:checked={albumPhysicalReleaseOnly} on:click={togglePhysicalRelease}/>
-					<label for='phyiscal-release-checkbox'>Phyical release only</label>
+					<label for='phyiscal-release-checkbox'>Physical release only</label>
 				</div>
 			{:else}
 				<span>Physical release only</span>
