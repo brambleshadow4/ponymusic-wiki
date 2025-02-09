@@ -1,6 +1,7 @@
 <script>
 	import Grid from "../GenericGrid.svelte";
 	import RadioGroup from "../RadioGroup.svelte"
+	import {canonicalURL} from "../helpers.js";
 
 	let columns = [{name: "Status"}];
 	let tableData = [];
@@ -325,7 +326,7 @@
 				return [null, "red", "Bad Data"];
 			}
 
-			track.tags.push({property: "hyperlink", value: link});
+			track.tags.push({property: "hyperlink", value: canonicalURL(link)});
 		}
 
 		let tagsProcessed = rawTags.split(", ").map(x => x.trim()).filter(x => x != "");

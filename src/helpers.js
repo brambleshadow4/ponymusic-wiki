@@ -45,6 +45,23 @@ function propertyOrder(prop){
 
 
 /**
+ * Returns the standard version of a URL (no extra parameter, etc.) 
+ **/
+export function canonicalURL(url)
+{
+
+	if(url.startsWith("https://www.youtube.com") || url.startsWith("https://youtube.com"))
+	{
+		return url;
+	}
+
+	let questionMark = url.indexOf("?");
+
+	return url.substring(0, questionMark);
+}
+
+
+/**
  * filters: string => {noFilter: true} | {exclude: string[]} | {include: string[]}
  */
 export function buildFilterQuery(filters, sort, page, includeSession)
