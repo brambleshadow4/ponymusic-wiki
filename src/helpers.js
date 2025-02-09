@@ -57,7 +57,9 @@ export function canonicalURL(url)
 
 	let questionMark = url.indexOf("?");
 
-	return url.substring(0, questionMark);
+	if(questionMark > -1)
+		return url.substring(0, questionMark);
+	return url
 }
 
 

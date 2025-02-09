@@ -280,6 +280,9 @@
 		columns = columns;	
 	}
 
+	/**
+	 * Returns 3 items [<the converted row, ?, ?]
+	 * */
 	function convertRowToTrack(row)
 	{
 		if(columnBindings["Title"].no == -1 || columnBindings["Hyperlink"].no == -1){
@@ -372,6 +375,11 @@
 		};
 
 		row[0].trackWarnings = response;
+
+		if(response.status != 200)
+		{
+			return ["red", response.error]
+		}
 
 		if(!response.warnings)
 		{
