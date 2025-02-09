@@ -757,6 +757,20 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		}
 	}
 
+	// deduplicate tags
+	for(let i=0; i < data.tags.length; i++)
+	{
+		let tag = data.tags[i]
+		let count = data.tags.filter(x => x.value == tag.value && x.property == tag.property && x.number == tag.number).length;
+
+		if(count > 1)
+		{
+			data.tags.splice(i, 1);
+			i--;
+		}
+	}
+
+
 	titleCache = (`"${title}" by ${titleCacheArtists.join(", ")}`).substring(0,500);
 
 
