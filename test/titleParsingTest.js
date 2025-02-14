@@ -99,10 +99,14 @@ describe('titleParsing', function () {
 		assert.equal(tags.length, 1);
 	});
 
-	//【Music】The Replacer
+	it('supports ft. in the first half', function () {
 
-
-	
+		let {title, tags} = parseTitle("David Larsen ft. Mandopony - Double Rainboom")
+		assert.equal(title, "Double Rainboom");
+		assertHasTag(tags, "artist", "David Larsen");
+		assertHasTag(tags, "featured artist", "Mandopony");
+		assert.equal(tags.length, 2);
+	});	
 });
 
 /*
