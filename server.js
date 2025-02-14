@@ -17,7 +17,7 @@ import loader from "./server/loaderLib.js";
 import {PERM, ROLE, auth, reqHasPerm, getSession} from "./server/auth.js";
 import {getOgCache, getOgPropertiesFromURL, areTitlesIdentical} from './server/helpers.js';
 
-const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","pl","cover","remix","original artist"];
+const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","alt mix hyperlink","reupload hyperlink", "pl","cover","remix","original artist"];
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -977,7 +977,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		if(tag.property != "hyperlink")
 			continue;
 
-		info = await db.query("SELECT a.track_id as id, b.titlecache as name FROM track_tags as a LEFT JOIN tracks as b ON a.track_id=b.id WHERE property='hyperlink' AND value=$1 AND track_id !=$2", [tag.value, data.id]);
+		info = await db.query("SELECT a.track_id as id, b.titlecache as name FROM track_tags as a LEFT JOIN tracks as b ON a.track_id=b.id WHERE (property='hyperlink' OR property='alt mix hyperlink' OR property='reupload hyperlink') AND value=$1 AND track_id !=$2", [tag.value, data.id]);
 
 		for(let row of info.rows)
 		{

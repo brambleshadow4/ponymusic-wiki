@@ -7,15 +7,17 @@ async function getOgCache(track, albumHyperlinks)
 {
 	if(!albumHyperlinks)
 		albumHyperlinks = [];
-	let hyperlinks = track.tags.filter(x => x.property == "hyperlink").map(x => x.value);
+	let hyperlinks = track.tags.filter(x => x.property == "hyperlink" && !x.number).map(x => x.value);
 
-	if(!hyperlinks.length && !albumHyperlinks.length){
+	let reuploadHyperlinks = track.tags.filter(x => x.property == "reupload hyperlink" && !x.number).map(x => x.value);
+
+	if(!hyperlinks.length && !albumHyperlinks.length && !reuploadHyperlinks.length){
 		return null;
 	}
 
 	var linkOfChoice;
 
-	for(let links of [hyperlinks, albumHyperlinks])
+	for(let links of [hyperlinks, reuploadHyperlinks, albumHyperlinks])
 	{
 		// youTube is a special case because we can lookup the embed from the URL.
 		let youTubeLinks = links.filter(x => /https:\/\/www\.youtube\.com\/watch\?v=(.*)/.exec(x));

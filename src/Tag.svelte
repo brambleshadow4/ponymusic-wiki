@@ -6,6 +6,9 @@
 	$: canRemoveCalc = canRemove && (tag.property != "original artist");
 	$: pageLink = getPageLink(tag, canRemoveCalc)
 
+
+	let linkMenuOpen = false;
+
 	function getPageLink(tag, canRemove)
 	{
 		if(canRemoveCalc, canRemove)
@@ -83,6 +86,36 @@
 		return "";
 	}
 
+	var brokenLinkCheckbox = null;
+	var altMixCheckbox = null;
+	var reuploadCheckbox = null;
+
+	function setHyperlinkProp(directive)
+	{
+		if(directive == 'altmix' && altMixCheckbox.checked == true)
+		{
+			reuploadCheckbox.checked = false;
+			tag.property = "alt mix hyperlink";
+		}
+
+		if(directive == 'reupload' && reuploadCheckbox.checked == true)
+		{
+			altMixCheckbox.checked = false;
+			tag.property = "reupload hyperlink";
+		}
+
+		if(!reuploadCheckbox.checked && !altMixCheckbox.checked)
+		{
+			tag.property = "hyperlink";
+		}
+
+		if(directive == 'brokenlink')
+		{
+			tag.number = tag.number ? undefined : 1;
+		}
+	}
+
+
 	$:text = lookupTagText(tag);
 	$:tagClass = "tag " + lookupTagStyle(tag);
 </script>
@@ -153,14 +186,123 @@
 		background-color: #ede697;
 		border-color: #dcce33;
 	}
+
+	img {
+		width: 20px;
+		height: 20px;
+		vertical-align: middle;
+	}
+
+	.link-menu-container {
+		position: relative;
+	}
+
+	.link-menu {
+		border: solid 1px black;
+		display: inline-block;
+		padding: 5px;
+		position: absolute;
+		top: calc(100% + 5px);
+		left: 0px;
+
+		width: 280px;
+		background-color: white;
+		z-index: 2;
+	}
+
+	.link-menu input {
+		height: 100%;
+		border: 0px;
+	}
+
+	label {
+		display: inline-block;
+		user-select: none;
+	}
+
+	.hyperlinkTag {
+		position: relative;
+	}
+
+	.hyperlinkTag span {
+		position: absolute;
+		right: 3px;
+		top: 0px;
+		color: white;
+		z-index: 2;
+		background-color: blue;
+
+		font-weight: bold;
+		line-height: 20px;
+		height: 20px;
+
+		font-size: 8pt;
+
+		padding: 3px 8px;
+		border-radius: 5px;
+	}
+
+	.hyperlinkTag span.green {
+		background-color: green;
+	}
+
+	.link-menu-shield {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 1;
+	}
 </style>
 
-{#if tag.property == "hyperlink"}
-	<a class="hyperlinkTag" href={tag.value}>{tag.value.length > 30 ? tag.value.substring(0,27) + "..." : tag.value}</a> {#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}
+{#if tag.property == "hyperlink" || tag.property == "alt mix hyperlink" || tag.property == "reupload hyperlink"}
+	<a class="hyperlinkTag" href={tag.value}>
+		{tag.value.length > 30 ? tag.value.substring(0,45) + "..." : tag.value}
+		{#if tag.property == 'alt mix hyperlink'}
+			<span class='green'>Alt Mix</span>
+		{:else if tag.property == 'reupload hyperlink'}
+			<span>Reupload</span>
+		{/if}
+	</a>
+	
+
+	<span class='link-menu-container'><img src={tag.number ? '/broken-link-icon.svg' : '/link-hyperlink-icon.svg'} on:click={() => {if(canRemoveCalc) linkMenuOpen = !linkMenuOpen;}}/>
+		{#if linkMenuOpen}
+			<div class='link-menu' on:blur={() => linkMenuOpen = false}>
+				<div>
+					<input bind:this={altMixCheckbox} checked={tag.property == "alt mix hyperlink"} id='alt-mix-checkbox' type='checkbox'  on:change={() => setHyperlinkProp("altmix")}>
+					<label for='alt-mix-checkbox'>Instrumental/A Capella/Other Mix</label>
+				</div>
+				<div>
+					<input bind:this={reuploadCheckbox} checked={tag.property == "reupload hyperlink"} id='reupload-checkbox' type='checkbox'  on:change={() => setHyperlinkProp("reupload")}>
+					<label for='reupload-checkbox'>Reupload/Archival Source</label>
+				</div>
+				<div>
+					<input bind:this={brokenLinkCheckbox} checked={tag.number == 1} id='broken-link-checkbox' type='checkbox' on:change={() => setHyperlinkProp("brokenlink")}>
+					<label for='broken-link-checkbox'>Broken link</label>
+				</div>
+				
+			</div>
+
+		{/if}
+	</span>
+	{#if linkMenuOpen}
+		<div class='link-menu-shield' on:click={()=>{linkMenuOpen = false;}}></div>
+	{/if}
+
+
+
+	{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}
 {:else if pageLink}
 	<a href={pageLink} class={tagClass}>
 		<span class="tagtext" title={text + (tag.number != undefined ? "(" + tag.number + ")" : "")}>{text}{#if tag.number}({tag.number}){/if}</span>
 		{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}</a>
 {:else}
 	<span class={tagClass}><span class="tagtext" title={text + (tag.number != undefined ? "(" + tag.number + ")" : "")}>{text}{#if tag.number}({tag.number}){/if}</span>{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}</span>
+{/if}
+
+
+{#if linkMenuOpen}
+	
 {/if}
