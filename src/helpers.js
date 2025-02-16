@@ -36,14 +36,16 @@ export function addTagToTrack(track, tag)
 function propertyOrder(prop){
 	switch(prop){
 		case "hyperlink": return 0;
-		case "artist": return 1;
-		case "featured artist": return 2;
-		case "original artist": return 3;
-		case "pl": return 4;
+		case "reupload hyperlink": return 1;
+		case "alt mix hyperlink": return 2;
+		case "artist": return 3;
+		case "featured artist": return 4;
+		case "original artist": return 5;
+		case "pl": return 6;
 		// default
-		case "cover": return 6;
-		case "remix": return 7;
-		default: return 5;
+		case "cover": return 7;
+		case "remix": return 8;
+		default: return 9;
 	}
 }
 

@@ -89,6 +89,7 @@
 	var brokenLinkCheckbox = null;
 	var altMixCheckbox = null;
 	var reuploadCheckbox = null;
+	var linkIconEl = null;
 
 	function setHyperlinkProp(directive)
 	{
@@ -113,6 +114,25 @@
 		{
 			tag.number = tag.number ? undefined : 1;
 		}
+	}
+
+	let linkMenuClass = "";
+
+	function openLinkOptions()
+	{
+		linkMenuOpen = true;
+		let boundingBox = linkIconEl.getBoundingClientRect();
+
+		if(boundingBox.left + 280 > window.innerWidth)
+		{
+			linkMenuClass = "left-side";
+		}
+		else
+		{
+			
+			linkMenuClass = "normal";
+		}
+
 	}
 
 
@@ -207,7 +227,13 @@
 
 		width: 280px;
 		background-color: white;
-		z-index: 2;
+		z-index: 3;
+	}
+
+	.link-menu.left-side {
+		top: calc(100% + 5px);
+		right: 0px;
+		left: unset;
 	}
 
 	.link-menu input {
@@ -267,9 +293,9 @@
 	</a>
 	
 
-	<span class='link-menu-container'><img src={tag.number ? '/broken-link-icon.svg' : '/link-hyperlink-icon.svg'} on:click={() => {if(canRemoveCalc) linkMenuOpen = !linkMenuOpen;}}/>
+	<span class='link-menu-container'><img bind:this={linkIconEl} src={tag.number ? '/broken-link-icon.svg' : '/link-hyperlink-icon.svg'} on:click={() => {if(canRemoveCalc) openLinkOptions();}}/>
 		{#if linkMenuOpen}
-			<div class='link-menu' on:blur={() => linkMenuOpen = false}>
+			<div class={'link-menu ' + linkMenuClass} on:blur={() => linkMenuOpen = false}>
 				<div>
 					<input bind:this={altMixCheckbox} checked={tag.property == "alt mix hyperlink"} id='alt-mix-checkbox' type='checkbox'  on:change={() => setHyperlinkProp("altmix")}>
 					<label for='alt-mix-checkbox'>Instrumental/A Capella/Other Mix</label>
