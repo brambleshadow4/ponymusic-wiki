@@ -1642,11 +1642,11 @@ function queryProcessing(req, res, next)
 	next();
 }
 
-async function exportMiddleware(req, res, next)
-{
+app.get("/export/precheck", queryProcessing, async (req,res) => {
+
 	if(generateLock)
 	{
-		res.status(500).send("Generating File, try again later");
+		res.json({status: "503", err: "Generating File, try again later"});
 		return;
 	}
 
@@ -1654,9 +1654,10 @@ async function exportMiddleware(req, res, next)
 
 	if(lastGeneratedDBFile < date)
 	{
+		res.json({status: "503", err: "Generating File, try again later"});
+
 		generateLock = true;
 		lastGeneratedDBFile = date;
-
 		console.log("EXPORTING DATA");
 
 		await Promise.all([
@@ -1664,12 +1665,46 @@ async function exportMiddleware(req, res, next)
 			loader.doExport()]
 		);
 
+		generateLock = false;
+		return;
+	}
+
+	res.json({status: "200"});
+});
+
+
+async function exportMiddleware(req, res, next)
+{
+	if(generateLock)
+	{
+		res.status(503).send("Generating File, try again later");
+		return;
+	}
+
+	let date = new Date().toISOString().substring(0,10);
+
+	if(lastGeneratedDBFile < date)
+	{
+		res.status(503).send("Generating File, try again later");
+
+		generateLock = true;
+		lastGeneratedDBFile = date;
+		console.log("EXPORTING DATA");
+
+		await Promise.all([
+			loader.doExcelExport(), 
+			loader.doExport()]
+		);
 
 		generateLock = false;
+		return;
 	}
 
 	next();
 }
+
+
+
 
 app.get("/export/db", queryProcessing, exportMiddleware, async (req,res) => {
 

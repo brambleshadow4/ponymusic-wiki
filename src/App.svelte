@@ -13,6 +13,7 @@
 	import RadioGroup from "./RadioGroup.svelte";
 	import Community from "./pages/Community.svelte";
 	import GridImport from "./pages/GridImport.svelte";
+	import Spinner from "./Spinner.svelte";
 	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
 	$: path = window.location.pathname;
@@ -33,6 +34,37 @@
 	let viewProperties = {};
 
 
+	let isExportReady = false;
+
+	$: isExportReady2 = evalIsExportReady(path)
+
+	async function evalIsExportReady(path){
+
+		isExportReady = false;
+		console.log("starting evalIsExportReady");
+
+		if(path != "/export-data")
+		{
+			return false;
+		}
+
+		let response = await fetch(`/export/precheck?t=` + new Date().getTime());
+		let data = await response.json();
+
+		console.log("fetch retured");
+
+		if(data.status == 200)
+		{
+			isExportReady = true;
+		}
+		else
+		{
+			isExportReady = false;
+			setTimeout(() => window.location.reload(), 5000);
+		}
+
+		return true;
+	}
 
 
 
@@ -462,18 +494,26 @@
 			<h1>Download the Data</h1>
 			<p>Since ponymusicwiki encourages contributions from everyone in the fandom, we offer a full export of all tracks and their metadata. User-based information is not available to download (in the future, we might offer an option to download user data for yourself)</p>
 			<p>We currently offer an excel export of the data, as well as SQL file which can be imported into a DBMS</p>
-			<p>
-				<a href="/export/db">
-					<img width="30" src="/icon/database-download.svg">
-					<span>export.sql</span>
-				</a>
-				<a href="/export/xlsx">
-					<img width="30" src="/icon/excel.svg">
-					<span>pmw.xlsx</span>
-				</a>
-			</p>
-			
+
+			{#if isExportReady && isExportReady2}
+
+				<p>
+					<a href="/export/db">
+						<img width="30" src="/icon/database-download.svg">
+						<span>export.sql</span>
+					</a>
+					<a href="/export/xlsx">
+						<img width="30" src="/icon/excel.svg">
+						<span>pmw.xlsx</span>
+					</a>
+				</p>
+			{:else}
+				<p>Generating files... this usually takes around 10 seconds</p>
+				<Spinner />
+			{/if}
+				
 			<p>For nerds who would like to access the database in real time and perform SQL queries, we also have a public, readonly login to the postgres database. Reach out to brambleshadow4 if you'd like to know the username and password</p>
+			
 		</div>
 	{:else if path == "/album-import"}
 		<div class='main'><AlbumImport /></div>
