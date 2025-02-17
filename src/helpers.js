@@ -2,7 +2,7 @@ import {PERM, hasPerm} from "./authClient.js";
 
 export function tagComp(tag1, tag2){
 
-	if(tag1.property == tag2.property){
+	if(tag1.property == tag2.property && propertyOrder(tag1) == propertyOrder(tag2)){
 		if (tag1.value > tag2.value) return 1;
 		if (tag2.value > tag1.value) return -1;
 
@@ -14,7 +14,7 @@ export function tagComp(tag1, tag2){
 		return 0;  
 	}
 
-	let k = propertyOrder(tag1.property) - propertyOrder(tag2.property);
+	let k = propertyOrder(tag1) - propertyOrder(tag2);
 	if(k != 0) return k;
 
 	if (tag1.property > tag2.property) return 1;
@@ -33,19 +33,20 @@ export function addTagToTrack(track, tag)
 	}
 }
 
-function propertyOrder(prop){
-	switch(prop){
-		case "hyperlink": return 0;
-		case "reupload hyperlink": return 1;
-		case "alt mix hyperlink": return 2;
-		case "artist": return 3;
-		case "featured artist": return 4;
-		case "original artist": return 5;
-		case "pl": return 6;
-		// default
-		case "cover": return 7;
-		case "remix": return 8;
-		default: return 9;
+function propertyOrder(tag){
+
+	switch(tag.property){
+		case "hyperlink": return 0 + (!!tag.number ? 3 : 0) ;
+		case "reupload hyperlink": return 1 + (!!tag.number ? 3 : 0) ;
+		case "alt mix hyperlink": return 2 + (!!tag.number ? 3 : 0);
+
+		case "artist": return 6;
+		case "featured artist": return 7;
+		case "original artist": return 8;
+		case "pl": return 9;
+		case "cover": return 10;
+		case "remix": return 11;
+		default: return 12;
 	}
 }
 

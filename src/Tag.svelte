@@ -272,6 +272,10 @@
 		background-color: green;
 	}
 
+	.hyperlinkTag.broken {
+		color: red;
+	}
+
 	.link-menu-shield {
 		position: fixed;
 		top: 0;
@@ -283,7 +287,7 @@
 </style>
 
 {#if tag.property == "hyperlink" || tag.property == "alt mix hyperlink" || tag.property == "reupload hyperlink"}
-	<a class="hyperlinkTag" href={tag.value}>
+	<a class={"hyperlinkTag " + (tag.number ? "broken" : "")} href={tag.value}>
 		{tag.value.length > 30 ? tag.value.substring(0,45) + "..." : tag.value}
 		{#if tag.property == 'alt mix hyperlink'}
 			<span class='green'>Alt Mix</span>
