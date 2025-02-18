@@ -1,9 +1,30 @@
 import loader from "./loaderLib.js";
+import {
+	Worker,
+	isMainThread,
+	parentPort
+} from "node:worker_threads";
 
 
 var locked = false;
-var lastGeneratedDBFile = ""
+var lastGeneratedDBFile = "";
 
+if(!isMainThread)
+{
+	new Promise(async function(){
+		
+		let returnDate = new Date().toISOString().substring(0,10);
+		console.log("EXPORTING DATA");
+
+		await Promise.all([
+			loader.doExcelExport(), 
+			loader.doExport()]
+		);
+
+		parentPort.postMessage(returnDate);
+		return;
+	});
+}
 
 function prepareExport()
 {
@@ -19,32 +40,23 @@ function prepareExport()
 
 		locked = true;
 
-		new Promise(async function(){
-			
-			lastGeneratedDBFile = date;
-			console.log("EXPORTING DATA");
+		let worker = new Worker("./server/exportWorker.js");
 
-			await Promise.all([
-				loader.doExcelExport(), 
-				loader.doExport()]
-			);
-
+		worker.on("message", function(data){
 			locked = false;
-			return;
-
+			lastGeneratedDBFile = data;
+		});
+		worker.on("error",function(e){
+			console.log(e)
+		});
+		worker.on("exit",function(){
+			console.log("worker exited")
 		});
 
-
 		return false
-
-		
 	}
 
 	return true;
-
 }
 
 export {prepareExport}
-
-
-
