@@ -12,7 +12,7 @@ import https from "https";
 import http from "http";
 import {AuthorizationCode} from 'simple-oauth2';
 import { v4 as uuidv4 } from 'uuid';
-import loader from "./server/loaderLib.js";
+import {prepareExport} from "./server/exportWorker.js";
 
 import {PERM, ROLE, auth, reqHasPerm, getSession} from "./server/auth.js";
 import {getOgCache, getOgPropertiesFromURL, areTitlesIdentical} from './server/helpers.js';
@@ -1644,59 +1644,25 @@ function queryProcessing(req, res, next)
 
 app.get("/export/precheck", queryProcessing, async (req,res) => {
 
-	if(generateLock)
+	
+	if(!prepareExport())
 	{
-		res.json({status: "503", err: "Generating File, try again later"});
+		res.json({status: 503, err:"Generating exports"});
 		return;
 	}
 
-	let date = new Date().toISOString().substring(0,10);
+	res.json({status: 200});
 
-	if(lastGeneratedDBFile < date)
-	{
-		res.json({status: "503", err: "Generating File, try again later"});
 
-		generateLock = true;
-		lastGeneratedDBFile = date;
-		console.log("EXPORTING DATA");
 
-		await Promise.all([
-			loader.doExcelExport(), 
-			loader.doExport()]
-		);
-
-		generateLock = false;
-		return;
-	}
-
-	res.json({status: "200"});
 });
 
 
 async function exportMiddleware(req, res, next)
 {
-	if(generateLock)
+	if(!prepareExport())
 	{
-		res.status(503).send("Generating File, try again later");
-		return;
-	}
-
-	let date = new Date().toISOString().substring(0,10);
-
-	if(lastGeneratedDBFile < date)
-	{
-		res.status(503).send("Generating File, try again later");
-
-		generateLock = true;
-		lastGeneratedDBFile = date;
-		console.log("EXPORTING DATA");
-
-		await Promise.all([
-			loader.doExcelExport(), 
-			loader.doExport()]
-		);
-
-		generateLock = false;
+		res.status(503).send("Generating exports. Please check back in around 10 seconds");
 		return;
 	}
 
