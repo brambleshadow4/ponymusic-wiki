@@ -13,6 +13,7 @@
 	import RadioGroup from "./RadioGroup.svelte";
 	import Community from "./pages/Community.svelte";
 	import GridImport from "./pages/GridImport.svelte";
+	import TagPage from "./pages/Tags.svelte";
 	import Spinner from "./Spinner.svelte";
 	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
@@ -341,6 +342,7 @@
 		<a href="/">Tracks</a>
 		<a href="/artists">Artists</a>
 		<a href="/albums">Albums</a>
+		<a href="/tags">Tags</a>
 		<a href="/community">Community</a>
 		<span class='nav-heading'>The Wiki</span>
 		<a href="/about">About</a>
@@ -371,6 +373,7 @@
 		<a href="/">Tracks</a>
 		<a href="/artists">Artists</a>
 		<a href="/albums">Albums</a>
+		<a href="/tags">Tags</a>
 		<a href="/community">Community</a>
 		<span class='nav-heading'>The Wiki</span>
 		<a href="/about">About</a>
@@ -404,7 +407,8 @@
 
 	{:else if pathSlug[0] == "genre"}
 		<ListView view={GenreView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
-
+	{:else if pathSlug[0] == "tags"}
+		<div class='main'><TagPage /></div>
 	{:else if pathSlug[0] == "tag"}
 		<ListView view={TagView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 

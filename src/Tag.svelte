@@ -1,6 +1,7 @@
 
 <script>
 	export let tag = {};
+	export let count = 0;
 	export let canRemove = false;
 
 	$: canRemoveCalc = canRemove && (tag.property != "original artist");
@@ -26,9 +27,11 @@
 			case "remix":
 				return "/remix/" + tag.value + "-" + encodeURIComponent(tag.text);
 			case "tag":
-				return "/tag/" + encodeURIComponent(tag.text);
+				return "/tag/" + encodeURIComponent(tag.value);
 			case "genre":
-				return "/genre/" + encodeURIComponent(tag.text);
+				return "/genre/" + encodeURIComponent(tag.value);
+			case "pl":
+				return "/?pl=" + tag.value;
 			default:
 				return "";
 		}
@@ -147,13 +150,24 @@
 		/*line-height: 35px;*/
 
 		margin: 5px;
-		padding: 5px;
+		/*padding: 5px;*/
 
 		white-space:nowrap;
 		display: inline-block;
 		font-size: 0;
 
 		vertical-align: middle;
+	}
+
+	.tag span {
+		padding: 5px;
+	}
+
+	.tag .count {
+		font-size: 16px;
+		vertical-align: middle;
+		padding-left: 10px;
+		/*background-color: red;*/
 	}
 
 	.tagtext{
@@ -178,11 +192,17 @@
 		color: rgb(38, 126, 173);
 		border-color: rgb(157, 193, 212);
 	}
+	.blue .count {
+		background-color: rgb(157, 193, 212);
+	}
 
 	.indigo{
 		color: rgb(57, 63, 133);
 		background-color: rgb(185, 188, 225);
 		border-color: rgb(149, 154, 209);
+	}
+	.indigo .count {
+		background-color: rgb(149, 154, 209);
 	}
 
 	.tan{
@@ -190,21 +210,35 @@
 		background-color: rgb(230, 201, 181);
 		border-color: rgb(205, 148, 108);
 	}
+	.tan .count {
+		background-color: rgb(205, 148, 108);
+	}
 
 	.pink{
 		color: #9852a3;
 		background-color: #dec5e2;
 		border-color: #cda7d3;
 	}
+	.pink .count {
+		background-color: #cda7d3;
+	}
+
+
 	.green{
 		color: #6f8f0e;
 		background-color: #d0e29c;
 		border-color: #b3cf5d;
 	}
+	.green .count {
+		background-color: #b3cf5d;
+	}
 	.yellow{
 		color: #998e1a;
 		background-color: #ede697;
 		border-color: #dcce33;
+	}
+	.yellow .count {
+		background-color: #dcce33;
 	}
 
 	img {
@@ -284,6 +318,10 @@
 		bottom: 0;
 		z-index: 1;
 	}
+
+	a:hover {
+		text-decoration: none;
+	}
 </style>
 
 {#if tag.property == "hyperlink" || tag.property == "alt mix hyperlink" || tag.property == "reupload hyperlink"}
@@ -326,13 +364,17 @@
 	{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}
 {:else if pageLink}
 	<a href={pageLink} class={tagClass}>
-		<span class="tagtext" title={text + (tag.number != undefined ? "(" + tag.number + ")" : "")}>{text}{#if tag.number}({tag.number}){/if}</span>
-		{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}</a>
+		<span class="tagtext" title={text}>{text}</span>
+		{#if tag.number}<span class='count'>#{tag.number}</span>{/if}
+		{#if count}<span class='count'>{count}</span>{/if}
+		{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}
+	</a>
 {:else}
-	<span class={tagClass}><span class="tagtext" title={text + (tag.number != undefined ? "(" + tag.number + ")" : "")}>{text}{#if tag.number}({tag.number}){/if}</span>{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}</span>
-{/if}
-
-
-{#if linkMenuOpen}
+	<span class={tagClass}>
+		<span class="tagtext" title={text}>{text}</span>
+		{#if tag.number}<span class='count'>#{tag.number}</span>{/if}
+		{#if count}<span class='count'>{count}</span>{/if}
+		{#if canRemoveCalc}<span class='remove-button' on:click={remove}>❌</span>{/if}
+	</span>
 	
 {/if}

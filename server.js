@@ -466,6 +466,28 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	res.json(response);
 });
 
+app.get("/api/view/tags", async(req, res) => {
+
+	let {rows} = await db.query(
+		`SELECT property, value, value as text, count(*) as count FROM track_tags LEFT JOIN tracks ON track_tags.track_id = tracks.id
+WHERE property NOT IN ('hyperlink','artist','featured artist','original artist', 'remix','cover') AND hidden=false
+GROUP by property, value
+UNION
+SELECT 'artist' as property, value, value as text, count(*) as count FROM track_tags LEFT JOIN tracks ON track_tags.track_id = tracks.id
+WHERE property IN ('artist','featured artist') AND hidden=false
+GROUP by value
+UNION
+SELECT property, value, (select title from tracks where id=cast(value as integer)) text, count(*) as count
+FROM track_tags LEFT JOIN tracks ON track_tags.track_id = tracks.id
+WHERE property IN ('remix','cover') AND hidden=false
+GROUP by property, value
+ORDER by count desc
+LIMIT 1000`
+	, []);
+
+	res.json(rows);
+});
+
 app.get("/api/history/track/*", async(req,res) =>
 {
 	let id = req.params[0];
