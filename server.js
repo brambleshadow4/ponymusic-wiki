@@ -488,6 +488,8 @@ LIMIT 1000`
 	res.json(rows);
 });
 
+
+// deprecated, I don't think anything uses this anymore
 app.get("/api/history/track/*", async(req,res) =>
 {
 	let id = req.params[0];
@@ -521,20 +523,21 @@ app.get("/api/history/track/*", async(req,res) =>
 
 });
 
+
 app.get('/api/history', async(req,res) =>
 {
 	let timestamp = req.query.timestamp;
 
 	let clauses = [];
 
-
+	let whereClause = "";
 	if(isNaN(new Date(timestamp).getTime()))
 	{
-		timestamp = "";
+		whereClause = "";
 	}
 	else
 	{
-		clauses.push("timestamp < '"+ timestamp + "'");
+		whereClause = "WHERE timestamp < '"+ timestamp + "'";
 	}
 	
 
@@ -543,38 +546,50 @@ app.get('/api/history', async(req,res) =>
 
 	if(type == "track")
 	{
-		clauses.push('type=\'track\'');
-		clauses.push('id=\'' + id.replace(/'/g, "''").replace(/\\/g,"\\\\") + "'");
+		let {rows} = await db.query(`
+			SELECT 'track' as type,
+			CAST(track_id as VARCHAR) as id, 
+		 	(SELECT title FROM tracks WHERE id=track_id) as title,
+		 	(SELECT name FROM users WHERE id=user_id) as user,
+			timestamp, value,
+		 	(SELECT value FROM track_history WHERE track_id=trackhis.track_id AND timestamp < trackhis.timestamp ORDER BY timestamp DESC LIMIT 1) as previous_value
+		 	FROM track_history as trackhis
+		 	WHERE track_id=$1
+		 	ORDER BY timestamp DESC
+		 	`, [id]);
+
+		
+		res.json({rows, status:200});
+		return;
 	}
 
-	let whereClause = "";
-	if(clauses.length)
-	{
-		whereClause = "WHERE " + clauses.join(" AND ");
-	}
-
-
-	
-
-	let {rows} = await db.query(`SELECT * FROM (
-		SELECT 'track' as type, CAST(track_id as VARCHAR) as id, 
-	 	(SELECT title FROM tracks WHERE id=track_id) as title,
-	 	(SELECT name FROM users WHERE id=user_id) as user,
-		timestamp, value,
-	 	(SELECT value FROM track_history WHERE track_id=trackhis.track_id AND timestamp < trackhis.timestamp ORDER BY timestamp DESC LIMIT 1) as previous_value
-	 	FROM track_history as trackhis
+	let {rows} = await db.query(`
+		SELECT * FROM (
+			SELECT 'track' as type, CAST(track_id as VARCHAR) as id, 
+		 	(SELECT title FROM tracks WHERE id=track_id) as title,
+		 	(SELECT name FROM users WHERE id=user_id) as user,
+			timestamp, value,
+		 	(SELECT value FROM track_history WHERE track_id=trackhis.track_id AND timestamp < trackhis.timestamp ORDER BY timestamp DESC LIMIT 1) as previous_value
+		 	FROM track_history as trackhis
+		 	${whereClause}
+		 	ORDER BY timestamp DESC
+		 	LIMIT 100
+	 	)
 
 		UNION ALL
-		
-		SELECT type,id, '' as title, (SELECT name FROM users WHERE id=user_id) as user,timestamp, value,
-		(SELECT value FROM tag_metadata_history WHERE type=revisions.type AND id=revisions.id AND timestamp < revisions.timestamp ORDER BY timestamp DESC LIMIT 1) as previous_value
-		FROM tag_metadata_history as revisions
-	) as combined_revisions
-	${whereClause}
-	ORDER BY timestamp DESC
-	LIMIT 100`, [])
 
-	let countRequest = await db.query(`SELECT COUNT(*) as count FROM track_history`,[]);
+		SELECT * FROM (
+			SELECT type,id, '' as title, (SELECT name FROM users WHERE id=user_id) as user,timestamp, value,
+			(SELECT value FROM tag_metadata_history WHERE type=revisions.type AND id=revisions.id AND timestamp < revisions.timestamp ORDER BY timestamp DESC LIMIT 1) as previous_value
+			FROM tag_metadata_history as revisions
+			${whereClause}
+			ORDER BY timestamp DESC
+			LIMIT 100
+		)
+		
+		ORDER BY timestamp DESC
+		LIMIT 100`
+		, [])
 
 
 	if(!rows){
@@ -582,7 +597,7 @@ app.get('/api/history', async(req,res) =>
 		return;
 	}
 
-	res.json({rows, pages: Math.ceil(countRequest.rows[0].count/PAGE_COUNT), status:200});
+	res.json({rows, status:200});
 })
 
 
