@@ -574,7 +574,7 @@ app.get('/api/history', async(req,res) =>
 		 	${whereClause}
 		 	ORDER BY timestamp DESC
 		 	LIMIT 100
-	 	)
+	 	) as table_a
 
 		UNION ALL
 
@@ -585,7 +585,7 @@ app.get('/api/history', async(req,res) =>
 			${whereClause}
 			ORDER BY timestamp DESC
 			LIMIT 100
-		)
+		) as table_b
 		
 		ORDER BY timestamp DESC
 		LIMIT 100`
