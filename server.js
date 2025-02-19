@@ -477,7 +477,7 @@ SELECT 'artist' as property, value, value as text, count(*) as count FROM track_
 WHERE property IN ('artist','featured artist') AND hidden=false
 GROUP by value
 UNION
-SELECT property, value, (select title from tracks where id=cast(value as integer)) text, count(*) as count
+SELECT property, value, (select title from tracks where id=cast(value as integer)) as text, count(*) as count
 FROM track_tags LEFT JOIN tracks ON track_tags.track_id = tracks.id
 WHERE property IN ('remix','cover') AND hidden=false
 GROUP by property, value
