@@ -1,5 +1,6 @@
 <script>
 	import PropertyEditor from "../components/PropertyEditor.svelte";
+	import ArtistHistory from "./ArtistHistory.svelte";
 	import {createEventDispatcher} from "svelte";
 	let dispatch = createEventDispatcher();
 
@@ -8,7 +9,7 @@
 
 	export let data = {
 		type: "none",
-		name: "",
+		id: "",
 		properties: []
 	}
 
@@ -16,7 +17,6 @@
 
 	async function saveChanges()
 	{
-		console.log('attempting to save changes')
 		let response = await fetch("/api/updateObject", {
 			method: "PUT",
 			headers: {"Content-Type": "text/json"},
@@ -168,6 +168,9 @@
 </div>
 
 <div class='main'>
+
+	<h1>Artist: {data.id}</h1>
+
 	{#if mode == 0}
 
 		<p>&nbsp;</p>
@@ -205,7 +208,7 @@
 
 		<button on:click={saveChanges}>Save changes</button>
 	{:else if mode == 2}
-		<p>Todo</p>
+		<ArtistHistory id={data.id} />
 	{/if}
 </div>
 	
