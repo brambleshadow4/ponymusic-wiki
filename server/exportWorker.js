@@ -16,10 +16,8 @@ if(!isMainThread)
 		let returnDate = new Date().toISOString().substring(0,10);
 		console.log("EXPORTING DATA");
 
-		await Promise.all([
-			loader.doExcelExport(), 
-			loader.doExport()]
-		);
+		await loader.doExport();
+		await loader.doExcelExport();
 
 		parentPort.postMessage(returnDate);
 		return;
