@@ -32,10 +32,10 @@ async function getOgCache(track, albumHyperlinks)
 
 			let vid = params.filter(x => x.startsWith("v="))[0].substring(2);
 
-			let tParams = params.filter(x => x.startsWith("t="))[0].substring(2);
+			let tParams = (params.filter(x => x.startsWith("t="))[0] || "").substring(2);
 
 			let embedLink = "https://www.youtube.com/embed/" + vid;
-			if(tParams != undefined)
+			if(tParams != "")
 			{
 				embedLink += "?start=" + tParams.replace("s","");
 			}
