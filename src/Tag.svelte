@@ -144,6 +144,11 @@
 </script>
 
 <style>
+
+	a:not(.hyperlinkTag):hover {
+		text-decoration: none;
+	}
+
 	.tag {
 		border: solid 1px gray;
 		background-color: #F0F0F0;
