@@ -116,19 +116,26 @@ async function doExport()
 async function doExcelExport()
 {
 	console.log("exporting excel")
-	let workbook = new ExcelJS.Workbook();
+	
+	let options = {
+		filename: './public/export/pmw.xlsx',
+		useStyles: true,
+		useSharedStrings: true
+	};
+
+	let workbook = new ExcelJS.stream.xlsx.WorkbookWriter(options);
+
 	let db = new Pool();
 	var sheet, data, excelRow
 
 	// Tracks
-		sheet = workbook.addWorksheet('Tracks');
-
-		sheet.views = [{
-			state: 'frozen',
-			ySplit: 1
-		}];
-
-		sheet.autoFilter = 'A1:M1';
+		sheet = workbook.addWorksheet('Tracks', {
+			views: [{
+				state: 'frozen',
+				ySplit: 1
+			}],
+			autoFilter: "A1:M1"
+		});
 
 		
 		data = await db.query(`
@@ -159,79 +166,82 @@ async function doExcelExport()
 			`);
 
 
-		excelRow = sheet.getRow(1);
-		excelRow.getCell(1).value = "ID";
-		excelRow.getCell(2).value = "Release Date"
-		excelRow.getCell(3).value = "Artist"
-		excelRow.getCell(4).value = "Title"
-		excelRow.getCell(5).value = "Hyperlink"
-		excelRow.getCell(6).value = "Featured Artist"
-		excelRow.getCell(7).value = "Genre"
-		excelRow.getCell(8).value = "Tag"
-		excelRow.getCell(9).value = "Pony Refernces"
-		excelRow.getCell(10).value = "Remix of ID"
-		excelRow.getCell(11).value = "Remix of"
-		excelRow.getCell(12).value = "Cover of ID"
-		excelRow.getCell(13).value = "Cover of"
+		sheet.addRow([
+			"ID",
+			"Release Date",
+			"Artist",
+			"Title",
+			"Hyperlink",
+			"Featured Artist",
+			"Genre",
+			"Tag",
+			"Pony Refernces",
+			"Remix of ID",
+			"Remix of",
+			"Cover of ID",
+			"Cover of"
+		]).commit();
 
 		for(let i =0; i < data.rows.length; i++)
 		{
 			let row = data.rows[i];
-			excelRow = sheet.getRow(i+2);
-			excelRow.getCell(1).value = row.id2;
-			excelRow.getCell(2).value = row.release_date;
-			excelRow.getCell(3).value = row.artist;
-			excelRow.getCell(4).value = row.title;
-			excelRow.getCell(5).value = row.hyperlink;
-			excelRow.getCell(6).value = row.featured_artist;
-			excelRow.getCell(7).value = row.genre;
-			excelRow.getCell(8).value = row.tag;
-			excelRow.getCell(9).value = plMap(row.pl);
-			excelRow.getCell(10).value = row.remix_of_id;	
-			excelRow.getCell(11).value = row.remix_of;
-			excelRow.getCell(12).value = row.cover_of_id;	
-			excelRow.getCell(13).value = row.cover_of;		
+			sheet.addRow([
+				row.id2,
+				row.release_date,
+				row.artist,
+				row.title,
+				row.hyperlink,
+				row.featured_artist,
+				row.genre,
+				row.tag,
+				plMap(row.pl),
+				row.remix_of_id,
+				row.remix_of,
+				row.cover_of_id,
+				row.cover_of
+			]).commit();
 		}
+
+		sheet.commit();
 
 		let trackCount = data.rows.length
 
 	// Albums
-		sheet = workbook.addWorksheet('Albums');
-
-		sheet.views = [{
-			state: 'frozen',
-			ySplit: 1
-		}];
-
-		sheet.autoFilter = 'A1:F1';
+		sheet = workbook.addWorksheet('Albums', {
+			views: [{
+				state: 'frozen',
+				ySplit: 1
+			}],
+			autoFilter: "A1:F1"
+		});
 
 		data = await db.query(`SELECT * FROM track_tags WHERE property='album'`);
 
-
-		excelRow = sheet.getRow(1);
-		excelRow.getCell(1).value = "Album";
-		excelRow.getCell(2).value = "Track No"
-		excelRow.getCell(3).value = "Track ID"
-		
-		excelRow.getCell(4).value = "Artist"
-		excelRow.getCell(5).value = "Title"
-		excelRow.getCell(6).value = "Hyperlink"
+		sheet.addRow([
+			"Album",
+			"Track No",
+			"Track ID",
+			"Artist",
+			"Title",
+			"Hyperlink"
+		]).commit();
 
 		for(let i =0; i < data.rows.length; i++)
 		{
 			let row = data.rows[i];
-			excelRow = sheet.getRow(i+2);
-			excelRow.getCell(1).value = row.value;
-			excelRow.getCell(2).value = row.number;
-			excelRow.getCell(3).value = row.track_id;
-
-			excelRow.getCell(4).value= {formula: `_xlfn.XLOOKUP(C${i+2},Tracks!$A$2:$A$${trackCount+1},Tracks!$C$2:$C$${trackCount+1})`}
-			excelRow.getCell(5).value= {formula: `_xlfn.XLOOKUP(C${i+2},Tracks!$A$2:$A$${trackCount+1},Tracks!$D$2:$D$${trackCount+1})`}
-			excelRow.getCell(6).value= {formula: `_xlfn.XLOOKUP(C${i+2},Tracks!$A$2:$A$${trackCount+1},Tracks!$E$2:$E$${trackCount+1})`}
+			excelRow = sheet.addRow([
+				row.value,
+				row.number,
+				row.track_id,
+				{formula: `_xlfn.XLOOKUP(C${i+2},Tracks!$A$2:$A$${trackCount+1},Tracks!$C$2:$C$${trackCount+1})`},
+				{formula: `_xlfn.XLOOKUP(C${i+2},Tracks!$A$2:$A$${trackCount+1},Tracks!$D$2:$D$${trackCount+1})`},
+				{formula: `_xlfn.XLOOKUP(C${i+2},Tracks!$A$2:$A$${trackCount+1},Tracks!$E$2:$E$${trackCount+1})`}
+			]).commit()
 			
 		}
+		sheet.commit();
 
-	await workbook.xlsx.writeFile("./public/export/pmw.xlsx");
+	await workbook.commit();
 }
 
 function plMap(x)
