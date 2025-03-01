@@ -96,19 +96,26 @@
 
 	function setHyperlinkProp(directive)
 	{
-		if(directive == 'altmix' && altMixCheckbox.checked == true)
+		let altMixChecked = altMixCheckbox && altMixCheckbox.checked == true
+		let reuploadChecked = reuploadCheckbox && reuploadCheckbox.checked == true
+
+		if(directive == 'altmix' && altMixChecked)
 		{
 			reuploadCheckbox.checked = false;
 			tag.property = "alt mix hyperlink";
 		}
 
-		if(directive == 'reupload' && reuploadCheckbox.checked == true)
+		if(directive == 'reupload' && reuploadChecked)
 		{
 			altMixCheckbox.checked = false;
 			tag.property = "reupload hyperlink";
 		}
 
-		if(!reuploadCheckbox.checked && !altMixCheckbox.checked)
+		if(tag.property == "youtube offset")
+		{
+
+		}
+		else if(!reuploadCheckbox.checked && !altMixCheckbox.checked)
 		{
 			tag.property = "hyperlink";
 		}
@@ -246,6 +253,8 @@
 		background-color: #dcce33;
 	}
 
+
+
 	img {
 		width: 20px;
 		height: 20px;
@@ -311,6 +320,10 @@
 		background-color: green;
 	}
 
+	.hyperlinkTag span.red {
+		background-color: red;
+	}
+
 	.hyperlinkTag.broken {
 		color: red;
 	}
@@ -324,18 +337,17 @@
 		z-index: 1;
 	}
 
-	a:hover {
-		text-decoration: none;
-	}
 </style>
 
-{#if tag.property == "hyperlink" || tag.property == "alt mix hyperlink" || tag.property == "reupload hyperlink"}
+{#if tag.property == "hyperlink" || tag.property == "alt mix hyperlink" || tag.property == "reupload hyperlink" || tag.property == "youtube offset"}
 	<a class={"hyperlinkTag " + (tag.number ? "broken" : "")} href={tag.value}>
 		{tag.value.length > 30 ? tag.value.substring(0,45) + "..." : tag.value}
 		{#if tag.property == 'alt mix hyperlink'}
 			<span class='green'>Alt Mix</span>
 		{:else if tag.property == 'reupload hyperlink'}
 			<span>Reupload</span>
+		{:else if tag.property == 'youtube offset'}
+			<span class='red'>YT Album</span>
 		{/if}
 	</a>
 	
@@ -343,14 +355,17 @@
 	<span class='link-menu-container'><img bind:this={linkIconEl} src={tag.number ? '/broken-link-icon.svg' : '/link-hyperlink-icon.svg'} on:click={() => {if(canRemoveCalc) openLinkOptions();}}/>
 		{#if linkMenuOpen}
 			<div class={'link-menu ' + linkMenuClass} on:blur={() => linkMenuOpen = false}>
-				<div>
-					<input bind:this={altMixCheckbox} checked={tag.property == "alt mix hyperlink"} id='alt-mix-checkbox' type='checkbox'  on:change={() => setHyperlinkProp("altmix")}>
-					<label for='alt-mix-checkbox'>Instrumental/A Capella/Other Mix</label>
-				</div>
-				<div>
-					<input bind:this={reuploadCheckbox} checked={tag.property == "reupload hyperlink"} id='reupload-checkbox' type='checkbox'  on:change={() => setHyperlinkProp("reupload")}>
-					<label for='reupload-checkbox'>Reupload/Archival Source</label>
-				</div>
+
+				{#if tag.property != "youtube offset"}
+					<div>
+						<input bind:this={altMixCheckbox} checked={tag.property == "alt mix hyperlink"} id='alt-mix-checkbox' type='checkbox'  on:change={() => setHyperlinkProp("altmix")}>
+						<label for='alt-mix-checkbox'>Instrumental/A Capella/Other Mix</label>
+					</div>
+					<div>
+						<input bind:this={reuploadCheckbox} checked={tag.property == "reupload hyperlink"} id='reupload-checkbox' type='checkbox'  on:change={() => setHyperlinkProp("reupload")}>
+						<label for='reupload-checkbox'>Reupload/Archival Source</label>
+					</div>
+				{/if}
 				<div>
 					<input bind:this={brokenLinkCheckbox} checked={tag.number == 1} id='broken-link-checkbox' type='checkbox' on:change={() => setHyperlinkProp("brokenlink")}>
 					<label for='broken-link-checkbox'>Broken link</label>

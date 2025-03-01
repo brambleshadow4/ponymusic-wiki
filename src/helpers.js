@@ -36,20 +36,30 @@ export function addTagToTrack(track, tag)
 function propertyOrder(tag){
 
 	switch(tag.property){
-		case "hyperlink": return 0 + (!!tag.number ? 3 : 0) ;
-		case "reupload hyperlink": return 1 + (!!tag.number ? 3 : 0) ;
-		case "alt mix hyperlink": return 2 + (!!tag.number ? 3 : 0);
+		case "hyperlink": return 0 + (!!tag.number ? 4 : 0) ;
+		case "reupload hyperlink": return 1 + (!!tag.number ? 4 : 0) ;
+		case "youtube offset": return 2 + (!!tag.number ? 4 : 0) ;
+		case "alt mix hyperlink": return 3 + (!!tag.number ? 4 : 0);
 
-		case "artist": return 6;
-		case "featured artist": return 7;
-		case "original artist": return 8;
-		case "pl": return 9;
-		case "cover": return 10;
-		case "remix": return 11;
-		default: return 12;
+		case "artist": return 8;
+		case "featured artist": return 9;
+		case "original artist": return 10;
+		case "pl": return 11;
+		case "cover": return 12;
+		case "remix": return 13;
+		default: return 14;
 	}
 }
 
+/**
+ * Returns whether the url is a youtube offset.
+ */
+export function isYouTubeOffset(url)
+{
+	let params = url.substring(url.indexOf("?")+1).split("&")
+	
+	return url.indexOf("www.youtube.com") > -1 && params.filter(x => x.startsWith("t=")).length > 0;
+}
 
 /**
  * Returns the standard version of a URL (no extra parameter, etc.) 

@@ -1,5 +1,6 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
+	import {isYouTubeOffset} from "./helpers.js";
 	const dispatch = createEventDispatcher();
 
 	export let property = "";
@@ -42,6 +43,11 @@
 
 			let tag = {property, value, text};
 
+			if(property == 'hyperlink' && isYouTubeOffset(value))
+			{
+				tag.property = "youtube offset";
+			}
+
 			if(!isNaN(number))
 			{
 				tag.number = number;
@@ -52,7 +58,7 @@
 					return;
 				}
 			}
-
+	
 			dispatch("valueSet", tag);
 			property = "";
 			value = "";

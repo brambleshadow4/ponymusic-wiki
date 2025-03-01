@@ -199,7 +199,8 @@
 
 		updateHasProperty();
 
-		if(tag.property == "hyperlink" || tag.property == "artist" || tag.property == "featured artist")
+		let props = ["hyperlink", "reupload hyperlink", "alt mix hyperlink", "artist", "featured artist", "youtube offset"];
+		if(props.indexOf(tag.property) != -1)
 		{
 			getTrackWarnings();
 		}

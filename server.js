@@ -17,7 +17,7 @@ import {prepareExport} from "./server/exportWorker.js";
 import {PERM, ROLE, auth, reqHasPerm, getSession} from "./server/auth.js";
 import {getOgCache, getOgPropertiesFromURL, areTitlesIdentical} from './server/helpers.js';
 
-const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","alt mix hyperlink","reupload hyperlink", "pl","cover","remix","original artist"];
+const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","alt mix hyperlink","reupload hyperlink", "youtube offset", "pl","cover","remix","original artist"];
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -830,7 +830,9 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	{
 		ogcache = await getOgCache(data, albumHyperlinkCache) || {};
 	}
-	catch(e){};
+	catch(e){
+		// console.error(e)
+	};
 
 	// insert the track
 
@@ -1022,10 +1024,11 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 	// check hyperlinks
 
 	var info = "";
+	let hyperlinkProps = ["hyperlink", "alt mix hyperlink", "reupload hyperlink"]
 
 	for(let tag of data.tags)
 	{
-		if(tag.property != "hyperlink")
+		if(hyperlinkProps.indexOf(tag.property) == -1)
 			continue;
 
 		info = await db.query("SELECT a.track_id as id, b.titlecache as name FROM track_tags as a LEFT JOIN tracks as b ON a.track_id=b.id WHERE (property='hyperlink' OR property='alt mix hyperlink' OR property='reupload hyperlink') AND value=$1 AND track_id !=$2", [tag.value, data.id]);
@@ -1044,7 +1047,40 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 			hasWarnings = true;
 			albumHyperlink.push({value: tag.value, albumName: row.value});
 		}
+	}
+	// youtube offsets
+	let attachedAlbums = new Set(data.tags.filter(x => x.property == "album").map(x => x.value));
+	let noAlbumForYTOffset = [];
 
+	for(let tag of data.tags.filter(x => x.property == "youtube offset"))
+	{
+		let qMark = tag.value.indexOf("?")
+		let baseURL = tag.value.substring(0, qMark)
+		let params = tag.value.substring(qMark+1).split("&");
+
+		let normalizedYT = baseURL + "?" + params.filter(x => x.startsWith("v=")).join("");
+
+		let albumHyperlinkResults = await db.query("SELECT * FROM tag_metadata WHERE type='album' AND property='hyperlink' AND value=$1", [normalizedYT]);
+
+
+
+		let foundAlbum = false;
+		for(let row of albumHyperlinkResults.rows)
+		{
+			if(attachedAlbums.has(row.id))
+			{
+				foundAlbum = true;
+				console.log("found album " + row.id)
+			}
+		}
+
+		if(!foundAlbum)
+		{
+			hasWarnings = true;
+			noAlbumForYTOffset.push({
+				"youtube offset": tag.value,
+				"albumsToLink": albumHyperlinkResults.rows.map(x => x.id)});
+		}
 	}
 
 	// check title against previously released songs by this artist
@@ -1112,7 +1148,16 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		}
 	}
 
-	res.json({status: 200, warnings: hasWarnings, sameTitle, sameHyperlink, unknownArtists, albumHyperlink, canonicalArtistNames});
+	res.json({status: 200, 
+		warnings: hasWarnings, sameTitle, 
+		sameHyperlink, 
+		unknownArtists,
+		albumHyperlink,
+		noAlbumForYTOffset,
+
+		// data, but not a warning
+		canonicalArtistNames
+	});
 	
 });
 

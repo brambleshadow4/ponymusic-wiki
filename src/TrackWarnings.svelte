@@ -56,6 +56,21 @@
 				<div class='indent'>{item.albumName}</div>
 			{/each}
 		{/if}
+		{#if warnings.noAlbumForYTOffset.length}
+			{#each warnings.noAlbumForYTOffset as item}
+
+				{#if item.albumsToLink.length}
+					<div>
+						This track has a youtube hyperlink associated with an album, but the album hasn't been added as a tag. Consider adding the following album tags: {#each item.albumsToLink as name}"{name}" {/each}
+					</div>
+				{:else}
+					
+					<div>This track has a youtube hyperlink with a timestamp. If that song is apart of an album, make sure to add an album tag and associate the album with the hyperlink.</div>
+					
+				{/if}
+				
+			{/each}
+		{/if}
 	</div>
 {/if}
 

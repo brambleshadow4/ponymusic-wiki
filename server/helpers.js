@@ -11,23 +11,36 @@ async function getOgCache(track, albumHyperlinks)
 
 	let reuploadHyperlinks = track.tags.filter(x => x.property == "reupload hyperlink" && !x.number).map(x => x.value);
 
-	if(!hyperlinks.length && !albumHyperlinks.length && !reuploadHyperlinks.length){
+	let ytOffsets = track.tags.filter(x => x.property == "youtube offset").map(x => x.value);
+
+	if(!hyperlinks.length && !albumHyperlinks.length && !reuploadHyperlinks.length && !ytOffsets.length){
 		return null;
 	}
 
 	var linkOfChoice;
 
-	for(let links of [hyperlinks, reuploadHyperlinks, albumHyperlinks])
+	for(let links of [hyperlinks, reuploadHyperlinks, ytOffsets, albumHyperlinks])
 	{
 		// youTube is a special case because we can lookup the embed from the URL.
 		let youTubeLinks = links.filter(x => /https:\/\/www\.youtube\.com\/watch\?v=(.*)/.exec(x));
 
 		if(youTubeLinks.length)
 		{
-			let pattern = /https:\/\/www\.youtube\.com\/watch\?v=(.*)/;
-			let match = pattern.exec(youTubeLinks[0])
+			let qMark = youTubeLinks[0].indexOf("?");
+			let baseURL = youTubeLinks[0].substring(0,qMark);
+			let params = youTubeLinks[0].substring(qMark+1).split("&");
 
-			return {embed:"https://www.youtube.com/embed/" + match[1], width: 560, height: 315};
+			let vid = params.filter(x => x.startsWith("v="))[0].substring(2);
+
+			let tParams = params.filter(x => x.startsWith("t="))[0].substring(2);
+
+			let embedLink = "https://www.youtube.com/embed/" + vid;
+			if(tParams != undefined)
+			{
+				embedLink += "?start=" + tParams.replace("s","");
+			}
+
+			return {embed:embedLink, width: 560, height: 315};
 		}
 
 		// generic lookup
