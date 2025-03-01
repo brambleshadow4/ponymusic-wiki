@@ -1,43 +1,3 @@
-
-<div class="container">
-	{#if property}
-		<span class='property-box'>{property}</span>
-	{/if}
-	
-	<input 
-		id="tag-entry-input"
-		class={isNaN(number) ? "" : "mid"}
-		type="text" maxlength="255"
-		bind:this={ref}
-		on:input={oninput} value={value} on:focus={oninput}
-		on:keyup={onkeyup}
-		on:keydown={onKeyDown}
-		on:blur={canOpenOptionList}
-		on:focus={canOpenOptionList}
-	/>
-
-	{#if !isNaN(number)}
-		<input bind:this={numberInput} class='number' placeholder="no" value={number || ""}
-			on:input={onNumberInput}
-			on:keydown={onKeyDown}
-		/>
-	{/if}
-
-	{#if options.length && cool}
-		<div class='auto-complete'>
-		{#each options as item, i}
-			<div on:click={select(item)} on:mousedown={() => { inOptionList = true; }} class={'option ' + (i == optionListKeyboardSel ? "keyboardSelect" : "")}>
-				{item.text}
-				{#if item.spelling}
-					(aka {item.spelling})
-				{/if}
-			</div>
-		{/each}
-		</div>
-	{/if}
-	
-</div>
-
 <script>
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -210,6 +170,46 @@
 	}
 
 </script>
+<div class="container">
+	{#if property}
+		<span class='property-box'>{property}</span>
+	{/if}
+	
+	<input 
+		id="tag-entry-input"
+		class={isNaN(number) ? "" : "mid"}
+		type="text" maxlength="255"
+		bind:this={ref}
+		on:input={oninput} value={value} on:focus={oninput}
+		on:keyup={onkeyup}
+		on:keydown={onKeyDown}
+		on:blur={canOpenOptionList}
+		on:focus={canOpenOptionList}
+	/>
+
+	{#if !isNaN(number)}
+		<input bind:this={numberInput} class='number' placeholder="no" value={number || ""}
+			on:input={onNumberInput}
+			on:keydown={onKeyDown}
+		/>
+	{/if}
+
+	{#if options.length && cool}
+		<div class='auto-complete'>
+		{#each options as item, i}
+			<div on:click={select(item)} on:mousedown={() => { inOptionList = true; }} class={'option ' + (i == optionListKeyboardSel ? "keyboardSelect" : "")}>
+				{item.text}
+				{#if item.spelling}
+					(aka {item.spelling})
+				{/if}
+			</div>
+		{/each}
+		</div>
+	{/if}
+	
+</div>
+
+
 
 <style>
 	.container
