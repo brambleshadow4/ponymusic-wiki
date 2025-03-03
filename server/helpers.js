@@ -136,6 +136,37 @@ async function getOgPropertiesFromURL(url, options)
 	return properties;
 }
 
+/**
+ * Returns the standard version of a URL (no extra parameter, etc.) 
+ **/
+export function canonicalURL(url, keepYToffset)
+{
+	// IF YOU EDIT THIS, MAKE SURE YOU EDIT BOTH src/helpers.js AND server/helpers.js
+	if(url.startsWith("https://www.youtube.com") || url.startsWith("https://youtube.com") || url.startsWith("https://youtu.be/"))
+	{
+		let params = url.substring(url.indexOf("?")+1).split("&");
+
+		let tParam = params.filter(x => x.startsWith("t="))[0] || "";
+		let vParam = params.filter(x => x.startsWith("v="))[0] || "";
+
+		if(url.startsWith("https://youtu.be/"))
+		{
+			vParam = "v=" + url.substring("https://youtu.be/".length, url.indexOf("?"));
+		}
+
+		if(!keepYToffset)
+			tParam = "";
+
+		return "https://www.youtube.com/watch?" + vParam + (tParam != "" ? "&" + tParam : "");
+	}
+
+	let questionMark = url.indexOf("?");
+
+	if(questionMark > -1)
+		return url.substring(0, questionMark);
+	return url
+}
+
 function areTitlesIdentical(title1, title2)
 {
 	let simple1 = getSimplifiedTitle(title1);

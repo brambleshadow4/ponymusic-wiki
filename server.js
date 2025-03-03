@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {prepareExport} from "./server/exportWorker.js";
 
 import {PERM, ROLE, auth, reqHasPerm, getSession} from "./server/auth.js";
-import {getOgCache, getOgPropertiesFromURL, areTitlesIdentical} from './server/helpers.js';
+import {getOgCache, getOgPropertiesFromURL, areTitlesIdentical, canonicalURL} from './server/helpers.js';
 
 const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","alt mix hyperlink","reupload hyperlink", "youtube offset", "pl","cover","remix","original artist"];
 
@@ -1411,12 +1411,18 @@ app.post("/api/checkURLs", processJSON, async (req,res) => {
 
 async function checkURL(url)
 {
-	let result = await db.query("SELECT * FROM track_tags WHERE property='hyperlink' AND value=$1 LIMIT 1",[url]);
+	let urlUpdated = canonicalURL(url)
+	let result = await db.query(`
+		SELECT * FROM track_tags 
+		WHERE (property='hyperlink' OR property='alt mix hyperlink' OR property='reupload hyperlink')
+		AND value=$1 
+		LIMIT 1`,[urlUpdated]);
+
 	if(result.rows.length){
 		return {track_id: result.rows[0].track_id};
 	}
 
-	result = await db.query("SELECT * FROM tag_metadata WHERE property='hyperlink' AND value=$1 LIMIT 1",[url]);
+	result = await db.query("SELECT * FROM tag_metadata WHERE property='hyperlink' AND value=$1 LIMIT 1",[urlUpdated]);
 
 	if(result.rows.length)
 	{

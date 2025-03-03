@@ -1,6 +1,6 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
-	import {isYouTubeOffset} from "./helpers.js";
+	import {isYouTubeOffset, canonicalURL} from "./helpers.js";
 	const dispatch = createEventDispatcher();
 
 	export let property = "";
@@ -43,9 +43,13 @@
 
 			let tag = {property, value, text};
 
-			if(property == 'hyperlink' && isYouTubeOffset(value))
+			if(property == 'hyperlink')
 			{
-				tag.property = "youtube offset";
+				tag.value = canonicalURL(value, true);
+				if(isYouTubeOffset(value))
+				{
+					tag.property = "youtube offset";
+				}
 			}
 
 			if(!isNaN(number))
