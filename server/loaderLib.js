@@ -104,12 +104,11 @@ async function doExport()
 	// public export
 	let publicCopyArr = ["-- This data was exported on " + new Date().toISOString()];
 	publicCopyArr.push(publicTables());
-	publicCopyArr.push(await exportTable("tracks", {id: "number", title: "string", release_date: "date", ogcache: "json", titlecache:"string"}));
+	publicCopyArr.push(await exportTable("tracks", {id: "number", title: "string", release_date: "date", ogcache: "json", titlecache:"string", hidden: "bool"}));
 	publicCopyArr.push(await exportTable("track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"}));
 	publicCopyArr.push(await exportTable("tag_metadata", {type: "string", id:"string", property:"string", value:"string"}));
 
 	fs.writeFileSync("./public/export/export.sql", publicCopyArr.join(""));
-
 }
 
 
@@ -322,7 +321,8 @@ function publicTables()
 		title VARCHAR(255) NOT NULL,
 		release_date DATE NOT NULL,
 		ogcache VARCHAR(1024) NOT NULL,
-		titlecache VARCHAR(511) NOT NULL
+		titlecache VARCHAR(511) NOT NULL,
+		hidden BOOLEAN NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS track_tags(
@@ -340,6 +340,7 @@ function publicTables()
 	);
 
 	CREATE INDEX IF NOT EXISTS property_index ON track_tags(property, value);
+	CREATE INDEX IF NOT EXISTS track_id_index ON track_tags(track_id);
 	CREATE INDEX IF NOT EXISTS object_index ON tag_metadata(type, id);
 	CREATE INDEX IF NOT EXISTS property_index ON tag_metadata(property, value);
 	`;
