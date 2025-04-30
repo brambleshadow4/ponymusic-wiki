@@ -494,6 +494,8 @@
 		let data = [];
 		let row = [];
 
+		rawText = rawText.replace(/\r\n/g,"\n");
+
 
 		while(true)
 		{
@@ -572,7 +574,7 @@
 					ptr++;
 				}
 			}
-			else if (mode == 3)
+			else if (mode == 3) // string in quotes is just closed, or it continues w/ another " character
 			{
 				if(rawText[ptr] == "\"")
 				{
@@ -602,6 +604,7 @@
 				}
 				else
 				{
+					console.log(rawText[ptr].charCodeAt(0));
 					throw new Error("Unexpected character after ending a string @" +ptr + " - " + rawText.substring(ptr-10, ptr) + "<--");
 				}
 			}

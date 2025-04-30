@@ -18,6 +18,7 @@ if(!isMainThread)
 
 		await loader.doExport();
 		await loader.doExcelExport();
+		await loader.doRdfExport();
 
 		parentPort.postMessage(returnDate);
 		return;
