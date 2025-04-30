@@ -467,6 +467,7 @@
 		{
 			params['artist']
 				.split("\x1E")
+				.map(x => x.replace(/<\/?(span|a|div)[^>]*>/g,""))
 				.map(x => x.trim())
 				.filter(x => x.length > 0)
 				.forEach(x => {
