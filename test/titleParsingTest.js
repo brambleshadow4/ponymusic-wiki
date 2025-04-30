@@ -75,6 +75,14 @@ describe('titleParsing', function () {
 
 	});
 
+	it('supports the format: W/ (w is capitalized)', function () {
+
+		let {title, tags} = parseTitle("PLAGUE W/ ASHES2DAY")
+		assert.equal(title, "PLAGUE W/ ASHES2DAY");
+		assertHasTag(tags, "featured artist", "ASHES2DAY");
+		assert.equal(tags.length, 1);
+	});	
+
 	it('supports the format: (vc. name)', function () {
 
 		let {title, tags} = parseTitle("Frozen Night - Zuriak's Resolve (vc. Yoed Nir)")

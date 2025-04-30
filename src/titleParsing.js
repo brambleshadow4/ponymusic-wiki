@@ -22,12 +22,32 @@ function parseTitle(title)
 	
 	if(artistList)
 	{
-		artistList = artistList.split(/,|&| and /g).map(x => x.trim()).filter(x => x);
-
-		for(let artist of artistList)
+		match = /(.*) fe?a?t\. (.*)/.exec(artistList)
+		if(match)
 		{
-			tags.push({property:"artist", value: artist, text: artist});	
+			artistList = match[1].split(/,|&| and /g).map(x => x.trim()).filter(x => x);
+			for(let artist of artistList)
+			{
+				tags.push({property:"artist", value: artist, text: artist});	
+			}
+
+			artistList = match[2].split(/,|&| and /g).map(x => x.trim()).filter(x => x);
+			for(let artist of artistList)
+			{
+				tags.push({property:"featured artist", value: artist, text: artist});	
+			}
 		}
+		else
+		{
+			artistList = artistList.split(/,|&| and /g).map(x => x.trim()).filter(x => x);
+
+			for(let artist of artistList)
+			{
+				tags.push({property:"artist", value: artist, text: artist});	
+			}
+		}
+
+		
 	}
 
 	var featArtistString = "";
@@ -50,7 +70,7 @@ function parseTitle(title)
 			break;
 		}
 
-		match = /.*w\/ (.*)/.exec(songName);
+		match = /.*(?:w|W)\/ (.*)/.exec(songName);
 
 		if(match)
 		{
