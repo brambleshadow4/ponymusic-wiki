@@ -54,6 +54,127 @@ if(title){
 	/>
 
 
+<h2 id="">Finding missing tracks</h2>
+
+<p>If you scouring youtube/bandcamp/soundcloud for missing pony music, try using the following bookmarklet which will quickly let you know which songs are/aren't in ponymusic wiki</p>
+
+<div><textarea rows="5" bind:this={compiled2}></textarea></div>
+<div><img src="/img/real_time_status.png" height=600/></div>
+<h3>Source code</h3>
+
+<div><textarea  rows="10" bind:this={source2}>{
+`(function(){
+
+	let notInPMW = new Set();
+	let inPMW = new Set();
+	let inMiddleOfRequest = false;
+
+	function isGoodURL(url)
+	{
+		if(/https:\\/\\/www.youtube\\.com\\/watch\\?v=.*/.exec(url))
+			return true;
+
+		if(/https:\\/\\/soundcloud\\.com.*/.exec(url))
+		{
+			let match = /soundcloud.com\\/([^\\/]*)\\/([^\\/]*)$/.exec(url);
+
+			if(!match)
+				return false;
+
+			if(["you","tags","pages","charts"].indexOf(match[1]) > -1)
+				return false;
+			if(["popular-tracks","tracks","albums","sets","reposts","followers","following","comments"].indexOf(match[2]) > -1)
+				return false;
+
+			return true;
+		}
+
+		if(url.indexOf(".bandcamp.com/" > -1))
+		{
+			if(!/bandcamp\\.com\\/album\\/.*|bandcamp\\.com\\/track\\/.*/.exec(url))
+				return false;
+
+			if(url.endsWith("#"))
+				return false; 
+			if(url.indexOf("#lyrics") > -1)
+				return false;
+			if(url.indexOf("action=download") > -1)
+				return false;
+
+			return true;
+		}
+	}
+
+	async function loop()
+	{
+		let linkEls = document.getElementsByTagName('a');
+		let nextBatch = [];
+		for(let i=0; i<linkEls.length; i++)
+		{
+			nextBatch.push(linkEls[i].href);
+		}
+
+		nextBatch = nextBatch.filter(isGoodURL);
+		nextBatch = nextBatch.filter(x => !inPMW.has(x) && !notInPMW.has(x));
+		nextBatch = [... new Set(nextBatch)];
+
+		if(inMiddleOfRequest || nextBatch.length == 0)
+			return;
+
+		inMiddleOfRequest = true;
+
+		let resp = await fetch("https://ponymusic.wiki/api/checkURLs",{
+			method: "POST",
+			headers: {"Content-Type": "text/json"},
+			body: JSON.stringify(nextBatch)
+		});
+
+		let values = await resp.json();
+
+		inMiddleOfRequest = false;
+
+		for(let [url,val] of values)
+		{
+			if(val == null)
+				notInPMW.add(url);
+			else {
+				inPMW.add(url);
+			}
+		}
+
+		for(let i=0; i<linkEls.length; i++)
+		{
+			if(linkEls[i].getElementsByClassName('pmwStatus').length)
+				continue;
+
+			if(notInPMW.has(linkEls[i].href))
+			{
+				let floater = document.createElement('span');
+				floater.innerHTML = "PMW ✗";
+				floater.className = "pmwStatus";
+				floater.style.backgroundColor = "red";
+				floater.style.padding = "3px";
+				floater.style.borderRadius = "3px";
+				floater.style.color = "white";
+				linkEls[i].appendChild(floater);
+			}
+			if(inPMW.has(linkEls[i].href))
+			{
+				let floater = document.createElement('span');
+				floater.innerHTML = "PMW ✓";
+				floater.className = "pmwStatus";
+				floater.style.backgroundColor = "green";
+				floater.style.padding = "3px";
+				floater.style.borderRadius = "3px";
+				floater.style.color = "white";
+				linkEls[i].appendChild(floater);
+			}
+		}
+	}
+	setInterval(loop, 1000);
+	
+})()`
+}</textarea></div>
 
 <h2 id="Check_URLs">Check URLs</h2>
 <p>If you have an existing list of URLs from another data set, you can copy them in here to quickly check if they are tracked in ponymuisc.wiki.  Each URL should be on its own line.</p>
@@ -143,6 +264,7 @@ if(title){
 	function mount(){
 
 		compiled.value = "javascript:(function(){" + source.value.replace(/\n|\t/g, "") + "})()";
+		compiled2.value = "javascript:(function(){" + source2.value.replace(/\n|\t/g, "") + "})()";
 	}
 
 
