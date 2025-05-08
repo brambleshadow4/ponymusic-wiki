@@ -172,6 +172,15 @@ function areTitlesIdentical(title1, title2)
 	let simple1 = getSimplifiedTitle(title1);
 	let simple2 = getSimplifiedTitle(title2);
 	let dist = damerauLevenshteinDistance(simple1, simple2);
+
+	let l = Math.min(simple1.length, simple2.length);
+
+	if(l <= 3)
+		return dist <= 1;
+
+	if(l <= 5)
+		return dist <= 2;
+
 	return dist <= 3;
 }
 
@@ -188,8 +197,7 @@ function getSimplifiedTitle(title)
 
 	simple = simple.replace(/ - [^-]* remix/g,"");
 
-	simple = simple.replace(/[^A-Za-z0-9 Ѐ-ӿ]/g,""); // Ѐ-ӿ is the Cyrillic alphabet
-	simple = simple.replace(/ +/g," ");
+	
 
 	i = simple.lastIndexOf(" feat ")
 	if(i != -1)
@@ -199,8 +207,30 @@ function getSimplifiedTitle(title)
 	if(i != -1)
 		simple = simple.substring(0, i);
 
+	simple = simple.split("").filter(isLetter).join("");
+
 	return simple;
 }
+
+function isLetter(char)
+{
+	// https://www.compart.com/en/unicode/block
+	let k = char.codePointAt(0);
+	if(0x30 <= k && k <= 0x39) return 1; // numbers
+	if(0x41 <= k && k <= 0x5A) return 1; // upper case letters
+	if(0x61 <= k && k <= 0x7A) return 1; // lower case letters
+
+	if(0x370 <= k && k < 0x1AB0) return 1; // other alphabets
+	// combining diacritical marks through miscellaneous symbols and arrows
+
+	if(0x2C00 <= k && k < 0xD800) return 1; // Glagolitic up to the surrogates
+
+	if(0xF900 <= k && k < 0xFB00) return 1; // GCJK compatibility ideographs
+
+	return 0;
+
+}
+
 
 function damerauLevenshteinDistance(a, b)
 {
