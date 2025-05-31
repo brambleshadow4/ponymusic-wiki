@@ -9,6 +9,10 @@ let {Pool} = pg;
 let HOST = "https://ponymusic.wiki";
 let sessionID = "" // DO NOT COMMIT AN ACTUAL ID HERE!
 
+// This conversion updates the title cache
+// for all remxies to remove the original
+// artist from it.
+
 doConversion();
 
 async function doConversion()
@@ -24,10 +28,8 @@ async function doConversion()
 	});
 
 	let response = await db.query(`
-		SELECT * 
-		FROM tracks LEFT JOIN track_tags ON tracks.id = track_tags.track_ID
-		WHERE property='featured artist' AND value='namii'
-		--AND hidden=false
+SELECT * FROM tracks WHERE titlecache LIKE '%" by%Vylet%' AND id NOT IN 
+(SELECT track_id FROM track_tags WHERE property='artist' and value='Vylet Pony')
 	`)
 
 	let affectedIDs = response.rows.map(x => x.id);
@@ -80,10 +82,11 @@ async function doConversion()
 			}
 		}*/
 
+		affected = true;
 
 		// replace one tag  with another
 
-		let TAG = "featured artist"
+		/*let TAG = "featured artist"
 		let OLD_VALUE = `namii`
 		let NEW_VALUE = "Namii"
 
@@ -96,7 +99,7 @@ async function doConversion()
 				affected = true;
 				i--;
 			}
-		}
+		}*/
 		
 
 		// Add a tag
@@ -130,6 +133,10 @@ async function doConversion()
 			headers: {"Content-Type": "text/json"},
 			body: JSON.stringify(track)
 		});
+
+		let json = await response.json();
+		if(json.status != 200)
+			console.log(json);
 	}
 
 	if(!commit)
