@@ -722,7 +722,6 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	let title = trim2(data.title || "")
 	let release_date = (data.release_date || "").trim();
 
-
 	if(isNaN(new Date(release_date).getTime()))
 	{
 		res.json({status:400, error: "Invalid date"});
@@ -822,31 +821,35 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 
 	// check if there are any changes
-	let oldTrack = await getTrackObject(id, "");
-	let hasChanges = false;
-	if(oldTrack.title != data.title || oldTrack.release_date != data.release_date)
-	{
-		hasChanges = true;
-	}
 
-	let oldTags = oldTrack.tags.filter(x => x.property != "original artist");
-
-	if(oldTags.length == data.tags.length)
+	let hasChanges = true;
+	if(id != "new")
 	{
-		for(let tag of oldTags)
+		let oldTrack = await getTrackObject(id, "");
+		hasChanges = false;
+		if(oldTrack.title != data.title || oldTrack.release_date != data.release_date)
 		{
-			if(data.tags.filter(x => x.property == tag.property && x.value == tag.value && x.number == tag.number).length != 1)
+			hasChanges = true;
+		}
+
+		let oldTags = oldTrack.tags.filter(x => x.property != "original artist");
+
+		if(oldTags.length == data.tags.length)
+		{
+			for(let tag of oldTags)
 			{
-				hasChanges = true;
-				break;
+				if(data.tags.filter(x => x.property == tag.property && x.value == tag.value && x.number == tag.number).length != 1)
+				{
+					hasChanges = true;
+					break;
+				}
 			}
 		}
+		else
+		{
+			hasChanges = true;
+		}
 	}
-	else
-	{
-		hasChanges = true;
-	}
-
 
 	titleCache = (`"${title}" by ${titleCacheArtists.join(", ")}`).substring(0,500);
 
@@ -902,7 +905,6 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	}	
 
 	// update tags
-
 	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
 
 	let originalArtists = new Set();
