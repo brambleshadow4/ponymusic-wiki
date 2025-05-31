@@ -410,7 +410,8 @@
 		}
 		else
 		{	
-			location.reload();
+			errorMessage = "";
+			load();
 		}
 	}
 
