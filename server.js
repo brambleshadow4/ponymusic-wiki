@@ -239,9 +239,8 @@ app.get("/api/search", queryProcessing, async (req,res) =>
 		return;
 	}
 
-	var weakPattern = "%" + sqlEscapeStringNoQuotes(search).toLowerCase() + "%";
-	var strongPattern = sqlEscapeStringNoQuotes(search).toLowerCase() + "%";
-
+	var weakPattern = "%" + sqlEscapePercentOnly(search).toLowerCase() + "%";
+	var strongPattern = sqlEscapePercentOnly(search).toLowerCase() + "%";
 	
 	let queries = [
 		db.query("SELECT DISTINCT property,value FROM track_tags WHERE LOWER(value) LIKE $1 AND property NOT IN ('featured artist', 'original artist','hyperlink') ORDER BY value ASC LIMIT 10", [strongPattern]),
@@ -1687,6 +1686,13 @@ function sqlEscapeString(s)
 	// pipes, percents, \ are fine within a string
 
 	return "'" + s + "'";
+}
+
+
+function sqlEscapePercentOnly(s)
+{
+	s = s.replace(/%/g,"\\%")
+	return s;
 }
 
 function sqlEscapeStringNoQuotes(s)
