@@ -706,6 +706,8 @@ async function getTrackObject(id, userID)
 }
 
 
+
+
 app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 {
 	var data = req.body;
@@ -715,11 +717,9 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		res.json({status: 400, err: "Invalid Session"});
 		return;
 	}
+
 	let userID = ses.user_id;
-
 	let title = trim2(data.title || "")
-
-
 	let release_date = (data.release_date || "").trim();
 
 
@@ -818,6 +818,33 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 			data.tags.splice(i, 1);
 			i--;
 		}
+	}
+
+
+	// check if there are any changes
+	let oldTrack = await getTrackObject(id, "");
+	let hasChanges = false;
+	if(oldTrack.title != data.title || oldTrack.release_date != data.release_date)
+	{
+		hasChanges = true;
+	}
+
+	let oldTags = oldTrack.tags.filter(x => x.property != "original artist");
+
+	if(oldTags.length == data.tags.length)
+	{
+		for(let tag of oldTags)
+		{
+			if(data.tags.filter(x => x.property == tag.property && x.value == tag.value && x.number == tag.number).length != 1)
+			{
+				hasChanges = true;
+				break;
+			}
+		}
+	}
+	else
+	{
+		hasChanges = true;
 	}
 
 
@@ -929,7 +956,8 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	let hiddenResp = await db.query("SELECT hidden FROM tracks WHERE id=$1", [id]);
 	let hidden = hiddenResp.rows[0].hidden;
 	
-	info = await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, hidden, release_date, tags: data.tags}]);
+	if(hasChanges)
+		info = await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, hidden, release_date, tags: data.tags}]);
 
 	if (info.err) {
 		res.json({status:400, error: "error 5"});
@@ -939,6 +967,8 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	res.json({status: 200, id});
 	
 });
+
+
 
 app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =>
 {
