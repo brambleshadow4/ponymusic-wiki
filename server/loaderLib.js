@@ -108,7 +108,7 @@ async function doExport()
 	publicCopyArr.push(await exportTable("track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"}));
 	publicCopyArr.push(await exportTable("tag_metadata", {type: "string", id:"string", property:"string", value:"string"}));
 
-	fs.writeFileSync("./public/export/export.sql", publicCopyArr.join(""));
+	fs.writeFileSync("./public/export/pmw.sql", publicCopyArr.join(""));
 }
 
 
@@ -272,10 +272,10 @@ async function doRdfExport()
 	let db = new Pool();
 	let file = fs.openSync("./public/export/pmw.ttl","w");
 
-	let buf = new Buffer.from(`@prefix pmw: <http://www.ponymusic.wiki/ns#> .
-@prefix artist: <http://www.ponymusic.wiki/artist/> .
-@prefix album: <http://www.ponymusic.wiki/album/> .
-@prefix track: <http://www.ponymusic.wiki/track/> .
+	let buf = new Buffer.from(`@prefix pmw: <http://ponymusic.wiki/ns#> .
+@prefix artist: <http://ponymusic.wiki/artist/> .
+@prefix album: <http://ponymusic.wiki/album/> .
+@prefix track: <http://ponymusic.wiki/track/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix dc: <http://purl.org/dc/elements/1.1/> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
@@ -290,9 +290,9 @@ async function doRdfExport()
 	for(let row of results.rows)
 	{
 		buf = new Buffer.from(`track:${row.id}
-	a pmw:track ;
-	dc:Title ${JSON.stringify(row.title)} ;${row.hidden ? "\n\tpmw:hidden 1 ;" : ""}
-	dc:Date "${dateToString(row.release_date)}" .\n`);
+	a pmw:Track ;
+	dc:title ${JSON.stringify(row.title)} ;${row.hidden ? "\n\tpmw:hidden 1 ;" : ""}
+	dc:date "${dateToString(row.release_date)}" .\n`);
 		fs.writeSync(file, buf);
 	}
 
@@ -371,7 +371,7 @@ async function doRdfExport()
 
 	for(let row of results.rows)
 	{
-		buf = new Buffer.from(`artist:${turtleEncode(row.value)} a pmw:artist ;\n\tfoaf:name ${JSON.stringify(row.value)} .\n`);
+		buf = new Buffer.from(`artist:${turtleEncode(row.value)} a pmw:Artist ;\n\tfoaf:name ${JSON.stringify(row.value)} .\n`);
 		fs.writeSync(file, buf);
 	}
 
@@ -397,7 +397,7 @@ async function doRdfExport()
 			
 			currentProps = [];
 			currentArtist = row.id;
-			currentProps.push("\ta pmw:artist");
+			currentProps.push("\ta pmw:Artist");
 			currentProps.push("\tfoaf:name " + JSON.stringify(row.id));
 
 		}
@@ -458,9 +458,9 @@ async function doRdfExport()
 			
 			currentProps = [];
 			currentAlbum = row.album;
-			currentProps.push("\ta pmw:album");
-			currentProps.push(`\tdc:Title ${JSON.stringify(currentAlbum)}`);
-			currentProps.push(`\tpmw:tracklist <http://www.ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>`);
+			currentProps.push("\ta pmw:Album");
+			currentProps.push(`\tdc:title ${JSON.stringify(currentAlbum)}`);
+			currentProps.push(`\tpmw:tracklist <http://ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>`);
 		}
 
 		switch(row.property)
@@ -498,7 +498,7 @@ async function doRdfExport()
 		{
 			if(currentAlbum != "" && currentProps.length)
 			{
-				buf = new Buffer.from(`<http://www.ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>\n` + currentProps.join(" ;\n") + " .\n")
+				buf = new Buffer.from(`<http://ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>\n` + currentProps.join(" ;\n") + " .\n")
 				fs.writeSync(file, buf);
 			}
 			
@@ -513,7 +513,7 @@ async function doRdfExport()
 
 	if(currentAlbum != "" && currentProps.length)
 	{
-		buf = new Buffer.from(`<http://www.ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>\n` + currentProps.join(" ;\n") + " .\n")
+		buf = new Buffer.from(`<http://ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>\n` + currentProps.join(" ;\n") + " .\n")
 		fs.writeSync(file, buf);
 	}
 

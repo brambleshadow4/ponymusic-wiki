@@ -1789,7 +1789,7 @@ app.get("/export/db", queryProcessing, exportMiddleware, async (req,res) => {
 	}
 	else
 	{
-		res.redirect("/export/export.sql");
+		res.redirect("/export/pmw.sql");
 	}
 
 });
@@ -1799,6 +1799,17 @@ app.get("/export/xlsx", queryProcessing, exportMiddleware, async (req,res) => {
 	res.redirect("/export/pmw.xlsx");
 
 });
+
+app.get("/export/ttl", queryProcessing, exportMiddleware, async (req,res) => {
+
+	res.redirect("/export/pmw.ttl");
+
+});
+
+app.get("/ns", async (req,res) => {
+	res.sendFile(path.resolve(process.cwd(), "public", 'ns.ttl'));
+});
+
 
 app.get('*', queryProcessing, (req, res) =>
 {
