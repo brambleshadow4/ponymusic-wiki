@@ -18,7 +18,7 @@
 	{#each options as option,i}
 		
 		<div class={i == checked ? "radioitem checked" : "radioitem"} on:click={() => handleClick(i)}>
-			<span class={"checkbox"}></span>
+			<span class="checkbox"></span>
 			<span>{option}</span>
 		</div>
 		
@@ -34,7 +34,7 @@
 .radioitem
 {
 	display: inline-block;
-	padding: 0px 5px;
+	padding: 0px 7px;
 	padding-bottom: 5px;
 	cursor: pointer;
 	margin-right: 5px;
@@ -61,6 +61,11 @@
 {
 	display: inline-block;
 	width: 15px;
+	height: 15px;
+	background-image: url(/icon/radio.svg);
+	background-size: 15px;
+	
+
 	/*height: 15px;
 	border: solid 1px black;
 	border-radius: 7.5px;
@@ -71,16 +76,12 @@
 .radioitem.checked .checkbox
 {
 	/*border: solid 1px white;*/
+	background-image: url(/icon/radio-full.svg);
 }
 
-.radioitem.checked .checkbox::before
+.radioitem.checked .checkbox
 {
-	position: relative;
-	bottom: 1px;
-	left: 1px;
-	content:  "\1F518\0FE0E";
-	text-align: center;
-	vertical-align: bottom;
+	
 }
 
 .radioitem.checked:hover

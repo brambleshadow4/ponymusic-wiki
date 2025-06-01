@@ -83,8 +83,7 @@
 			<p>Compilation album of hardcore and 18+ music</p>
 		</div>
 	</a>
-
-
+	
 	<a href="https://poniesatdawn.bandcamp.com">
 		<img src="/img/p@d.png" width="100" height=100 />
 		<div>
