@@ -15,7 +15,8 @@
 	import GridImport from "./pages/GridImport.svelte";
 	import TagPage from "./pages/Tags.svelte";
 	import Spinner from "./Spinner.svelte";
-	import {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
+	import ArtistList from "./pages/Artists.svelte";
+	import {DefaultView, AlbumView, ArtistView, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
 	$: path = window.location.pathname;
 	$: pathSlug = window.location.pathname.split("/").slice(1);
@@ -51,8 +52,6 @@
 
 		let response = await fetch(`/export/precheck?t=` + new Date().getTime());
 		let data = await response.json();
-
-		console.log("fetch retured");
 
 		if(data.status == 200)
 		{
@@ -447,7 +446,9 @@
 		<ListView view={DefaultView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
 	{:else if pathSlug[0] == "artists"}
-		<ListView view={ArtistList} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+		<div class='main'>
+			<ArtistList />
+		</div>
 		
 	{:else if pathSlug[0] == "albums"}
 		<ListView view={AlbumList} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} on:openObjectEditor={openObjectEditor} />

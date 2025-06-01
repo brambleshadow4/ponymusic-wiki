@@ -285,61 +285,40 @@ app.get("/api/search", queryProcessing, async (req,res) =>
 
 app.get("/api/view/artists", queryProcessing, async(req,res) =>
 {
-	let ses = await getSession(req);
-	let userID = ses && ses.user_id;
-	let page = Number(req.query.page) || 0; 
-	let offset = page*PAGE_COUNT;
+
+	let recentCriteria = "";
+	let nameCriteria = "" // AND lower(value) LIKE 'b%'
+	let countCriteria = ""//"WHERE count >= 5"
+
+	if(req.query.recent)
+		recentCriteria = "AND most_recent > CURRENT_DATE - INTERVAL '3 years'"
+
+	if(req.query.name == "non-alpha")
+		nameCriteria = "AND lower(value) ~ '^[^a-z].*'"
+	else if("abcdefghijklmnopqrstuvwxyz".indexOf(req.query.name) > -1)
+		nameCriteria = "AND lower(value) LIKE '" + req.query.name + "%'"
+
+
+	if(req.query.count == "5")
+		countCriteria = "AND count >= 5"
+	if(req.query.count == "25")
+		countCriteria = "AND count >= 25"
 	
 	let query = `
-	-- lawful good --
+	SELECT * FROM (
+		SELECT value as artist, lower(value) as artist_l, count(*) as count, max(release_date) as most_recent FROM track_tags LEFT JOIN tracks ON track_tags.track_id = tracks.id
+		WHERE property IN ('artist','featured artist') AND hidden=false
+		${nameCriteria}
+		GROUP by value
+		ORDER by artist_l
+		) as temp_a
+	WHERE 1 = 1
+	${countCriteria}
+	${recentCriteria}`;
 
-SELECT tableb.*,
-	tracks.id, tracks.title, tracks.release_date
-FROM (
-	SELECT *, 
-	-- Combined Genres --
-		(
-			SELECT COALESCE(string_agg(value, CHR(30)), '') FROM (
-			SELECT DISTINCT(value)
-			FROM track_tags
-			WHERE track_id IN (
-				SELECT track_id
-				FROM track_tags
-				WHERE (property='artist' OR property='featured artist') AND value=tablea.artist
-			) AND property='genre') as td
-		) as genre,
-	-- most recent track -- 
-		(
-			SELECT id FROM tracks
-			WHERE id IN (
-				SELECT track_id
-				FROM track_tags
-				WHERE (property='artist' OR property='featured artist') AND value=tablea.artist
-			)
-			ORDER BY release_date DESC
-			LIMIT 1
-		) as latest_id
-	FROM (
-		SELECT 
-		COUNT(value) as tracks,
-		value as artist
+	let response = await db.query(query,[]);
 
-		FROM track_tags LEFT JOIN tracks on track_tags.track_id = tracks.id
-		WHERE (track_tags.property='artist' OR track_tags.property='featured artist') AND tracks.hidden=false
-		GROUP BY artist
-	) as tablea
-	) as tableb INNER JOIN tracks ON tableb.latest_id = tracks.id
-	ORDER BY release_date DESC
-	LIMIT ${PAGE_COUNT} OFFSET ${offset}`;
-
-	let [{rows}, countRequest] = await Promise.all([
-		db.query(query,[]),
-		db.query(`SELECT COUNT(DISTINCT(value)) FROM track_tags WHERE property='artist'`, [])
-	]);
-
-	let total = countRequest.rows[0].count;
-
-	res.json({rows, pages: Math.ceil(total/PAGE_COUNT), total});
+	res.json({rows: response.rows, status:200});
 
 });
 

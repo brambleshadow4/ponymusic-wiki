@@ -5,6 +5,15 @@
 
 	const dispatch = createEventDispatcher();
 
+	function getStyle(option)
+	{
+		if(option.width)
+		{
+			return "width: " + option.width;
+		}
+		return "";
+	}
+
 	function handleClick(itemNo)
 	{
 		checked = itemNo;
@@ -17,9 +26,9 @@
 <div class='control'>
 	{#each options as option,i}
 		
-		<div class={i == checked ? "radioitem checked" : "radioitem"} on:click={() => handleClick(i)}>
+		<div style={getStyle(option)} class={i == checked ? "radioitem checked" : "radioitem"} on:click={() => handleClick(i)}>
 			<span class="checkbox"></span>
-			<span>{option}</span>
+			<span>{typeof option == "object" ? option.text : option}</span>
 		</div>
 		
 	{/each}
