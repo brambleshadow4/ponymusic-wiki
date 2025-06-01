@@ -291,6 +291,22 @@
 		margin-top: .5in;
 	}
 
+	.exportlink {
+		padding: 15px;
+		margin: 5px;
+		display: inline-block;
+	}
+
+	.exportlink:hover {
+		text-decoration: none;
+		background-color: #e6f7ff;
+
+	}
+
+	.exportlink img, .exportlink span {
+		vertical-align: middle;
+	}
+
 	@media only screen and (max-width: 800px)
 	{
 		.main-container
@@ -497,19 +513,24 @@
 		<div class='main'>
 			<h1>Download the Data</h1>
 			<p>Since ponymusicwiki encourages contributions from everyone in the fandom, we offer a full export of all tracks and their metadata. User-based information is not available to download (in the future, we might offer an option to download user data for yourself)</p>
-			<p>We currently offer an excel export of the data, as well as SQL file which can be imported into a DBMS</p>
+			<p>We currently offer the data in three formats: excel spreadsheet, RDF/TURTLE, and a SQL file which can be imported into a DBMS</p>
 
 			{#if isExportReady && isExportReady2}
 
 				<p>
-					<a href="/export/db">
-						<img width="30" src="/icon/database-download.svg">
-						<span>export.sql</span>
-					</a>
-					<a href="/export/xlsx">
+					<a class='exportlink' href="/export/xlsx">
 						<img width="30" src="/icon/excel.svg">
 						<span>pmw.xlsx</span>
 					</a>
+					<a class='exportlink' href="/export/ttl">
+						<img width="30" src="/icon/rdf.svg">
+						<span>pmw.ttl</span>
+					</a>
+					<a class='exportlink' href="/export/db">
+						<img width="30" src="/icon/database-download.svg">
+						<span>pmw.sql</span>
+					</a>
+					
 				</p>
 			{:else}
 				<p>Generating files... this usually takes around 10 seconds</p>

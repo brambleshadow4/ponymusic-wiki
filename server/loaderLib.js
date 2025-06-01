@@ -1,4 +1,4 @@
-export default {doLoad, doPull, doExport, doExcelExport};
+export default {doLoad, doPull, doExport, doExcelExport, doRdfExport};
 
 import fs from 'fs';
 import ExcelJS from 'exceljs'
@@ -108,7 +108,7 @@ async function doExport()
 	publicCopyArr.push(await exportTable("track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"}));
 	publicCopyArr.push(await exportTable("tag_metadata", {type: "string", id:"string", property:"string", value:"string"}));
 
-	fs.writeFileSync("./public/export/export.sql", publicCopyArr.join(""));
+	fs.writeFileSync("./public/export/pmw.sql", publicCopyArr.join(""));
 }
 
 
@@ -241,6 +241,287 @@ async function doExcelExport()
 		sheet.commit();
 
 	await workbook.commit();
+}
+
+function dateToString(date)
+{
+	let month = date.getMonth();
+	month = month < 10 ? "0" + month : "" + month;
+	let day = date.getDate();
+	day = day < 10 ? "0" + day : "" + day;
+	return date.getFullYear() + "-" + month + "-" + day;
+}
+
+function turtleEncode(s)
+{
+	if(/[^a-zA-Z]/.exec(s))
+	{
+		return s.split("").map(x => {
+			let cp = x.codePointAt(0);
+			if((97 <= cp && cp <=122) || (65 <= cp && cp <= 90)) 
+				return x;
+			let k = cp.toString(16)
+			return k.length == 1 ? "%0" + k : "%" + k;
+		}).join("");
+	}
+	return s;
+}
+
+async function doRdfExport()
+{
+	let db = new Pool();
+	let file = fs.openSync("./public/export/pmw.ttl","w");
+
+	let buf = new Buffer.from(`@prefix pmw: <http://ponymusic.wiki/ns#> .
+@prefix artist: <http://ponymusic.wiki/artist/> .
+@prefix album: <http://ponymusic.wiki/album/> .
+@prefix track: <http://ponymusic.wiki/track/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+`)
+	fs.writeSync(file, buf)
+
+	let results = await db.query(`
+		SELECT id, title, release_date, hidden
+		FROM tracks
+	`);
+
+	for(let row of results.rows)
+	{
+		buf = new Buffer.from(`track:${row.id}
+	a pmw:Track ;
+	dc:title ${JSON.stringify(row.title)} ;${row.hidden ? "\n\tpmw:hidden 1 ;" : ""}
+	dc:date "${dateToString(row.release_date)}" .\n`);
+		fs.writeSync(file, buf);
+	}
+
+	results = await db.query(`
+		SELECT *
+		FROM track_tags
+		ORDER BY track_id
+	`);
+
+	let currentTrack = -1;
+	let currentProps = [];
+
+	for(let row of results.rows)
+	{
+		if(currentTrack != row.track_id)
+		{
+			if(currentTrack != -1 && currentProps.length)
+			{
+				buf = new Buffer.from(`track:${currentTrack}\n` + currentProps.join(" ;\n") + " .\n")
+				fs.writeSync(file, buf);
+			}
+			
+			currentProps = [];
+			currentTrack = row.track_id;
+		}
+		
+		switch(row.property)
+		{
+			case "hyperlink":
+				currentProps.push(`\tpmw:hyperlink <${row.value.replace(/ /g,"%20")}>`);
+				break;
+			case "reupload hyperlink":
+				currentProps.push(`\tpmw:reupload_hyperlink <${row.value.replace(/ /g,"%20")}>`);
+				break;
+			case "alt mix hyperlink":
+				currentProps.push(`\tpmw:alt_mix_hyperlink <${row.value.replace(/ /g,"%20")}>`);
+				break;
+			case "youtube offset":
+				currentProps.push(`\tpmw:youtube_offset <${row.value.replace(/ /g,"%20")}>`);
+				break;
+			case "artist":
+				currentProps.push(`\tpmw:artist artist:${turtleEncode(row.value)}`);
+				break;
+			case "featured artist":
+				currentProps.push(`\tpmw:featured_artist artist:${turtleEncode(row.value)}`);
+				break;
+			case "cover":
+			case "remix":
+				currentProps.push(`\tpmw:${row.property} track:${row.value}`);
+				break;
+			case "tag":
+			case "genre":
+				currentProps.push(`\tpmw:${row.property} ${JSON.stringify(row.value)}`);
+				break;
+			case "pl":
+				currentProps.push(`\tpmw:pl ${row.value}`);
+				break;
+			default:
+				break;
+		}
+	}
+
+	if(currentTrack != -1 && currentProps.length)
+	{
+		buf = new Buffer.from(`track:${currentTrack}\n` + currentProps.join(" ;\n") + " .\n")
+		fs.writeSync(file, buf);
+	}
+
+	//************** Artists **************
+
+	results = await db.query(`
+		SELECT distinct value
+		FROM track_tags
+		WHERE (property ='artist' or property='featured artist')
+		AND value NOT IN (SELECT id FROM tag_metadata WHERE type='artist')`)
+
+	for(let row of results.rows)
+	{
+		buf = new Buffer.from(`artist:${turtleEncode(row.value)} a pmw:Artist ;\n\tfoaf:name ${JSON.stringify(row.value)} .\n`);
+		fs.writeSync(file, buf);
+	}
+
+
+	results = await db.query(`
+		SELECT *
+		FROM tag_metadata
+		WHERE type='artist'
+		ORDER BY id
+	`);
+	let currentArtist = "";
+	currentProps = [];
+
+	for(let row of results.rows)
+	{
+		if(currentArtist != row.id)
+		{
+			if(currentArtist != "" && currentProps.length)
+			{
+				buf = new Buffer.from(`artist:${turtleEncode(currentArtist)}\n` + currentProps.join(" ;\n") + " .\n")
+				fs.writeSync(file, buf);
+			}
+			
+			currentProps = [];
+			currentArtist = row.id;
+			currentProps.push("\ta pmw:Artist");
+			currentProps.push("\tfoaf:name " + JSON.stringify(row.id));
+
+		}
+		
+		switch(row.property)
+		{
+			case "twitter":
+			case "youtube":
+			case "soundcloud":
+			case "ponyfm":
+			case "mastodon":
+			case "bluesky":
+			case "spotify":
+			case "bandcamp":
+			case "applemusic":
+			case "personalsite":
+				currentProps.push(`\tpmw:${row.property} <${row.value.replace(/ /g,"%20")}>`);
+				break;
+			case "group member":
+				currentProps.push(`\tpmw:group_member artist:${turtleEncode(row.value)}`);
+				break;
+			default:
+				currentProps.push(`\tpmw:${row.property.replace(/ /g,"_")} ${JSON.stringify(row.value)}`);
+		}
+	}
+
+	if(currentArtist != "" && currentProps.length)
+	{
+		buf = new Buffer.from(`artist:${turtleEncode(currentArtist)}\n` + currentProps.join(" ;\n") + " .\n")
+		fs.writeSync(file, buf);
+	}
+
+	//************** Albums **************
+
+
+	results = await db.query(`
+		SELECT distinct value as album, '' as property, '' as value
+		FROM track_tags
+		WHERE property='album'
+		UNION
+		SELECT id, property, value
+		FROM tag_metadata
+		WHERE type='album'
+		ORDER BY album`);
+
+	let currentAlbum = "";
+	currentProps = [];
+
+	for(let row of results.rows)
+	{
+		if(currentAlbum != row.album)
+		{
+			if(currentAlbum != "" && currentProps.length)
+			{
+				buf = new Buffer.from(`album:${turtleEncode(currentAlbum)}\n` + currentProps.join(" ;\n") + " .\n")
+				fs.writeSync(file, buf);
+			}
+			
+			currentProps = [];
+			currentAlbum = row.album;
+			currentProps.push("\ta pmw:Album");
+			currentProps.push(`\tdc:title ${JSON.stringify(currentAlbum)}`);
+			currentProps.push(`\tpmw:tracklist <http://ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>`);
+		}
+
+		switch(row.property)
+		{
+			case "hyperlink":
+				currentProps.push(`\tpmw:hyperlink <${row.value.replace(/ /g,"%20")}>`);
+				break;
+			case "physical release only":
+				currentProps.push(`\tpmw:physical_release_only 1`);
+				break;
+			default:
+				break;
+		}
+	}
+
+	if(currentAlbum != "" && currentProps.length)
+	{
+		buf = new Buffer.from(`album:${turtleEncode(currentAlbum)}\n` + currentProps.join(" ;\n") + " .\n")
+		fs.writeSync(file, buf);
+	}
+
+
+	results = await db.query(`
+		SELECT *
+		FROM track_tags
+		WHERE property='album'
+		ORDER BY value,number
+	`);
+	currentAlbum = "";
+	currentProps = [];
+
+	for(let row of results.rows)
+	{
+		if(currentAlbum != row.value)
+		{
+			if(currentAlbum != "" && currentProps.length)
+			{
+				buf = new Buffer.from(`<http://ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>\n` + currentProps.join(" ;\n") + " .\n")
+				fs.writeSync(file, buf);
+			}
+			
+			currentProps = [];
+			currentAlbum = row.value;
+			currentProps.push("\ta rdf:Seq");
+			
+		}
+
+		currentProps.push(`\trdf:_${row.number} track:${row.track_id}`);
+	}
+
+	if(currentAlbum != "" && currentProps.length)
+	{
+		buf = new Buffer.from(`<http://ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>\n` + currentProps.join(" ;\n") + " .\n")
+		fs.writeSync(file, buf);
+	}
+
+
+		
+
+	fs.closeSync(file);
+
 }
 
 function plMap(x)

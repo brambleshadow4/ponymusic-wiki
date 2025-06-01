@@ -1,0 +1,198 @@
+# This is an RDF representation of the Pony Music Wiki (PMW) data model.
+# it is subject to change without notice. 
+
+@prefix pmw: <http://ponymusic.wiki/ns#>
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+@prefix dc: <http://purl.org/dc/elements/1.1/>
+@prefix foaf: <http://xmlns.com/foaf/0.1/>
+@prefix vann: <http://purl.org/vocab/vann/>
+
+<http://ponymusic.wiki/ns> 
+	vann:preferredNamespaceUri "http://ponymusic.wiki/ns#" ;
+	vann:preferredNamespacePrefix "pmw" .
+
+
+# ----------------
+# Classes
+# ----------------
+
+pmw:Track 
+	a rdfs:Class ;
+	rdfs:comment "Class representing a PMW track" . 
+
+pmw:Artist
+	a rdfs:Class ;
+	rdfs:comment "Class representing a PMW artist" .
+
+pmw:Album
+	a rdfs:Class ;
+	rdfs:comment "Class representing a PMW album" .
+
+# ----------------
+# Track Properties
+# ----------------
+
+# Tracks may have the following properties in addition to dc:title and dc:date
+
+pmw:pl 
+	a rdf:Property ;
+	rdfs:domain pmw:Track ; 
+	rdfs:comment "Links to an integer, 0..2. At some point this may be replaced with a more-specific range. 2-Obvious refs is for tracks which make heavy use of source material, likely to the point someone not familiar with My Little Pony could pick up that it's pony related. 1-Subtle Refs is for tracks which build upon source material, but in a way that people not familiar with MLP would likely not pick up on. Most fans, however, would see the connection. 0-No refs is for tracks which don't reference any material from the show/fandom - it is still pony music, but you wouldn't have any way of telling just listening to the track alone" .
+
+pmw:hyperlink 
+	a rdf:Property ;
+	rdfs:comment "The hyperlink to a website where the track or album is available to listen to" .
+
+pmw:reupload_hyperlink 
+	a rdf:Property ;
+	rdfs:domain pmw:Track ; 
+	rdfs:comment "The hyperlink to a website where the track is available to listen to, but was uploaded by someone other than the artist" .
+
+pmw:alt_mix_hyperlink 
+	a rdf:Property ;
+	rdfs:domain pmw:Track ; 
+	rdfs:comment "The hyperlink to a website where an alternate version of the track (instrumental, a cappela, radio edit, etc.) is available to listen to" .
+
+pmw:youtube_offset 
+	a rdf:Property ;
+	rdfs:domain pmw:Track ; 
+	rdfs:comment "A hyperlink to a youtube video which includes a t=?? parameter. The timestamp indicates where the track starts within the video" .
+
+pmw:cover 
+	a rdf:Property ;
+	rdfs:domain pmw:Track ; 
+	rdfs:range pmw:Track ; 
+	rdfs:comment "Links the track to the original song which this track covers" .
+
+pmw:remix 
+	a rdf:Property ;
+	rdfs:domain pmw:Track ; 
+	rdfs:range pmw:Track ; 
+	rdfs:comment "Links the track to the original song which this track remixes" .
+
+pmw:genre 
+	a rdf:Property ;
+	rdfs:domain pmw:Track ; 
+	rdfs:comment "Free-text genre label for the track" .
+
+pmw:artist 
+	a rdf:Property ;
+	rdfs:domain pmw:Track ;
+	rdfs:range pmw:Artist ; 
+	rdfs:comment "Link a track to the artist which made it" .
+
+pmw:featured_artist 
+	a rdf:Property ;
+	rdfs:domain pmw:Track ;
+	rdfs:range pmw:Artist ; 
+	rdfs:comment "Link a track to any artist which is featured on the track" .
+
+pmw:tag 
+	a rdf:Property ;
+	rdfs:domain pmw:Track ; 
+	rdfs:comment "Free-text tags for the track, like character names, labels, etc" .
+
+pmw:hidden 
+	a rdf:Property ;
+	rdfs:domain pmw:Track ; 
+	rdfs:comment "Set to 1 if the track should not be displayed in the listing. This may be because there are no valid hyperlinks or if the artist " .
+
+# -----------------
+# Artist Properties
+# -----------------
+
+# foaf:name is used to store the name of the artist
+
+pmw:twitter
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Used to link an artist to the artist's twitter.com user (aka x.com user)" .
+
+pmw:youtube 
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Used to link an artist to the artist's youtube.com channel or user. Both channel URLs and user URLs are currently allowed" .
+
+pmw:soundcloud
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Used to link an artist to the artist's soundcloud user account." .
+
+pmw:ponyfm
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Used to link an artist to the artist's pony.fm user" .
+
+pmw:group_member
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Indicates that this artist is a group of people, and that the linked artist is a member of that group" .
+
+pmw:aliasgroup
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Some people release music under multiple aliases; each alias is its own pmw:Artist entity, but the person making them is the same. Artists which are related in this way can all share the same aliasgroup, which links each artist to all the others" .
+	
+pmw:mastodon
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Used to link an artist to the artist's mastodon account" .
+	
+pmw:bluesky
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Used to link an artist to the artist's bluesky account" .
+	
+pmw:spotify
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Used to link an artist to the artist's spotify account" .
+	
+pmw:alternate_spelling
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "An alternate spelling is a string which represents the same exact artist alias. It can be used for misspellings of the artist's name, or an older alias the artist used to go by which was replaced with the current alias. If an artist still has releases with the old alias, then the old alias should be listed as an additional pmw:Artist entity and not an pmw:alternate_spelling" .
+	
+pmw:bandcamp
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Used to link an artist to the artist's bandcamp profile" .
+	
+pmw:applemusic
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Used to link an artist to the artist's Apple Music account" .
+	
+pmw:personalsite
+	a rdf:Property ;
+	rdfs:domain pmw:Artist ; 
+	rdfs:comment "Used to link an artist to the artist's personal website" .
+	
+
+
+# ----------------
+# Album Properties
+# ----------------
+
+# Albums may have the following list of properties in addition to dc:title and pmw:hyperlink
+
+pmw:physical_release_only 
+	a rdf:Property ;
+	rdfs:domain pmw:Album ;
+	rdfs:comment "If set to 1, this means the album was never released digitally, only in a physical medium such as a CD. " .
+
+pmw:tracklist
+	a rdf:Property ;
+	rdfs:range rdf:Seq ;
+	rdfs:comment "Links to a sequence of tracks representing the album" .
+
+
+# ----------------
+# Miscellaneous
+# ----------------
+pmw:broken_link
+	a rdf:Property ;
+	rdfs:comment "When set to 1, this indicates that an album hyperlink, track hyperlink, or other hyperlink no longer resolves to its original document" .
+
+
