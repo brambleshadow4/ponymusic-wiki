@@ -3,7 +3,7 @@ import {plEnumText, statusIcon, Columns} from "./helpers.js";
 
 let DefaultView = {
 	api: "/api/view/tracks",
-	htmlTitle: "<h1 class='no-margin'>Pony Music Wiki <span class='version'>(alpha build)</span></h1><div>A community maintained database of pony music.</div>",
+	htmlTitle: "<h1 class='no-margin'>Pony Music Wiki</h1><div>A community maintained database of pony music.</div>",
 	hasButtonNewTrack: true,
 	hasButtonRandomTrack: true,
 	tabs: [

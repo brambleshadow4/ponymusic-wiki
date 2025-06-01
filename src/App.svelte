@@ -280,16 +280,6 @@
 		max-width: 800px;		
 	}
 
-	blockquote
-	{
-		border-left: solid 3px #d6a172;
-		background-color: #f5ece4;
-		margin: 0px;
-		padding-left: .5in;
-		padding-top: 10px;
-		margin-top: .5in;
-	}
-
 	.exportlink {
 		padding: 15px;
 		margin: 5px;
@@ -472,12 +462,6 @@
 	{:else if pathSlug[0] == "about"}
 		<div class='main'>
 
-			<blockquote>
-				<p>This is basically a design prototype for a potential way of keeping track of pony music. It's far from complete and will likely evolve based on input from the community (which is to say anypony who thinks this is remotely useful).</p>
-
-				<p>Reach out to brambleshadow4 if you'd like to provide design input + feedback.</p>
-			</blockquote>
-
 			<h1>About the Pony Music Wiki</h1>
 
 			<p>There's hundreds (if not thousands) of musicians out there releasing tons and tons of My Little Pony fan music. With so much creativity in the fandom, not all of it can be given the spotlight, but the least we can do is keep track of it.</p>
@@ -485,9 +469,8 @@
 			<p>The Pony Music Wiki is designed to be just that—a community database of all pony music known to Equestria. Anypony is allowed to add missing tracks and make corrections to ensure the wiki has the most up-to-date list of music, that way the burden of responsibility never falls on just a single pony. Like Wikipedia, the wiki also comes with tools to quickly revert any bad changes made by accident or malice. The wiki does not host music files but rather links out to the artist's original upload, be it on Bandcamp or YouTube or Soundcloud. This allows the community to create a more complete database without having to upload an artist's song without their permission. If you are looking for a pony website to upload your tracks to, <a href="https://pony.fm">pony.fm</a> or <a href="https://projectvinyl.net/">Project Vinyl</a> might better suit your needs.</p>
 
 			<h2 id="rules-and-guidelines">Rules and Guidelines</h2>
-			<p>There are a few rules to help maintain the peace</p>
 
-			<p>There are also several guidelines to help everypony work together in maintaining this database</p>
+			<p>There are several guidelines to help everypony work together in maintaining this database</p>
 
 			<ol>
 				<li>This site is for pony music. Anything inspired by My Little Pony source material or the brony fandom counts as pony music. Please do not upload tracks if they are not related to pony
@@ -516,18 +499,6 @@
 				<li>The artist has been ousted from the fandom for extremely bad behavior (e.g. being a nazi, pedophile, etc.)</li></ol>
 
 			<p>These hidden tracks can be viewed by visiting their URLs directly or by turning on this setting</p>
-
-			
-
-			<h2>Upcoming features (updated 4 September 2022), coming eventually</h2>
-
-			<ul>	
-				<li>Search - quickly jump to artists/albums/etc without having to filter</li>
-				<li>Publicallly visible lists that only one person can edit</li>
-				<li>Favoriting pages</li>
-				<li>Tag view: quickly see all the tracks associated with a tag/artist/album/etc</li>
-				<li>Actually have tooling for moderators/admins</li>
-			</ul>
 
 			<PonyRefs />
 
