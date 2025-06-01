@@ -21,6 +21,7 @@ const validProperties = ["album","genre","artist","featured artist","tag","hyper
 
 const app = express();
 const PORT = process.env.PORT || 80;
+const discordLink = process.env.DISCORD || "";
 
 const PAGE_COUNT = 100;
 const MAX_STRING_LENGTH = 256;
@@ -172,6 +173,7 @@ app.post("/restoreSession", processJSON, async (req,res) =>
 	if(session)
 	{
 		session.status = 200;
+		session.discord = discordLink;
 		res.json(session);
 		return;
 	}

@@ -71,6 +71,7 @@
 				avatar = data.avatar;
 
 				localStorage.session = data.session;
+
 				signedIn = true;
 
 				let needReload = false;
@@ -86,6 +87,7 @@
 				}
 
 				sessionStorage.session = localStorage.session;
+				sessionStorage.discord = data.discord;
 
 				if(needReload)
 				{

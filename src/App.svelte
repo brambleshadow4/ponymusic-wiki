@@ -308,6 +308,32 @@
 		vertical-align: middle;
 	}
 
+	.discord-invite {
+		text-align: center;
+		display: block;
+		color: white;
+		transition: background-color .3s linear;
+
+		background-image: url(/discord.png);
+		background-size: 150px;
+		background-repeat: no-repeat;
+		background-position: 50px -20px;
+
+		height: 100px;
+		position: relative;
+	}
+
+	.discord-invite:hover {
+		background-color: #232a46;
+	}
+
+
+
+	.discord-invite span {
+		display: inline-block;
+		margin-top: 55px;
+	}
+
 	@media only screen and (max-width: 800px)
 	{
 		.main-container
@@ -370,6 +396,13 @@
 		<!--<a href="/grid-import">Bulk Import</a>-->
 		<a href="/docs">API Documentation</a>
 		
+		
+		{#if sessionStorage["discord"]}
+			<a class='discord-invite' on:click={() => {location.href = sessionStorage["discord"]}} href={sessionStorage["discord"]}>
+				<span>Join our discord!</span>
+				
+			</a>
+		{/if}
 	</nav>
 
 	<LoginButton display="fixed"/>
@@ -400,6 +433,9 @@
 		<a href="/album-import">Import Album</a>
 		<!--a href="/grid-import">Bulk Import</a-->
 		<a href="/docs">API Documentation</a>
+		{#if sessionStorage["discord"]}
+			<a href={sessionStorage["discord"]}>Join our discord!</a>
+		{/if}
 	</div>
 	{/if}
 {/if}
