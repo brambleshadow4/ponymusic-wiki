@@ -1,33 +1,32 @@
-# This is an RDF representation of the Pony Music Wiki (PMW) data model.
-# it is subject to change without notice. 
-
 @prefix pmw: <http://ponymusic.wiki/ns#>
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 @prefix dc: <http://purl.org/dc/elements/1.1/>
-@prefix foaf: <http://xmlns.com/foaf/0.1/>
 @prefix vann: <http://purl.org/vocab/vann/>
 
-<http://ponymusic.wiki/ns> 
-	vann:preferredNamespaceUri "http://ponymusic.wiki/ns#" ;
-	vann:preferredNamespacePrefix "pmw" .
-
-
+<http://ponymusic.wiki/ns#> 
+	a <http://www.w3.org/2002/07/owl#Ontology> ;
+	dc:title "PMW: A vocabulary for describing My Little Pony fan music" ;
+	<http://purl.org/dc/terms/description> "This is an RDF vocabulary of the Pony Music Wiki data model. It is subject to change without notice." ;
+	<http://purl.org/dc/terms/creator> <http://brambleshadow4.net> ;
+	vann:preferredNamespacePrefix "pmw" ;
+	vann:preferredNamespaceUri "http://ponymusic.wiki/ns#" .
+	
 # ----------------
 # Classes
 # ----------------
 
 pmw:Track 
 	a rdfs:Class ;
-	rdfs:comment "Class representing a PMW track" . 
+	rdfs:comment "Class representing a released piece of music, available online" . 
 
 pmw:Artist
 	a rdfs:Class ;
-	rdfs:comment "Class representing a PMW artist" .
+	rdfs:comment "Class representing an artist associated with a track" .
 
 pmw:Album
 	a rdfs:Class ;
-	rdfs:comment "Class representing a PMW album" .
+	rdfs:comment "Class representing an album" .
 
 # ----------------
 # Track Properties
@@ -169,8 +168,6 @@ pmw:personalsite
 	rdfs:domain pmw:Artist ; 
 	rdfs:comment "Used to link an artist to the artist's personal website" .
 	
-
-
 # ----------------
 # Album Properties
 # ----------------
