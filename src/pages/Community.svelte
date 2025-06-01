@@ -18,6 +18,13 @@
 		<p>A music database and hosting website</p>
 	</div>
 </a>
+<a href="https://www.youtube.com/channel/UCbT0PFbfaYvgv7TSlYfekdA">
+	<img src="/img/top10.png" width="100" height=100 />
+	<div>
+		<div class='title'>Top Brony Music</div>
+		<p>A youtube channel featuring the top 10 fan-made MLP songs each month</p>
+	</div>
+</a>
 
 <a href="https://bronymusiciandatabase.crd.co/">
 	<img src="/img/bronymusiciandb.png" width="100" height=100 />
@@ -51,14 +58,13 @@
 		</div>
 	</a>
 
-	<a href="https://radiobrony.fr">
-		<img src="/img/radiobrony.png" width="100" height=100 />
+	<a href="https://www.bronyradiogermany.com">
+		<img src="/img/brg.png" width="100" height=100 />
 		<div>
-			<div class='title'>Radio Brony</div>
-			<p>France-based MLP radio station</p>
+			<div class='title'>Brony Radio Germany</div>
+			<p>A germany-based MLP radio station</p>
 		</div>
 	</a>
-
 	<a href="https://fancynoise.net">
 		<img src="/img/fancynoise.png" width="100" height=100 />
 		<div>
@@ -108,7 +114,7 @@
 	a{
 		display: inline-flex;
 		padding: 15px;
-		transition: background-color .5s;
+		transition: background-color .3s;
 		width: 400px;
 	}
 	a:hover {

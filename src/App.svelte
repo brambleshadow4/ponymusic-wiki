@@ -295,6 +295,7 @@
 		padding: 15px;
 		margin: 5px;
 		display: inline-block;
+		transition: background-color .3s;
 	}
 
 	.exportlink:hover {
