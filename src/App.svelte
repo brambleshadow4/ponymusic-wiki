@@ -29,11 +29,15 @@
 	let editProperties = null;
 	let loadedFilter = "";
 
+
+
 	let showAllTracks =  Number(localStorage.SHOW_ALL_TRACKS || 0);
 
 	let filters = {};
 
 	let viewProperties = {};
+
+	let discordHandle = (sessionStorage && sessionStorage.discord) || "";
 
 
 	let isExportReady = false;
@@ -66,7 +70,11 @@
 		return true;
 	}
 
-
+	function makePostLoginUpdates()
+	{
+		discordHandle = (sessionStorage && sessionStorage.discord) || "";
+		return discordHandle;
+	}
 
 	function loadFilters()
 	{
@@ -386,15 +394,15 @@
 		<a href="/docs">API Documentation</a>
 		
 		
-		{#if sessionStorage["discord"]}
-			<a class='discord-invite' on:click={() => {location.href = sessionStorage["discord"]}} href={sessionStorage["discord"]}>
+		{#if discordHandle}
+			<a class='discord-invite' href={discordHandle}>
 				<span>Join our discord!</span>
 				
 			</a>
 		{/if}
 	</nav>
 
-	<LoginButton display="fixed"/>
+	<LoginButton display="fixed" on:login={makePostLoginUpdates} />
 {/if}
 
 {#if mobileLayout}
@@ -402,7 +410,7 @@
 		<div class='navbar'>
 			<img alt="menu icond" on:click={()=>{mobileNavOpen = !mobileNavOpen}} src="/menu.png" />
 			<span class='mobile-top flex-main'>Ponymusic.wiki</span>
-			<LoginButton display="inline"/>
+			<LoginButton display="inline" on:login={makePostLoginUpdates} />
 		</div>
 	</nav>
 
@@ -422,8 +430,8 @@
 		<a href="/album-import">Import Album</a>
 		<!--a href="/grid-import">Bulk Import</a-->
 		<a href="/docs">API Documentation</a>
-		{#if sessionStorage["discord"]}
-			<a href={sessionStorage["discord"]}>Join our discord!</a>
+		{#if discordHandle}
+			<a href={discordHandle}>Join our discord!</a>
 		{/if}
 	</div>
 	{/if}

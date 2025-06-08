@@ -1,7 +1,9 @@
 <script>
 	import CircleSpinner from "./CircleSpinner.svelte";
+	import {createEventDispatcher} from "svelte";
 	export let display = "fixed";
 
+	let eventDispatch = createEventDispatcher();
 	let signedIn = !!localStorage.role;
 	let avatar = localStorage.avatar || "/discord.png";
 	let loading = false;
@@ -89,10 +91,8 @@
 				sessionStorage.session = localStorage.session;
 				sessionStorage.discord = data.discord;
 
-				if(needReload)
-				{
-					window.location.reload(true);
-				}
+
+				eventDispatch("login", {})
 			}
 			else if(data.status == 400)
 			{
