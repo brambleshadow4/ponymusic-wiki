@@ -28,8 +28,7 @@ async function doConversion()
 	});
 
 	let response = await db.query(`
-SELECT * FROM tracks WHERE titlecache LIKE '%" by%Vylet%' AND id NOT IN 
-(SELECT track_id FROM track_tags WHERE property='artist' and value='Vylet Pony')
+SELECT track_id as id FROM track_tags WHERE property='album' AND value='CHROMATIC HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH'
 	`)
 
 	let affectedIDs = response.rows.map(x => x.id);
@@ -82,8 +81,6 @@ SELECT * FROM tracks WHERE titlecache LIKE '%" by%Vylet%' AND id NOT IN
 			}
 		}*/
 
-		affected = true;
-
 		// replace one tag  with another
 
 		/*let TAG = "featured artist"
@@ -103,8 +100,11 @@ SELECT * FROM tracks WHERE titlecache LIKE '%" by%Vylet%' AND id NOT IN
 		
 
 		// Add a tag
-		//track.tags.push({property: "tag", "value":"ASOS"});
-		//affected = true;
+		if(track.tags.filter(x => x.property == "tag" && x.value == "Pinkamena Party").length == 0)
+		{
+			track.tags.push({property: "tag", "value":"Pinkamena Party"});
+			affected = true;
+		}
 
 		// replace bad dates
 		//if(track.release_date == "2022-12-10T00:00:00.000Z")
