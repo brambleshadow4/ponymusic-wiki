@@ -104,11 +104,10 @@ export function buildFilterQuery(filters, sort, page, includeSession)
 		params.push("session=" + localStorage.session);
 	}
 
-	if(includeSession && localStorage.SHOW_ALL_TRACKS == "1")
+	if(localStorage.SHOW_ALL_TRACKS != "1" && !(sort.length && sort[0].asc == "album_no"))
 	{
-		params.push("all=1");
+		params.push("hidden=false");
 	}
-
 
 	for(let property in filters)
 	{
@@ -237,5 +236,6 @@ Columns.GenreNF = {name: "Genre", width: "100", property: "genre"};
 Columns.Tags = {name: "Tags", width: "100", property: "tag", filtered: false};
 Columns.ReleasedNF = {name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)]};
 Columns.Released = {name: "Released", width: "100", property: "release_date", transform: (x) => [x.substring(0,10)], filtered: false};
+Columns.Hidden = {name: "Hidden", width: "25", property: "hidden", transform: (x) => x ? "✓" : "",  filtered: true}
 
 export {Columns, HeardButtons, statusIcon};

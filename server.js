@@ -389,9 +389,10 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let page = Number(req.query.page) || 0; 
 	
 	let limitCount = PAGE_COUNT;
-	let offset = page*PAGE_COUNT;	
+	let offset = page*PAGE_COUNT;
 
-	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","original_artist","album","genre","pl","tag","release_date","status","title","remixcover"]));
+	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","original_artist","album","genre","pl","tag","release_date","status","title","remixcover","hidden"]));
+	
 	let albumNoSelect = "";
 	let orderBy = "ORDER BY release_date DESC";	
 
@@ -419,7 +420,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	}
 
 	let query = `
-		SELECT id, title, release_date,
+		SELECT id, title, release_date, hidden, 
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') FROM track_tags WHERE track_id=id AND (property='artist' OR property='original artist')) AS artist,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') FROM track_tags WHERE track_id=id AND property='artist') AS remix_artist,
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') FROM track_tags WHERE track_id=id AND property='featured artist') AS featured_artist, 
@@ -1487,12 +1488,7 @@ async function buildWhereClause(req, allowedFilters)
 	let session = req.query.session;
 
 	let whereClause = "";
-	let whereClauses = ["hidden=false"];
-
-	if(req.query.all)
-	{
-		whereClauses = [];
-	}
+	let whereClauses = [];
 
 	let simpleFilters = ["artist","featured_artist","album","genre","pl","tag","remixcover","original_artist"];
 	
@@ -1524,6 +1520,14 @@ async function buildWhereClause(req, allowedFilters)
 		{
 			whereClauses.push(buildWhereClausePart(prop, req.query[negKey], true))
 		}
+	}
+
+	if(allowedFilters.has("hidden"))
+	{
+		if(req.query.hidden == "true")
+			whereClauses.push(`hidden = true`);
+		else if(req.query.hidden == "false")
+			whereClauses.push('hidden = false');
 	}
 
 

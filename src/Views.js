@@ -18,6 +18,7 @@ let DefaultView = {
 				Columns.Refs,
 				Columns.Genre,
 				Columns.Tags,
+				Columns.Hidden,
 				Columns.Released
 			]
 		}
@@ -40,6 +41,7 @@ let ArtistView = {
 				Columns.Refs,
 				Columns.Genre,
 				Columns.Tags,
+				Columns.Hidden,
 				Columns.Released
 			],
 
@@ -60,6 +62,7 @@ let ArtistView = {
 				Columns.Refs,
 				Columns.Genre,
 				Columns.Tags,
+				Columns.Hidden,
 				Columns.Released
 			],
 
@@ -80,6 +83,7 @@ let ArtistView = {
 				Columns.Refs,
 				Columns.Genre,
 				Columns.Tags,
+				Columns.Hidden,
 				Columns.Released
 			],
 
@@ -139,6 +143,7 @@ let TagView = {
 				Columns.Refs,
 				Columns.Genre,
 				Columns.Tags,
+				Columns.Hidden,
 				Columns.Released
 			],
 			filter: function(filters) {
@@ -168,6 +173,7 @@ let GenreView = {
 				Columns.Refs,
 				Columns.Genre,
 				Columns.Tags,
+				Columns.Hidden,
 				Columns.Released
 			],
 			filter: function(filters) {

@@ -118,6 +118,16 @@
 		}
 	}
 
+	function updateHiddenColVisibility(columnnDefs)
+	{
+		let newDefs = columnDefs.slice();
+		if(localStorage.SHOW_ALL_TRACKS != "1")
+		{
+			newDefs = newDefs.filter(x => x.property != "hidden");
+		}
+		return newDefs;
+	}
+
 	function onPageChange(e)
 	{
 		if(e.detail > page[0])
@@ -355,7 +365,7 @@
 	
 	{#if loaded}
 		<Grid 
-			columns={columnDefs}
+			columns={updateHiddenColVisibility(columnDefs)}
 			data={data}
 			page={page}
 			total={total}

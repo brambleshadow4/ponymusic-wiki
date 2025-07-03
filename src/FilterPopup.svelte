@@ -71,6 +71,10 @@
 				break;
 			case "status":
 				groups = statusGroups();
+				break;
+			case "hidden":
+				groups = hiddenGroups();
+
 		}
 
 		flattenGroups(filterItems, groups)
@@ -234,6 +238,36 @@
 				value: "0",
 				parent: groups
 			},
+		];
+
+		groups.children = children;
+		return groups;
+	}
+
+	function hiddenGroups()
+	{
+		let groups = {
+			name: "All",
+			level: 0,
+			checked: 3,
+			children: []
+		};
+
+		let children = [
+			{
+				name: "Hidden",
+				level: 1,
+				checked: 3,
+				value: "true",
+				parent: groups
+			},
+			{
+				name: "Not Hidden",
+				level: 1,
+				checked: 3,
+				value: "false",
+				parent: groups
+			}
 		];
 
 		groups.children = children;
@@ -488,7 +522,7 @@
 			return;
 		}
 
-		if(posFilters.length < negFilters.length)
+		if(posFilters.length <= negFilters.length)
 		{
 			dispatch('change', {
 				property,
