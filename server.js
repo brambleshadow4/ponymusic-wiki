@@ -17,7 +17,9 @@ import {prepareExport} from "./server/exportWorker.js";
 import {PERM, ROLE, auth, reqHasPerm, getSession} from "./server/auth.js";
 import {getOgCache, getOgPropertiesFromURL, areTitlesIdentical, canonicalURL} from './server/helpers.js';
 
-const validProperties = ["album","genre","artist","featured artist","tag","hyperlink","alt mix hyperlink","reupload hyperlink", "youtube offset", "pl","cover","remix","original artist"];
+const validProperties = ["album","genre","artist","featured artist","tag",
+	"hyperlink","alt mix hyperlink","reupload hyperlink", "youtube offset",
+	"pl","cover","remix","original artist", "hidden"];
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -762,7 +764,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		tag.value = trim2(tag.value);
 
 		// Use whatever existing casing is in the database for the tag value.
-		if(tag.property != "hyperlink")
+		if(["hyperlink","reupload hyperlink","alt mix hyperlink","youtube offset"].indexOf(tag.property) == -1)
 		{
 			var goodTag;
 			if(tag.property=='featured artist' || tag.property=='artist')
@@ -785,7 +787,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		}
 	}
 
-	// deduplicate tags
+	// deduplicate tags + remove hidden:1 tag
 	for(let i=0; i < data.tags.length; i++)
 	{
 		let tag = data.tags[i]
@@ -796,7 +798,27 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 			data.tags.splice(i, 1);
 			i--;
 		}
+
+		if(tag.property == "hidden" && tag.value == "1")
+		{
+			data.tags.splice(i, 1);
+			i--;
+		}
 	}
+
+	// set hidden:1 property
+	if(data.tags.filter(
+		x => ["alt mix hyperlink","hyperlink","youtube offset","reupload hyperlink"].indexOf(x.property) != -1
+		&& x.number != "1"
+		).length == 0)
+	{
+		data.tags.push({property: "hidden", value: "1"});
+	}
+
+	let shouldHideTrack = data.tags.filter(x => x.property == "hidden").length > 0;
+		
+
+
 
 
 	// check if there are any changes
@@ -808,6 +830,23 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 		if(!oldTrack.deleted)
 		{
+			if(!reqHasPerm(req, PERM.HIDE_TRACK))
+			{
+				let oldSig = oldTrack.tags.filter(x => x.property == "hidden" && x.value != 1).map(x => x.value);
+				oldSig.sort();
+				oldSig = oldSig.join("");
+
+				let sig = data.tags.filter(x => x.property == "hidden" && x.value != 1).map(x => x.value);
+				sig.sort();
+				sig = sig.join("");
+
+				if(sig != oldSig)
+				{
+					res.json({status:400, error: "Forbiddn tag addition/removal"});
+					return;
+				}
+			}
+
 			hasChanges = false;
 			if(oldTrack.title != data.title || oldTrack.release_date != data.release_date)
 			{
@@ -815,6 +854,8 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 			}
 
 			let oldTags = oldTrack.tags.filter(x => x.property != "original artist");
+
+
 
 			if(oldTags.length == data.tags.length)
 			{
@@ -831,9 +872,11 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 			{
 				hasChanges = true;
 			}
-		}
+		}	
+	}
+	else
+	{
 
-		
 	}
 
 	titleCache = (`"${title}" by ${titleCacheArtists.join(", ")}`).substring(0,500);
@@ -852,7 +895,9 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 	if(id == "new")
 	{
-		let x = await db.query("INSERT INTO tracks (title, release_date, locked, ogcache, titlecache) VALUES ($1, $2, false, $3, $4) RETURNING id", [title, release_date, ogcache, titleCache]);
+		let x = await db.query(`INSERT INTO tracks (title, release_date, locked, ogcache, titlecache, hidden) 
+			VALUES ($1, $2, false, $3, $4, $5) RETURNING id`,
+			[title, release_date, ogcache, titleCache, shouldHideTrack]);
 
 		if(x.err)
 		{
@@ -875,7 +920,8 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		let {rows} = await db.query("SELECT * FROM tracks WHERE id=$1", [id]);
 		if(rows.length)
 		{
-			info = await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3, titlecache=$5 WHERE id=$4", [title, release_date, ogcache, id, titleCache]);	
+			info = await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3, titlecache=$5, hidden=$6 WHERE id=$4", 
+				[title, release_date, ogcache, id, titleCache,shouldHideTrack]);	
 			if(info.err)
 			{ 
 				res.json({status:400, error: "Error code 2"});
@@ -885,7 +931,8 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		else
 		{
 			// restoring a deleted track
-			await db.query("INSERT INTO tracks (id, title, release_date, locked, ogcache, titlecache) VALUES ($1, $2, $3, false, $4, $5)", [id, title, release_date, ogcache, titleCache]);
+			await db.query("INSERT INTO tracks (id, title, release_date, locked, ogcache, titlecache) VALUES ($1, $2, $3, false, $4, $5)", 
+				[id, title, release_date, ogcache, titleCache,shouldHideTrack]);
 		}
 	}	
 
@@ -940,11 +987,9 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		}
 	}
 
-	let hiddenResp = await db.query("SELECT hidden FROM tracks WHERE id=$1", [id]);
-	let hidden = hiddenResp.rows[0].hidden;
 	
 	if(hasChanges)
-		info = await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, hidden, release_date, tags: data.tags}]);
+		info = await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, "hidden": shouldHideTrack, release_date, tags: data.tags}]);
 
 	if (info.err) {
 		res.json({status:400, error: "error 5"});
@@ -976,25 +1021,9 @@ app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =
 		res.json({status: 400});
 	}
 
-	if(data.hide)
-	{
-		await db.query("UPDATE tracks SET hidden=true WHERE id=$1", [id]);
-		let track = await getTrackObject(id, "");
-
-		await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title: track.title, hidden:true, release_date: track.release_date, tags: track.tags}]);
-	}
-	else if(data.unhide)
-	{
-		await db.query("UPDATE tracks SET hidden=false WHERE id=$1", [id]);
-		let track = await getTrackObject(id, "");
-		await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title: track.title, hidden:false, release_date: track.release_date, tags: track.tags}]);
-	}
-	else
-	{
-		await db.query("DELETE FROM tracks WHERE id=$1", [id]);	
-		await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
-		await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {deleted:true}]);
-	}	
+	await db.query("DELETE FROM tracks WHERE id=$1", [id]);	
+	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
+	await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {deleted:true}]);
 
 	res.json({status: 200, id});
 });
@@ -1400,8 +1429,6 @@ async function getPropertyObject(recType, id)
 			propObject.derived_properties.push(['member of', row.id]);
 		}
 	}
-
-	
 
 	return propObject;
 }
