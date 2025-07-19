@@ -12,7 +12,7 @@ let DefaultView = {
 			columns: [
 				Columns.Status,
 				{name: "Artist", width: "200", property: "artist", linkTo:"/artist/*",  filtered: false},
-				{name: "Featured Arist", width: "50", property: "featured_artist", linkTo:"/artist/*", filtered: false},
+				{name: "Featured Artist", width: "50", property: "featured_artist", linkTo:"/artist/*", filtered: false},
 				Columns.Title,
 				Columns.Album,
 				Columns.Refs,
