@@ -6,6 +6,7 @@
 	import TrackWarnings from "./TrackWarnings.svelte";
 	import Spinner from "./Spinner.svelte";
 	import { createEventDispatcher } from 'svelte';
+	import DropDownButton from "./components/DropDownButton.svelte"
 	import {tagComp, setUserFlag} from "./helpers.js";
 	import {PERM, hasPerm} from "./authClient.js";
 	import {parseTitle} from "./titleParsing.js";
@@ -908,8 +909,12 @@
 					<p>Sign in to make edits to the wiki</p>
 				{/if}
 				{#if hasPerm(PERM.DELETE_TRACK) && id != "new"}	
-					<button style="float: right; margin-right:.5in" on:click={deleteTrack} disabled={sendingRequest}>Delete</button>
-					<button style="float: right;" on:click={hideTrack} disabled={sendingRequest}>{track.hidden ? "Unhide" : "Hide"}</button>
+					<div style="float: right; margin-right: 15px;">
+						
+						<button on:click={deleteTrack} disabled={sendingRequest}>Delete</button>
+						<DropDownButton caption="Hide" />
+					</div>
+					
 				{/if}
 				{#if errorMessage}
 					<p>{errorMessage}</p>
