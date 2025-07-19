@@ -58,11 +58,12 @@ export function isYouTubeOffset(url)
 {
 	let params = url.substring(url.indexOf("?")+1).split("&")
 	
-	return url.indexOf("www.youtube.com") > -1 && params.filter(x => x.startsWith("t=")).length > 0;
+	return url.indexOf("youtube.com") > -1 && params.filter(x => x.startsWith("t=")).length > 0;
 }
 
 /**
  * Returns the standard version of a URL (no extra parameter, etc.) 
+ * Make sure this is copied in both server and client helper.js
  **/
 export function canonicalURL(url, keepYToffset)
 {
@@ -70,8 +71,19 @@ export function canonicalURL(url, keepYToffset)
 	if(url.startsWith("https://www.youtube.com") || url.startsWith("https://youtube.com") || url.startsWith("https://youtu.be/"))
 	{
 		let params = url.substring(url.indexOf("?")+1).split("&");
-
 		let tParam = params.filter(x => x.startsWith("t="))[0] || "";
+
+		// some people add the youtube timestamps without the S at the end, so we add it back
+		if(tParam != "")
+		{
+			let charCode = tParam[tParam.length -1].charCodeAt(0);
+			if(48 <= charCode && charCode <= 57)
+			{
+				url += "s";
+				tParam += "s";
+			}
+		}
+
 		let vParam = params.filter(x => x.startsWith("v="))[0] || "";
 
 		if(url.startsWith("https://youtu.be/"))
