@@ -805,29 +805,35 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 	if(id != "new")
 	{
 		let oldTrack = await getTrackObject(id, "");
-		hasChanges = false;
-		if(oldTrack.title != data.title || oldTrack.release_date != data.release_date)
-		{
-			hasChanges = true;
-		}
 
-		let oldTags = oldTrack.tags.filter(x => x.property != "original artist");
-
-		if(oldTags.length == data.tags.length)
+		if(!oldTrack.deleted)
 		{
-			for(let tag of oldTags)
+			hasChanges = false;
+			if(oldTrack.title != data.title || oldTrack.release_date != data.release_date)
 			{
-				if(data.tags.filter(x => x.property == tag.property && x.value == tag.value && x.number == tag.number).length != 1)
+				hasChanges = true;
+			}
+
+			let oldTags = oldTrack.tags.filter(x => x.property != "original artist");
+
+			if(oldTags.length == data.tags.length)
+			{
+				for(let tag of oldTags)
 				{
-					hasChanges = true;
-					break;
+					if(data.tags.filter(x => x.property == tag.property && x.value == tag.value && x.number == tag.number).length != 1)
+					{
+						hasChanges = true;
+						break;
+					}
 				}
 			}
+			else
+			{
+				hasChanges = true;
+			}
 		}
-		else
-		{
-			hasChanges = true;
-		}
+
+		
 	}
 
 	titleCache = (`"${title}" by ${titleCacheArtists.join(", ")}`).substring(0,500);
