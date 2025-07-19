@@ -47,7 +47,11 @@ function propertyOrder(tag){
 		case "pl": return 11;
 		case "cover": return 12;
 		case "remix": return 13;
-		default: return 14;
+		case "tag": return 14;
+		// default
+		case "hidden": return 16;
+		default: return 15;
+
 	}
 }
 

@@ -910,9 +910,11 @@
 				{/if}
 				{#if hasPerm(PERM.DELETE_TRACK) && id != "new"}	
 					<div style="float: right; margin-right: 15px;">
-						
+						<DropDownButton caption="Hide" options={[
+							{caption: "Not Pony", handler:()=>{addTag({property:"hidden",value:"2"})}},
+							{caption: "Other", handler:()=>{addTag({property:"hidden",value:"3"})}}
+						]} />
 						<button on:click={deleteTrack} disabled={sendingRequest}>Delete</button>
-						<DropDownButton caption="Hide" />
 					</div>
 					
 				{/if}

@@ -58,6 +58,15 @@
 
 			return text;
 		}
+		if(tag.property == "hidden")
+		{
+			switch(tag.value){
+				case "1": text = "No working URL"; break;
+				case "2": text = "Not Pony"; break;
+				case "3": text = "Other"; break;
+			}
+			return "hidden:" + text;
+		}
 		if(tag.property == "tag"){
 			return (tag.text||tag.value);
 		}
@@ -85,6 +94,8 @@
 			case "remix":
 			case "cover":
 				return "yellow";
+			case "hidden":
+				return "hidden"
 		}
 		return "";
 	}
@@ -206,6 +217,11 @@
 	}
 	.blue .count {
 		background-color: rgb(157, 193, 212);
+	}
+
+	.hidden {
+		background-color: #FFEECC;
+		border-color: #FFCC66;
 	}
 
 	.indigo{
