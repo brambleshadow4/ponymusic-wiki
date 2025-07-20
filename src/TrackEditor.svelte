@@ -6,7 +6,7 @@
 	import TrackWarnings from "./TrackWarnings.svelte";
 	import Spinner from "./Spinner.svelte";
 	import { createEventDispatcher } from 'svelte';
-	import DropDownButton from "./components/DropDownButton.svelte"
+	import DropDownButton from "./components/DropdownButton.svelte"
 	import {tagComp, setUserFlag} from "./helpers.js";
 	import {PERM, hasPerm} from "./authClient.js";
 	import {parseTitle} from "./titleParsing.js";
