@@ -28,7 +28,7 @@ async function doConversion()
 	});
 
 	let response = await db.query(`
-SELECT track_id as id FROM track_tags WHERE property='album' AND value='CHROMATIC HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH'
+SELECT id FROM tracks WHERE hidden=true
 	`)
 
 	let affectedIDs = response.rows.map(x => x.id);
@@ -100,9 +100,9 @@ SELECT track_id as id FROM track_tags WHERE property='album' AND value='CHROMATI
 		
 
 		// Add a tag
-		if(track.tags.filter(x => x.property == "tag" && x.value == "Pinkamena Party").length == 0)
+		//if(track.tags.filter(x => x.property == "hidden" && x.value == "Pinkamena Party").length == 0)
 		{
-			track.tags.push({property: "tag", "value":"Pinkamena Party"});
+			track.tags.push({property: "hidden", "value":"3"});
 			affected = true;
 		}
 
