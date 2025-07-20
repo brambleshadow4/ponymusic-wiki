@@ -79,13 +79,7 @@
 
 	function isVisibilityChange(historyRow)
 	{
-		if(historyRow.value.deleted)
-			return true;
-
-		if(!historyRow.value || !historyRow.previous_value)
-			return false;
-
-		return !!historyRow.value.hidden != !!historyRow.previous_value.hidden;
+		return !!historyRow.value.deleted
 	}
 
 </script>

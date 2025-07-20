@@ -207,8 +207,9 @@
 		{#if current.deleted}
 			<span class='deleted'>Track deleted</span>
 		{:else}
-			{#if current.hidden && !previous.hidden}<span class='hidden'>Track hidden</span>{/if}
-			{#if !current.hidden && previous.hidden}<span class='hidden'>Track unhidden</span>{/if}
+			<!-- Track Hidden/Unhidden are needed for legacy entries. Seee edits on 2/13/2025 for examples -->
+			{#if current.hidden && !previous.hidden && removedTags.length == 0 && addedTags.length == 0 }<span class='hidden'>Track hidden</span>{/if}
+			{#if !current.hidden && previous.hidden && removedTags.length == 0 && addedTags.length == 0}<span class='hidden'>Track unhidden</span>{/if}
 			{#if current.title != previous.title}
 				<div class='indent'>Title: {previous.title || ""} => {current.title || ""}</div>
 			{/if}

@@ -931,7 +931,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 		else
 		{
 			// restoring a deleted track
-			await db.query("INSERT INTO tracks (id, title, release_date, locked, ogcache, titlecache) VALUES ($1, $2, $3, false, $4, $5)", 
+			await db.query("INSERT INTO tracks (id, title, release_date, locked, ogcache, titlecache, hidden) VALUES ($1, $2, $3, false, $4, $5, $6)", 
 				[id, title, release_date, ogcache, titleCache,shouldHideTrack]);
 		}
 	}	
