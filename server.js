@@ -1582,7 +1582,7 @@ async function buildWhereClause(req, allowedFilters)
 
 				hiddenQueries.push(`id IN (SELECT track_id FROM track_tags WHERE value IN (${[...hiddenSet].map(sqlEscapeString).join(",")}) AND property='hidden')`)
 
-			whereClauses.push(hiddenQueries.join(" OR "));
+			whereClauses.push("(" + hiddenQueries.join(" OR ") + ")");
 		}
 	}
 
