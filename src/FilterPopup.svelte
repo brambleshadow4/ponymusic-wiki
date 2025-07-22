@@ -253,21 +253,46 @@
 			children: []
 		};
 
-		let children = [
+		let hidden = {
+			name: "Hidden",
+			level: 1,
+			checked: 3,
+			parent: groups,
+		};
+
+		hidden.children = [
 			{
-				name: "Hidden",
-				level: 1,
+				name: "No working URL",
+				level: 2,
 				checked: 3,
-				value: "true",
-				parent: groups
+				value: "1",
+				parent: hidden
 			},
+			{
+				name: "Not Pony",
+				level: 2,
+				checked: 3,
+				value: "2",
+				parent: hidden
+			},
+			{
+				name: "Other",
+				level: 2,
+				checked: 3,
+				value: "3",
+				parent: hidden
+			},
+		];
+
+		let children = [
 			{
 				name: "Not Hidden",
 				level: 1,
 				checked: 3,
-				value: "false",
+				value: "0",
 				parent: groups
-			}
+			},
+			hidden
 		];
 
 		groups.children = children;

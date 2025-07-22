@@ -394,7 +394,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let offset = page*PAGE_COUNT;
 
 	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","original_artist","album","genre","pl","tag","release_date","status","title","remixcover","hidden"]));
-	
+
 	let albumNoSelect = "";
 	let orderBy = "ORDER BY release_date DESC";	
 
@@ -1558,6 +1558,32 @@ async function buildWhereClause(req, allowedFilters)
 			whereClauses.push(`hidden = true`);
 		else if(req.query.hidden == "false")
 			whereClauses.push('hidden = false');
+		else
+		{	
+			let hiddenSet = new Set(["0","1","2","3"]);
+			if(req.query.hidden)
+			{
+				hiddenSet = new Set(req.query.hidden);
+			}
+			else if(req.query.x_hidden)
+			{
+				req.query.x_hidden.forEach(x => hiddenSet.delete(x));
+			}
+
+			let hiddenQueries = [];
+
+			if(hiddenSet.has("0"))
+			{
+				hiddenQueries.push("hidden = false");
+				hiddenSet.delete("0");
+			}
+
+			if(hiddenSet.size > 0)
+
+				hiddenQueries.push(`id IN (SELECT track_id FROM track_tags WHERE value IN (${[...hiddenSet].map(sqlEscapeString).join(",")}) AND property='hidden')`)
+
+			whereClauses.push(hiddenQueries.join(" OR "));
+		}
 	}
 
 
