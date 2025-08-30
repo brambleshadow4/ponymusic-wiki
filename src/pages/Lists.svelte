@@ -41,7 +41,7 @@
 		return newObj;
 	}
 
-	function updateStarredList()
+	async function updateStarredList()
 	{
 		if(starListToggle && !starList)
 		{
@@ -52,6 +52,23 @@
 
 			allLists.push(newList);
 			allLists = allLists;
+		}
+		if(!starListToggle && starList)
+		{
+			var response = await (await fetch("/api/updateList", 
+			{
+				method: "DELETE",
+				headers: {"Content-Type": "text/json"},
+				body: JSON.stringify({
+					id: starList.id,
+					session: localStorage.session
+				})
+			})).json();
+			
+			let k = allLists.indexOf(starList);
+			allLists.splice(k, 1);
+			allLists = allLists;
+			starListToggle = false;
 		}
 	}
 

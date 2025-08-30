@@ -1412,6 +1412,47 @@ app.put("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) =
 })
 
 
+app.delete("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) => {
+
+	let userID = (await getSession(req)).user_id;
+	let body = req.body || {};
+
+	body.id = (body.id || "").toString();
+	
+
+
+	
+
+	if(body.id == "")
+	{
+		res.json({status: 400, error: "No ID provided"});
+		return;
+	}
+
+	let listData = await getPropertyObject("list", body.id);
+
+	let owners = listData.properties.filter(x => x[0] == "owner");
+	if(!owners[0] || owners[0][1] != userID)
+	{
+		res.json({status: 403, error: "You do not own this list"});
+		return;
+	} 
+
+	if(owners.length > 1)
+	{
+		res.json({status: 403, error: "Multiple people own this list"});
+		return;
+	} 
+
+	let rows = await db.query(`
+		DELETE FROM tag_metadata
+		WHERE type='list' AND id=$1
+	`, [body.id]);
+
+	res.json({status: 200});
+})
+
+
 app.put("/api/updateProperty", processJSON, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
 
 	let userID = (await getSession(req)).user_id;

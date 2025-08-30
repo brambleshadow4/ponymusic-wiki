@@ -17,8 +17,6 @@
 
 	async function trySave()
 	{
-		
-
 		let body = {
 			id: data.id,
 			name: data.name,
