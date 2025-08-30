@@ -1327,6 +1327,90 @@ app.put("/api/updateObject", processJSON, auth(PERM.EDIT_TAG_METADATA), async (r
 
 });
 
+app.get("/api/myLists", queryProcessing, auth(PERM.EDIT_LISTS), async (req,res) => {
+
+	let userID = (await getSession(req)).user_id;
+
+	let lists = await db.query("SELECT id FROM tag_metadata WHERE type='list' AND property='owner' AND value=$1", [userID]);
+
+	let listData = await Promise.all(lists.rows.map(x => getPropertyObject("list", x.id)));
+
+	return res.json({status: 200, lists: listData});
+})
+
+app.put("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) => {
+
+	let userID = (await getSession(req)).user_id;
+	let body = req.body || {};
+
+	body.id = (body.id || "").toString();
+	body.name = (body.name || "").toString();
+	body.description = (body.description || "").toString();
+
+
+	let slug = (req.body.slug || "" ).toString();
+
+	if(!/^[A-Za-z0-9_]+$/.exec(slug) && slug.length < 60)
+	{
+		res.json({status: 400, error: "URL Slug is invalid"})
+		return;
+	}
+
+	let slugMatches = await db.query("SELECT id FROM tag_metadata WHERE type='list' AND property='slug' AND value=$1", [slug]);
+
+	if(slugMatches.rows.length > 0 && slugMatches.rows[0].id != body.id)
+	{
+		res.json({status: 400, error: "URL slug is being used by another list"});
+		return;
+	}
+
+	if(body.name.length > 100)
+	{
+		res.json({status: 400, error: "Name is too long"})
+		return;
+	}
+
+	if(body.description.length > 500)
+	{
+		res.json({status: 400, error: "Description is too long"})
+		return;
+	}
+
+	if(body.id == "")
+	{
+		let rows = await db.query(`
+			INSERT INTO tag_metadata (type,id,property,value)
+			VALUES ('list', (select COALESCE(max(id::int+1),1) from tag_metadata WHERE type='list'),'owner', $1)
+			RETURNING (select COALESCE(max(id::int+1),1) from tag_metadata WHERE type='list')`, [userID]);
+		
+		body.id = rows.rows[0].coalesce;
+	}
+
+	let listData = await getPropertyObject("list", body.id);
+
+	let owners = listData.properties.filter(x => x[0] == "owner");
+	if(!owners[0] || owners[0][1] != userID)
+	{
+		res.json({status: 403, error: "You do not own this list"});
+		return;
+	} 
+
+	let rows = await db.query(`
+		DELETE FROM tag_metadata
+		WHERE type='list' AND id=$1 AND property NOT IN ('owner')
+	`, [body.id]);
+
+	rows = await db.query(`
+		INSERT INTO tag_metadata (type, id, property, value)
+		VALUES ('list', $1, 'name', $2),
+		('list', $1, 'description', $3),
+		('list', $1, 'slug', $4)
+		${body.star ? ", ('list', $1, 'star', 1)" :""} 
+	`, [body.id, body.name, body.description, body.slug]);
+
+	res.json({status: 200, id: body.id});
+})
+
 
 app.put("/api/updateProperty", processJSON, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
 
@@ -1828,7 +1912,6 @@ function queryProcessing(req, res, next)
 		s = s.map(x => x.replace(/\uE000/g, ","));
 		req.query[key] = s;
 	}
-
 	next();
 }
 

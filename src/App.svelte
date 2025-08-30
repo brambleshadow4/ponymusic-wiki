@@ -16,6 +16,7 @@
 	import TagPage from "./pages/Tags.svelte";
 	import Spinner from "./Spinner.svelte";
 	import ArtistList from "./pages/Artists.svelte";
+	import Lists from "./pages/Lists.svelte";
 	import {DefaultView, AlbumView, ArtistView, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
 	
 	$: path = window.location.pathname;
@@ -28,8 +29,6 @@
 	let loadedTrackID = "";
 	let editProperties = null;
 	let loadedFilter = "";
-
-
 
 	let showAllTracks =  Number(localStorage.SHOW_ALL_TRACKS || 0);
 
@@ -466,6 +465,10 @@
 
 	{:else if pathSlug[0] == "remix"}
 		<ListView view={RemixCoverView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+
+	{:else if pathSlug[0] == "lists"}
+		<div class='main'><Lists /></div>
+		
 
 	{:else if pathSlug[0] == "about"}
 		<div class='main'>
