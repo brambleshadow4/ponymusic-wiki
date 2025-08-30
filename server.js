@@ -245,11 +245,20 @@ app.get("/api/search", queryProcessing, async (req,res) =>
 
 	var weakPattern = "%" + sqlEscapePercentOnly(search).toLowerCase() + "%";
 	var strongPattern = sqlEscapePercentOnly(search).toLowerCase() + "%";
-	
+
+	let includeInSearch = [
+		"artist",
+		"genre",
+		"album",
+		"tag"
+	]
+
+	let includeSearchStr = includeInSearch.map(x => "'" + x + "'").join(", ");
+
 	let queries = [
-		db.query("SELECT DISTINCT property,value FROM track_tags WHERE LOWER(value) LIKE $1 AND property NOT IN ('featured artist', 'original artist','hyperlink') ORDER BY value ASC LIMIT 10", [strongPattern]),
+		db.query("SELECT DISTINCT property,value FROM track_tags WHERE LOWER(value) LIKE $1 AND property IN ("+includeSearchStr+") ORDER BY value ASC LIMIT 10", [strongPattern]),
 		db.query("SELECT * FROM tracks WHERE LOWER(title) LIKE $1 AND hidden=false LIMIT 10", [strongPattern]),
-		db.query("SELECT DISTINCT property,value FROM track_tags WHERE LOWER(value) LIKE $1 AND property NOT IN ('featured artist', 'original artist','hyperlink') ORDER BY value ASC LIMIT 10", [weakPattern]),
+		db.query("SELECT DISTINCT property,value FROM track_tags WHERE LOWER(value) LIKE $1 AND property IN ("+includeSearchStr+") ORDER BY value ASC LIMIT 10", [weakPattern]),
 		db.query("SELECT * FROM tracks WHERE LOWER(title) LIKE $1 AND hidden=false LIMIT 10", [weakPattern]),
 		db.query("SELECT 'artist' as property, id as value FROM tag_metadata WHERE property='alternate spelling' AND LOWER(value) LIKE $1 LIMIT 10", [weakPattern])
 	]
