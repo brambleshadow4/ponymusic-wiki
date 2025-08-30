@@ -1,18 +1,21 @@
 <script>
-	
-
 	export var data = {};
 
 	var saveNo = 0;
-
 	var errorText = "";
-
+	var slugBox = null;
 
 	function queueSave()
 	{
 		errorText = "";
 		let k = ++saveNo;
 		setTimeout(() => {if(k==saveNo) trySave();}, 400);
+	}
+
+	function formatSlug(el)
+	{
+		slugBox.value = slugBox.value.replace(/[^A-Za-z0-9_]/g,"");
+		queueSave();
 	}
 
 	async function trySave()
@@ -60,11 +63,17 @@
 
 </script>
 <div>
-	<label>Name:</label><input on:input={queueSave} bind:value={data.name} type="text" />
-	<label>Slug:</label><input on:input={queueSave} bind:value={data.slug} type="text" />
+	<label>Name:</label><input maxlength="100" on:input={queueSave} bind:value={data.name} />
+	<label>Slug:</label><input maxlength="60" bind:this={slugBox} on:input={formatSlug} on:change={formatSlug} bind:value={data.slug} />
 	<label>Description:</label>
-	<textarea on:input={queueSave} rows=4 bind:value={data.description}></textarea>
-	<p class={errorText == "200" ? "error green" : " error red"}>{errorText == "200" ? "Saved!" : errorText}&nbsp;</p>
+	<textarea maxlength="500"  on:input={queueSave} rows=4 bind:value={data.description}></textarea>
+	<p class={errorText == "200" ? "error green" : " error red"}>
+		{errorText == "200" ? "Saved!" : errorText}&nbsp;
+		{#if errorText == "200"}
+		<br>
+		<a href={"/list/" + data.slug}>ponymusic.wiki/list/{data.slug}</a>
+		{/if}
+	</p>
 	
 </div>
 
