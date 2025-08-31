@@ -170,11 +170,13 @@
 			await changeUserFlag(e);
 		else 
 		{
-			console.log(e.detail);
-			newPlaylistValues = []; // TODO grab this from the track
+			newPlaylistValues = e.detail.row.lists.split(",").filter(x => x != "");
+			console.log(newPlaylistValues)
+
 			pickPlaylistsProps = {
 				target: e.detail.target,
-				track_id: e.detail.row.id
+				track_id: e.detail.row.id,
+				row: e.detail.row
 			};
 		}
 	}
@@ -417,7 +419,13 @@
 			on:rowbuttonclick={rowButtonClick}
 		/>
 		{#if pickPlaylistsProps}
-			<PlaylistMenu track_id={pickPlaylistsProps.track_id} target={pickPlaylistsProps.target} on:close={() => pickPlaylistsProps = null} />
+			<PlaylistMenu bind:values={newPlaylistValues} track_id={pickPlaylistsProps.track_id} target={pickPlaylistsProps.target} 
+				on:close={() => {
+					
+					pickPlaylistsProps.row.lists = newPlaylistValues.join(",");
+					pickPlaylistsProps = null;
+					// newPlaylistValues
+				}} />
 		{/if}
 		
 	{:else}

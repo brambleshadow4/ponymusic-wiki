@@ -465,7 +465,8 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 			(SELECT COALESCE(string_agg(value, CHR(30)), '') FROM track_tags WHERE track_id=id AND property='tag') AS tag,
 			(SELECT COALESCE(value, '') FROM track_tags WHERE track_id=id AND property='pl') AS pl,
 			${albumNoSelect}
-			(SELECT value FROM user_flags WHERE track_id=id AND user_id=$1 AND flag='status') AS status
+			(SELECT value FROM user_flags WHERE track_id=id AND user_id=$1 AND flag='status') AS status,
+			(SELECT COALESCE(string_agg(value::text, ','), '') FROM user_flags WHERE track_id=id AND user_id=$1 AND flag='list') AS lists
 		FROM tracks 
 		${whereClause}
 		${orderBy}
@@ -1721,10 +1722,10 @@ app.put("/api/setUserLists", processJSON, auth(PERM.USER_FLAGS), async (req, res
 			return;
 		}
 
-		subQueries.push(`(${data.track_id}, '${userID}', 'list${list}', 1)`)
+		subQueries.push(`(${data.track_id}, '${userID}', 'list', ${list})`)
 	}
 
-	await db.query("DELETE FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag LIKE 'list%'", [data.track_id, userID]);
+	await db.query("DELETE FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag='list'", [data.track_id, userID]);
 	if(subQueries.length)
 		await db.query(`INSERT INTO user_flags (track_id, user_id, flag, value) VALUES ${subQueries.join(", ")}`);
 	
