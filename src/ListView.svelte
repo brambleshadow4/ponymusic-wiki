@@ -70,8 +70,6 @@
 				if(obj.status == 400)
 					return;
 
-				console.log(obj)
-
 				viewProperties = obj;
 			});
 		}
@@ -171,8 +169,6 @@
 		else 
 		{
 			newPlaylistValues = e.detail.row.lists.split(",").filter(x => x != "");
-			console.log(newPlaylistValues)
-
 			pickPlaylistsProps = {
 				target: e.detail.target,
 				track_id: e.detail.row.id,

@@ -19,6 +19,13 @@
 
 	async function updatePlaylists(e)
 	{
+		// delete old values - this can happen if an old list was deleted
+		for(let i=values.length-1; i>=0; i--)
+		{
+			if(options.filter(x => x.value==values[i]).length == 0)
+				values.splice(i, 1);
+		}
+
 		let response = await (await fetch("/api/setUserLists", {
 			method: "PUT",
 			headers: {"Content-Type": "text/json"},

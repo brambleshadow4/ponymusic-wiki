@@ -49,10 +49,10 @@
 
 </script>
 <span bind:this={menu} class='floatcheckboxmenu'>
-	{#each options as option}
+	{#each options as option, i}
 		<div>
-			<input type='checkbox' checked={values.indexOf(option.value) > -1} on:change={(e) => onChange(e,option)}>
-			<span class='option'>{option.text}</span>
+			<input id={'float-checkbox-'+i} type='checkbox' checked={values.indexOf(option.value) > -1} on:change={(e) => onChange(e,option)}>
+			<label for={'float-checkbox-'+i} class='option'>{option.text}</label>
 		</div>
 	{/each}
 </span>
@@ -74,6 +74,7 @@
 
 	.option {
 		margin-right: 5px;
+		display: inline;
 	}
 
 	.shield {
