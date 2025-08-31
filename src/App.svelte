@@ -382,6 +382,7 @@
 		<a href="/artists">Artists</a>
 		<a href="/albums">Albums</a>
 		<a href="/tags">Tags</a>
+		<a href="/lists">Lists</a>
 		<a href="/community">Community</a>
 		<span class='nav-heading'>The Wiki</span>
 		<a href="/about">About</a>
@@ -420,6 +421,7 @@
 		<a href="/artists">Artists</a>
 		<a href="/albums">Albums</a>
 		<a href="/tags">Tags</a>
+		<a href="/lists">Lists</a>
 		<a href="/community">Community</a>
 		<span class='nav-heading'>The Wiki</span>
 		<a href="/about">About</a>
@@ -465,7 +467,7 @@
 
 	{:else if pathSlug[0] == "remix"}
 		<ListView view={RemixCoverView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
-		
+
 	{:else if pathSlug[0] == "list"}
 		<ListView view={ListListView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 

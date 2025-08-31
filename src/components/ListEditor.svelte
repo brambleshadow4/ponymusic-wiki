@@ -1,4 +1,5 @@
 <script>
+	import {getMyLists} from "./myLists.js";
 	export var data = {};
 
 	var saveNo = 0;
@@ -60,32 +61,69 @@
 		if(response.id)
 			data.id = response.id;
 
-		getMyLists(true); // update the cache
+		await getMyLists(true); // update the cache
+	}
+
+	function open()
+	{
+		if(data.slug)
+		{
+			window.location = "/list/" + data.slug;
+		}
+		else
+		{
+			window.location = "/list/private/" + data.id;
+		}
+	}
+
+	async function tryDelete()
+	{
+		if(!confirm("Are you sure you want to delete " + (data.name || "this list") + "?\nYou cannot undo this."))
+			return;
+
+		var response = await (await fetch("/api/updateList", 
+		{
+			method: "DELETE",
+			headers: {"Content-Type": "text/json"},
+			body: JSON.stringify({
+				id: data.id,
+				session: localStorage.session
+			})
+		})).json();
+
+		window.location.reload();
 	}
 
 </script>
-<div>
+<div class='list'>
+	
 	<label>Name:</label><input maxlength="100" on:input={queueSave} bind:value={data.name} />
-	<label>Slug:</label><input maxlength="60" bind:this={slugBox} on:input={formatSlug} on:change={formatSlug} bind:value={data.slug} />
+	<label>Slug:</label>
+		<input maxlength="60" bind:this={slugBox} on:input={formatSlug} on:change={formatSlug} 
+			bind:value={data.slug} placeholder="Adding a slug will make this list viewable to everypony"/>
+	<div class='extra-info'><a href={"/list/" + data.slug}>ponymusic.wiki/list/{data.slug || "<your-slug>"}</a></div>
 	<label>Description:</label>
 	<textarea maxlength="500"  on:input={queueSave} rows=4 bind:value={data.description}></textarea>
-	<p class={errorText == "200" ? "error green" : " error red"}>
-		{errorText == "200" ? "Saved!" : errorText}&nbsp;
-		{#if errorText == "200"}
-		<br>
-		<a href={"/list/" + data.slug}>ponymusic.wiki/list/{data.slug}</a>
-		{/if}
-	</p>
+	<div style="margin: 0px; margin-top: 10px;"><button on:click={open}>View</button> <button on:click={tryDelete}>Delete</button> <span class={errorText == "200" ? "error green" : " error red"}>
+			{errorText == "200" ? "Saved!" : errorText}&nbsp;
+		</span></div>
+	
 	
 </div>
 
 
 <style>
 
-	div {
+	.list {
 		background-color: #f1f2f4;
 		border-radius: 10px;
 		padding-top: 20px;
+		margin-bottom: 20px;
+
+		padding-left: 10px;
+	}
+
+	div {
 		margin-bottom: 20px;
 	}
 
@@ -95,16 +133,18 @@
 
 	label {
 		width: 110px;
-		padding-left: 10px;
 		vertical-align: top;
 		line-height: 35px;
 	}
 
+	.extra-info {
+		width: calc(100% - 150px);
+		margin-left: 115px;
+		padding: 0px;
+	}
+
 	input,textarea {
 		width: calc(100% - 150px);
-	}
-	.error {
-		padding-left: 110px;
 	}
 	.green {
 		color: green;

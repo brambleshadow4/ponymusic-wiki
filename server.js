@@ -406,10 +406,29 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 
 	var loadedList = null;
 
-	if(req.query.list)
+	if(req.query.list || req.query.private_list)
 	{
-		let listSlug = req.query.list[0];
-		loadedList = await getListFromSlug(listSlug);
+		let listSlug = (req.query.list && req.query.list[0]) || "";
+		let privateListID = (req.query.private_list && req.query.private_list[0]) || "";
+
+		if(listSlug)
+		{
+			loadedList = await getListFromSlug(listSlug);
+		}
+		else if (privateListID)
+		{
+			loadedList = await getListFromID(privateListID);
+			if(loadedList.owner != userID)
+			{
+				res.json({status: 404});
+				return;
+			}
+		}
+		else
+		{
+			res.json({status: 404});
+			return;
+		}
 
 		if(loadedList.star)
 		{
@@ -417,7 +436,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 		}
 		else if (loadedList.owner != undefined)
 		{
-
+			req.query.listClause = `id IN (SELECT track_id FROM user_flags WHERE flag='list' AND value=${loadedList.id})`;
 		}
 		else
 		{
@@ -1389,21 +1408,27 @@ app.put("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) =
 	body.name = (body.name || "").toString();
 	body.description = (body.description || "").toString();
 
-
 	let slug = (req.body.slug || "" ).toString();
 
-	if(!/^[A-Za-z0-9_]+$/.exec(slug) && slug.length < 60)
+	if(!body.star && slug == "")
 	{
-		res.json({status: 400, error: "URL Slug is invalid"})
-		return;
+		// fine, it's just not public
 	}
-
-	let slugMatches = await db.query("SELECT id FROM tag_metadata WHERE type='list' AND property='slug' AND value=$1", [slug]);
-
-	if(slugMatches.rows.length > 0 && slugMatches.rows[0].id != body.id)
+	else
 	{
-		res.json({status: 400, error: "URL slug is being used by another list"});
-		return;
+		if(!/^[A-Za-z0-9_]+$/.exec(slug) && slug.length < 60)
+		{
+			res.json({status: 400, error: "URL Slug is invalid"})
+			return;
+		}
+
+		let slugMatches = await db.query("SELECT id FROM tag_metadata WHERE type='list' AND property='slug' AND value=$1", [slug]);
+
+		if(slugMatches.rows.length > 0 && slugMatches.rows[0].id != body.id)
+		{
+			res.json({status: 400, error: "URL slug is being used by another list"});
+			return;
+		}
 	}
 
 	if(body.name.length > 100)
@@ -1448,7 +1473,7 @@ app.put("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) =
 		('list', $1, 'description', $3),
 		('list', $1, 'slug', $4)
 		${body.star ? ", ('list', $1, 'star', 1)" :""} 
-	`, [body.id, body.name, body.description, body.slug]);
+	`, [body.id, body.name, body.description, slug]);
 
 	res.json({status: 200, id: body.id});
 })
@@ -1461,10 +1486,6 @@ app.delete("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res
 
 	body.id = (body.id || "").toString();
 	
-
-
-	
-
 	if(body.id == "")
 	{
 		res.json({status: 400, error: "No ID provided"});
@@ -1614,8 +1635,25 @@ async function getListFromSlug(slug)
 	let data = await db.query("SELECT * FROM tag_metadata WHERE type='list' AND id in (SELECT id FROM tag_metadata WHERE type='list' and property='slug' and value=$1)", [slug]);
 
 	var props = {};
-	if(data.rows)
+	if(data.rows && data.rows.length > 0)
 	{
+		props["id"] = data.rows[0].id;
+		for(let row of data.rows)
+		{
+			props[row.property] = row.value;
+		}
+	}
+	return props;
+}
+
+async function getListFromID(listID)
+{
+	let data = await db.query("SELECT * FROM tag_metadata WHERE type='list' AND id=$1", [listID]);
+
+	var props = {};
+	if(data.rows && data.rows.length > 0)
+	{
+		props["id"] = data.rows[0].id;
 		for(let row of data.rows)
 		{
 			props[row.property] = row.value;

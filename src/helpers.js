@@ -127,9 +127,9 @@ export function buildFilterQuery(filters, sort, page, includeSession)
 
 	for(let property in filters)
 	{
-		if(property == "list")
+		if(property == "list" || property == "private_list")
 		{
-			params.push("list=" + encodeURIComponent(filters["list"]));
+			params.push(property + "=" + encodeURIComponent(filters[property]));
 			continue;
 		}
 

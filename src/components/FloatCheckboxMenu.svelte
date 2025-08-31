@@ -35,8 +35,6 @@
 
 	function onChange(e,option)
 	{
-		console.log(e.target.checked);
-
 		if(e.target.checked)
 		{
 			values.push(option.value);

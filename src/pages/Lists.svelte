@@ -66,7 +66,7 @@
 	<p>loading lists...</p>
 {:else if hasPerm(PERM.EDIT_LISTS)}
 		
-	<h2>Your Lists</h2>
+	<h1>Lists</h1>
 
 	<div>
 		<input type='checkbox' id='share-starred' bind:checked={starListToggle} on:change={updateStarredList} /> <label for='share-starred'>Share Your Starred Tracks</label>
@@ -75,6 +75,10 @@
 	{#if starListToggle}
 		<ListEditor data={starList}/>
 	{/if}
+
+	<h2>Your Lists</h2>
+
+	
 
 	{#each allLists.filter(x => x.star == undefined) as list}
 		<ListEditor data={list}/>

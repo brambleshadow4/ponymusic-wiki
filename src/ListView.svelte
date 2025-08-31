@@ -421,10 +421,8 @@
 		{#if pickPlaylistsProps}
 			<PlaylistMenu bind:values={newPlaylistValues} track_id={pickPlaylistsProps.track_id} target={pickPlaylistsProps.target} 
 				on:close={() => {
-					
 					pickPlaylistsProps.row.lists = newPlaylistValues.join(",");
 					pickPlaylistsProps = null;
-					// newPlaylistValues
 				}} />
 		{/if}
 		

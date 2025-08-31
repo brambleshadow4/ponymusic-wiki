@@ -244,6 +244,14 @@ let ListView = {
 			filter: function(filters) {
 				let listName = location.pathname.substring("/list/".length);
 				let filterCopy = JSON.parse(JSON.stringify(filters));
+
+				if(listName.startsWith("private/"))
+				{
+					let listID = listName.substring("private/".length);
+					filterCopy.private_list = listID;
+					return filterCopy;
+				}
+
 				filterCopy.list = listName;
 				return filterCopy
 			}
