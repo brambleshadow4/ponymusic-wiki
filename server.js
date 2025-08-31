@@ -694,6 +694,10 @@ async function getTrackObject(id, userID)
 	let coverCount = (await db.query("SELECT COUNT(*) as count FROM track_tags WHERE property='cover' AND value=$1", [id])).rows[0].count;
 	let remixCount = (await db.query("SELECT COUNT(*) as count FROM track_tags WHERE property='remix' AND value=$1", [id])).rows[0].count;
 	let userFlags = (await db.query("SELECT value as status FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag='status'",[id,userID])).rows;
+
+	let userPlaylists = (await db.query("SELECT COALESCE(string_agg(value::text, ','), '') FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag='list'",[id,userID])).rows;
+
+
 	let response = trackRows[0];
 
 
@@ -747,9 +751,19 @@ async function getTrackObject(id, userID)
 		response.status = 200;
 	}
 
+
+
+
 	if(userFlags[0])
 	{
-		response.userFlags = {status: userFlags[0].status}; 
+		response.userFlags = response.userFlags || {};
+		response.userFlags.status = userFlags[0].status; 
+	}
+
+	if(userPlaylists[0])
+	{
+		response.userFlags = response.userFlags || {};
+		response.userFlags.lists = userPlaylists[0].coalesce; 
 	}
 
 	return response;

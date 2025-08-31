@@ -11,6 +11,7 @@
 	import {PERM, hasPerm} from "./authClient.js";
 	import {parseTitle} from "./titleParsing.js";
 	import { onMount } from 'svelte';
+	import PlaylistMenu from "./components/PlaylistMenu.svelte";
 
 	const dispatch = createEventDispatcher();
 
@@ -43,6 +44,11 @@
 	let spinner1 = false;
 	let sendingRequest = false;
 	let getWarningsChannelStatus = 0;
+
+	let listMenu = null;
+	var playlistButton = null;
+	let playlists = [];
+
 
 	async function load()
 	{
@@ -78,6 +84,7 @@
 			if(track.userFlags)
 			{
 				activeUserFlag = track.userFlags.status;
+				playlists = track.userFlags.lists.split(",").filter(x => x != "")
 			}
 			
 			mode = 0;
@@ -764,8 +771,6 @@
 
 </style>
 
-
-
 <div class='tabs'>
 	{#each tabProps as tab}
 		<span><span class={'tab-text '} on:click={() => {mode = tab[0]}}>{tab[1]}</span><span class={'tab' + (mode == tab[0] ? " selected" : "")} ></span></span>
@@ -835,7 +840,6 @@
 				<div class="userFlagButtons">
 					{#each [["Heard it","/notes.png"],["Listen Later","/later.png"],["Skip","/rest.png"],["Star", "/star-unfilled.svg", "/star-filled.svg"]] as pair,i}
 						<span class={"userFlagButton" + (i+1 == activeUserFlag ? " selected" : "")} on:click={() => changeUserFlag(i+1)}>
-
 							{#if pair[2] && i+1==activeUserFlag}
 								<img class='icon' src={pair[2]}/>
 							{:else}
@@ -844,6 +848,15 @@
 							<span>{pair[0]}</span>
 						</span>
 					{/each}
+					<span bind:this={playlistButton} class={"userFlagButton " + (playlists.length ? "selected" : "")} on:click={(e) => {
+						listMenu = playlistButton;
+					}}>
+						<img class='icon' src="/saved-icon.svg"/>
+						<span>Lists</span>
+					</span>
+					{#if listMenu}
+						<PlaylistMenu values={playlists} track_id={id} target={listMenu} on:close={() => {listMenu = null;}}/>
+					{/if}
 				</div>
 			{/if}
 		{/if}
