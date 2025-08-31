@@ -1,5 +1,6 @@
 <script>
 	import FloatCheckboxMenu from "./FloatCheckboxMenu.svelte";
+	import FloatBox from "./FloatBox.svelte";
 	import {getMyLists} from "./myLists.js";
 	import {onMount, createEventDispatcher} from "svelte";
 
@@ -41,5 +42,13 @@
 	}
 
 </script>
-
-<FloatCheckboxMenu options={options} target={target} on:close={updatePlaylists} bind:values={values} />
+{#if options.length}
+	<FloatCheckboxMenu options={options} target={target} on:close={updatePlaylists} bind:values={values} />
+{:else}
+	<FloatBox target={target} on:close >
+		<div style="padding: 10px;">
+			<div>You don't have any playlists yet</div>
+			<div><a href="/lists">Create one!</a></div>
+		</div>
+	</FloatBox>
+{/if}
