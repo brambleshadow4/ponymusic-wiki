@@ -327,7 +327,7 @@
 				{#if rowButtons.length}
 					<span class='row-buttons'>
 						{#each rowButtons as button, i}
-							<span on:click={(e) => {e.stopPropagation(); dispatch("rowbuttonclick", {row: song, button: i})}}>
+							<span on:click={(e) => {e.stopPropagation(); dispatch("rowbuttonclick", {row: song, button: i, target: e.target})}}>
 								<img class='icon' src={button[1]}/><span>{button[0]}</span>
 							</span>
 						{/each}

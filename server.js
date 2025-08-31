@@ -415,6 +415,10 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 		{
 			req.query.listClause = `id IN (SELECT track_id FROM user_flags WHERE user_id='${loadedList.owner}' AND flag='status' AND value=4)`;
 		}
+		else if (loadedList.owner != undefined)
+		{
+
+		}
 		else
 		{
 			res.json({status: 404});
@@ -1682,7 +1686,51 @@ app.put("/api/setUserFlag", processJSON, auth(PERM.USER_FLAGS), async (req, res)
 
 	res.json({status: 200});
 
+})
+
+app.put("/api/setUserLists", processJSON, auth(PERM.USER_FLAGS), async (req, res) =>
+{
+	let userID = (await getSession(req)).user_id;
+
+	let data = req.body || {};
+	data.track_id = (Number(data.track_id)).toString();
+
+	if(data.track_id == "NaN")
+	{
+		res.json({status: 400, error: "bad track_id"});
+		return;
+	}
+
+	data.lists = (data.lists || "").toString();
+
+	let query = await db.query("SELECT * FROM tag_metadata WHERE type='list' AND property='owner' AND value=$1", [userID]);
+
+	let allowedLists = new Set(query.rows.map(x => x.id.toString()));
+	let modifiedLists = data.lists.split(",");
+
+	if(data.lists == "")
+		modifiedLists = [];
+
+	let subQueries = [];
+
+	for(let list of modifiedLists)
+	{
+		if(!allowedLists.has(list))
+		{
+			res.json({status: 403, error: "cannot modify a list you don't own"});
+			return;
+		}
+
+		subQueries.push(`(${data.track_id}, '${userID}', 'list${list}', 1)`)
+	}
+
+	await db.query("DELETE FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag LIKE 'list%'", [data.track_id, userID]);
+	if(subQueries.length)
+		await db.query(`INSERT INTO user_flags (track_id, user_id, flag, value) VALUES ${subQueries.join(", ")}`);
+	
+	res.json({status: 200});
 } )
+
 
 
 let lastGeneratedDBFile = "";

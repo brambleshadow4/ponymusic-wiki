@@ -59,6 +59,8 @@
 
 		if(response.id)
 			data.id = response.id;
+
+		getMyLists(true); // update the cache
 	}
 
 </script>
@@ -84,6 +86,7 @@
 		background-color: #f1f2f4;
 		border-radius: 10px;
 		padding-top: 20px;
+		margin-bottom: 20px;
 	}
 
 	label,input {

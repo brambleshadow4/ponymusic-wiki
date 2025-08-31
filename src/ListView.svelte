@@ -5,6 +5,7 @@
 	import {PERM, hasPerm} from "./authClient.js";
 	import Grid from "./Grid.svelte";
 	import SearchInput from "./SearchInput.svelte";
+	import PlaylistMenu from "./components/PlaylistMenu.svelte";
 
 	export let selectedId = "";
 	export let filters = {};
@@ -27,6 +28,9 @@
 
 	let queryCache = "";
 	let loaded = false;
+
+	var pickPlaylistsProps = null;
+	var newPlaylistValues = [];
 
 	$: pathSlug = window.location.pathname.split("/").slice(1);
 
@@ -160,6 +164,21 @@
 		dispatch("openTrack", e.detail.id);
 	}
 
+	async function rowButtonClick(e)
+	{
+		if(e.detail.button != 4)
+			await changeUserFlag(e);
+		else 
+		{
+			console.log(e.detail);
+			newPlaylistValues = []; // TODO grab this from the track
+			pickPlaylistsProps = {
+				target: e.detail.target,
+				track_id: e.detail.row.id
+			};
+		}
+	}
+
 	async function changeUserFlag(e)
 	{
 		let song = e.detail.row;
@@ -249,7 +268,8 @@
 			["Heard it", "/notes.png"],
 			["Listen Later","/later.png"],
 			["Skip","/rest.png"],
-			["Star","/star-unfilled.svg"]
+			["","/star-unfilled.svg"],
+			["","/saved-icon.svg"]
 		]
 	}
 
@@ -394,8 +414,11 @@
 			selectedId={selectedId}
 			rowButtons = {rowButtons}
 			on:pagechange={onPageChange} on:rowclick={view.api == "/api/view/albums" ? () => {} : openTrack} on:openFilter
-			on:rowbuttonclick={changeUserFlag}
+			on:rowbuttonclick={rowButtonClick}
 		/>
+		{#if pickPlaylistsProps}
+			<PlaylistMenu track_id={pickPlaylistsProps.track_id} target={pickPlaylistsProps.target} on:close={() => pickPlaylistsProps = null} />
+		{/if}
 		
 	{:else}
 		<Spinner />

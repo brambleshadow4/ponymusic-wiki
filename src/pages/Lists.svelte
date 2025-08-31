@@ -1,5 +1,7 @@
 <script>
 	import ListEditor from "../components/ListEditor.svelte";
+	import {getMyLists} from "../components/myLists.js";
+
 	import {hasPerm, PERM} from "../authClient.js";
 	import {onMount} from "svelte";
 
@@ -13,32 +15,18 @@
 
 	onMount(async function(){
 
-		var resp = await fetch("/api/myLists?session=" + localStorage["session"]);
+		allLists = await getMyLists(true);
+		starListToggle = !! allLists.filter(x => x.star != undefined)[0];
+		loaded = true;
 
-		var parsedResp = await resp.json();
-
-		if(parsedResp.status == 200)
-		{
-			allLists = parsedResp.lists.map(flatten);
-			starListToggle = !! allLists.filter(x => x.star != undefined)[0];
-			loaded = true;
-		}
 	});
 
-	function flatten(obj)
+
+
+	function createNewList()
 	{
-		var newObj = {};
-		newObj.id = obj.id;
-		for(let [p,v] of obj.properties)
-		{
-			if(newObj[p] == undefined)
-				newObj[p] = v;
-			else if(typeof newObj[p] == "object")
-				newObj[p].push(v);
-			else
-				newObj[p] = [newObj[p], v];
-		}
-		return newObj;
+		allLists.push({id: ""});
+		allLists = allLists;
 	}
 
 	async function updateStarredList()
@@ -75,7 +63,7 @@
 </script>
 
 {#if !loaded}
-
+	<p>loading lists...</p>
 {:else if hasPerm(PERM.EDIT_LISTS)}
 		
 	<h2>Your Lists</h2>
@@ -88,6 +76,12 @@
 		<ListEditor data={starList}/>
 	{/if}
 
+	{#each allLists.filter(x => x.star == undefined) as list}
+		<ListEditor data={list}/>
+	{/each}
+
+	<button on:click={createNewList}>Create list</button>
+
 {:else}
 	<p>Sign in to edit your lists!</p>
 {/if}
@@ -95,6 +89,10 @@
 <style>
 	label,input {
 		display: inline-block;
+	}
+
+	button {
+		width: 200px;
 	}
 
 </style>
