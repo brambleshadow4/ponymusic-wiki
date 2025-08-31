@@ -127,6 +127,12 @@ export function buildFilterQuery(filters, sort, page, includeSession)
 
 	for(let property in filters)
 	{
+		if(property == "list")
+		{
+			params.push("list=" + encodeURIComponent(filters["list"]));
+			continue;
+		}
+
 		if(filters[property].noFilter){
 			delete filters[property];
 			continue;

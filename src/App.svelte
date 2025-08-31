@@ -17,7 +17,7 @@
 	import Spinner from "./Spinner.svelte";
 	import ArtistList from "./pages/Artists.svelte";
 	import Lists from "./pages/Lists.svelte";
-	import {DefaultView, AlbumView, ArtistView, AlbumList, RemixCoverView, TagView, GenreView} from "./Views.js";
+	import {DefaultView, AlbumView, ArtistView, AlbumList, RemixCoverView, TagView, GenreView, ListView as ListListView} from "./Views.js";
 	
 	$: path = window.location.pathname;
 	$: pathSlug = window.location.pathname.split("/").slice(1);
@@ -465,6 +465,9 @@
 
 	{:else if pathSlug[0] == "remix"}
 		<ListView view={RemixCoverView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+		
+	{:else if pathSlug[0] == "list"}
+		<ListView view={ListListView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
 	{:else if pathSlug[0] == "lists"}
 		<div class='main'><Lists /></div>

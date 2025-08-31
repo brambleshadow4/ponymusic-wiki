@@ -221,6 +221,37 @@ let RemixCoverView = {
 
 }
 
+let ListView = {
+	api: "/api/view/tracks",
+	title: "List: {1}",
+	hasButtonNewTrack: true,
+	hasButtonRandomTrack: true,
+	tabs: [
+		{
+			name: "(default)",
+			columns: [
+				Columns.Status,
+				{name: "Artist", width: "200", property: "artist", linkTo:"/artist/*",  filtered: false},
+				{name: "Featured Artist", width: "50", property: "featured_artist", linkTo:"/artist/*", filtered: false},
+				Columns.Title,
+				Columns.Album,
+				Columns.Refs,
+				Columns.Genre,
+				Columns.Tags,
+				Columns.Hidden,
+				Columns.Released
+			],
+			filter: function(filters) {
+				let listName = location.pathname.substring("/list/".length);
+				let filterCopy = JSON.parse(JSON.stringify(filters));
+				filterCopy.list = listName;
+				return filterCopy
+			}
+		}
+	]
+}
+
+
 let ArtistList = {
 	api: "/api/view/artists",
 	htmlTitle: "<h1 class='no-margin'>Artists</h1>",
@@ -263,4 +294,4 @@ function filterArtist(row)
 	return allArtists.split("\x1E").filter(x => x != artistName);
 }
 
-export {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, GenreView, TagView}
+export {DefaultView, ArtistView, AlbumView, ArtistList, AlbumList, RemixCoverView, GenreView, TagView, ListView}

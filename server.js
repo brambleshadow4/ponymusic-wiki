@@ -402,6 +402,26 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	let limitCount = PAGE_COUNT;
 	let offset = page*PAGE_COUNT;
 
+	delete req.query.listClause;
+
+	var loadedList = null;
+
+	if(req.query.list)
+	{
+		let listSlug = req.query.list[0];
+		loadedList = await getListFromSlug(listSlug);
+
+		if(loadedList.star)
+		{
+			req.query.listClause = `id IN (SELECT track_id FROM user_flags WHERE user_id='${loadedList.owner}' AND flag='status' AND value=4)`;
+		}
+		else
+		{
+			res.json({status: 404});
+			return;
+		}
+	}
+
 	let whereClause = await buildWhereClause(req, new Set(["artist","featured_artist","original_artist","album","genre","pl","tag","release_date","status","title","remixcover","hidden"]));
 
 	let albumNoSelect = "";
@@ -454,6 +474,23 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	response.rows = rows;
 	response.pages = Math.ceil(total/PAGE_COUNT);
 	response.total = total;
+
+	if(loadedList)
+	{
+		let moreListInfo = await db.query("SELECT name, avatar FROM users WHERE id=$1", [loadedList.owner]);
+
+		response.listInfo = {
+			title: loadedList.name,
+			description: loadedList.description
+		}
+
+		if(moreListInfo.rows.length == 1)
+		{
+			response.listInfo.ownerName = moreListInfo.rows[0].name;
+			response.listInfo.ownerAvatar = moreListInfo.rows[0].avatar;
+		}
+	}
+	
 
 	res.json(response);
 });
@@ -1567,6 +1604,21 @@ async function getPropertyObject(recType, id)
 	return propObject;
 }
 
+async function getListFromSlug(slug)
+{
+	let data = await db.query("SELECT * FROM tag_metadata WHERE type='list' AND id in (SELECT id FROM tag_metadata WHERE type='list' and property='slug' and value=$1)", [slug]);
+
+	var props = {};
+	if(data.rows)
+	{
+		for(let row of data.rows)
+		{
+			props[row.property] = row.value;
+		}
+	}
+	return props;
+}
+
 app.post("/api/checkURLs", processJSON, async (req,res) => {
 
 	if (typeof req.body != "object" || !req.body.length)
@@ -1758,6 +1810,12 @@ async function buildWhereClause(req, allowedFilters)
 			whereClauses.push(buildStatusClause(userID, req.query.x_status, true))
 		}
 	}
+
+	if(req.query.listClause)
+	{
+		whereClauses.push(req.query.listClause);
+	}
+
 
 	if(whereClauses.length)
 	{	

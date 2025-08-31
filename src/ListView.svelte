@@ -82,10 +82,18 @@
 		page = [page[0], response.pages];
 		total = response.total;
 
+
+
 		if(response.albumHyperlinks)
 			albumHyperlinks = response.albumHyperlinks;
 		if(response.albumPhysicalReleaseOnly)
 			albumPhysicalReleaseOnly = response.albumPhysicalReleaseOnly;
+
+		if(response.listInfo)
+		{
+			view.listInfo = response.listInfo;
+			delete view.title;
+		}
 
 		loaded = true;
 	}
@@ -290,6 +298,20 @@
 				<img class='edit-button' src="/edit-round-line-icon.svg" height="15" on:click={() => dispatch("openObjectEditor", viewProperties)}>
 			{/if}
 		</h1>
+	{:else if view.listInfo}
+		<div>
+			<div>
+				<img src={view.listInfo.ownerAvatar} class="list-owner-avatar" />
+			</div>
+			<div>
+				<h1 class='no-margin'>
+			{view.listInfo.title}	
+		</h1>
+		<div>{view.listInfo.description}</div>
+			</div>
+		</div>
+		
+		
 	{/if}
 
 	
@@ -466,6 +488,15 @@
 	label {
 		display: inline-block;
 		cursor: pointer;
+	}
+
+	.list-owner-avatar
+	{
+		width: 70px;
+		height: 70px;
+		border-radius: 50px;
+		float: left;
+		margin-right: 10px;
 	}
 
 
