@@ -1423,7 +1423,7 @@ FROM (
 	(SELECT value from tag_metadata WHERE type='list' AND tag_metadata.id=id2 AND property='slug') as slug,
 	(SELECT value from tag_metadata WHERE type='list' AND tag_metadata.id=id2 AND property='description') as description
 	FROM (SELECT distinct id as id2 from tag_metadata WHERE type='list') as temptable
-) INNER JOIN users ON owner = users.id
+) as temp2 INNER JOIN users ON owner = users.id
 WHERE slug != ''`);
 
 	return res.json({status: 200, lists: lists.rows});
