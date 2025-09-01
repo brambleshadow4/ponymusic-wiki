@@ -111,22 +111,30 @@ export function canonicalURL(url, keepYToffset)
 
 /**
  * filters: string => {noFilter: true} | {exclude: string[]} | {include: string[]}
+ * 
+ * includeDBparams - 
  */
-export function buildFilterQuery(filters, sort, page, includeSession)
+export function buildFilterQuery(filters, sort, page, includeDBparams)
 {
 	let params = [];
 
-	if(includeSession && localStorage.session){
+	if(includeDBparams && localStorage.session){
 		params.push("session=" + localStorage.session);
 	}
 
-	if(localStorage.SHOW_ALL_TRACKS != "1" && !(sort.length && sort[0].asc == "album_no"))
+	let forceHiddenFalse = localStorage.SHOW_ALL_TRACKS != "1" && !(sort.length && sort[0].asc == "album_no");
+
+
+	if(includeDBparams && forceHiddenFalse)
 	{
 		params.push("hidden=false");
 	}
 
 	for(let property in filters)
 	{
+		if(property == "hidden" && forceHiddenFalse)
+			continue;
+
 		if(property == "list" || property == "private_list")
 		{
 			params.push(property + "=" + encodeURIComponent(filters[property]));
