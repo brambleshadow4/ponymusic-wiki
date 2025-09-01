@@ -18,6 +18,11 @@
 
 	onMount(async function(){
 
+		if(window.location.hash == "#mine")
+		{
+			loadedTab = 1;
+		}
+
 		[myLists, allLists] = await Promise.all([
 			getMyLists(true),
 			fetch("/api/allLists").then((data) => data.json()).then((x) => x.lists)
@@ -72,8 +77,12 @@
 
 <div class='tabs'>
 	<div class='tabs-background'></div>
-	{#each [[0,"Public Lists"],[1,"Your Lists"]] as tab}
-		<span><span class={'tab-text '} on:click={() => {loadedTab = tab[0]}}>{tab[1]}</span><span class={'tab' + (loadedTab == tab[0] ? " selected" : "")} ></span></span>
+	{#each [[0,"Public Lists","#all"],[1,"Your Lists","#mine"]] as tab}
+		<span><span class={'tab-text '} on:click={() => {
+			loadedTab = tab[0];
+			window.history.replaceState({},"",tab[2])
+
+		}}>{tab[1]}</span><span class={'tab' + (loadedTab == tab[0] ? " selected" : "")} ></span></span>
 	{/each}
 </div>
 
