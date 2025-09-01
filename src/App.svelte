@@ -472,9 +472,8 @@
 		<ListView view={ListListView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
 
 	{:else if pathSlug[0] == "lists"}
-		<div class='main'><Lists /></div>
+		<Lists />
 		
-
 	{:else if pathSlug[0] == "about"}
 		<div class='main'>
 

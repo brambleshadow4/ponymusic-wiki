@@ -13,9 +13,7 @@
 	let dispatch = createEventDispatcher();
 
 	onMount(async function(){
-
 		options = (await getMyLists()).filter(x => !x.star).map(x => {return {text: x.name, value: x.id}});
-
 	});
 
 	async function updatePlaylists(e)

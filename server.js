@@ -1413,6 +1413,22 @@ app.get("/api/myLists", queryProcessing, auth(PERM.EDIT_LISTS), async (req,res) 
 	return res.json({status: 200, lists: listData});
 })
 
+app.get("/api/allLists", queryProcessing, async (req,res) => {
+
+	let lists = await db.query(`SELECT list_id as id, slug, users.name as owner_name, avatar as owner_avatar, description, list_name as name
+FROM (
+	SELECT distinct id2 as list_id,
+	(SELECT value from tag_metadata WHERE type='list' AND tag_metadata.id=id2 AND property='owner') as owner,
+	(SELECT value from tag_metadata WHERE type='list' AND tag_metadata.id=id2 AND property='name') as list_name,
+	(SELECT value from tag_metadata WHERE type='list' AND tag_metadata.id=id2 AND property='slug') as slug,
+	(SELECT value from tag_metadata WHERE type='list' AND tag_metadata.id=id2 AND property='description') as description
+	FROM (SELECT distinct id as id2 from tag_metadata WHERE type='list') as temptable
+) INNER JOIN users ON owner = users.id
+WHERE slug != ''`);
+
+	return res.json({status: 200, lists: lists.rows});
+})
+
 app.put("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) => {
 
 	let userID = (await getSession(req)).user_id;
