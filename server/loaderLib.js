@@ -571,6 +571,7 @@ async function exportTable(stream, table, cols)
 	stream.write("\tINSERT INTO "+table+" (" + Object.keys(cols).join(", ") + ") VALUES\n")
 	
 	let offset = 0;	
+	var outputARow = false;
 
 	while(true)
 	{
@@ -579,10 +580,22 @@ async function exportTable(stream, table, cols)
 
 		offset += 10000;
 		if(response.rows.length == 0)
-			break;
-
-		for(let row of response.rows)
 		{
+			if(outputARow)
+				stream.write(";\n");
+			break;
+		}
+
+		if(outputARow)
+		{
+			stream.write(",\n");
+		}
+
+		outputARow = true;
+
+		for(let i=0; i<response.rows.length; i++)
+		{	
+			let row = response.rows[i];
 			let rowVals = [];
 
 			for (let col in cols)
@@ -619,7 +632,11 @@ async function exportTable(stream, table, cols)
 				}
 			}
 
-			stream.write("\t("+ rowVals.join(",")+")\n");
+			stream.write("\t("+ rowVals.join(",")+")");
+			if(i+1 != response.rows.length)
+			{
+				stream.write(",\n");
+			}
 		}
 	}
 
