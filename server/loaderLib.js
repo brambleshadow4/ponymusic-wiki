@@ -1,18 +1,41 @@
-export default {doLoad, doPull, doExport, doExcelExport, doRdfExport};
+export default {doLoad, doPull, doExport, doExcelExport, doRdfExport, makeCopy};
 
 import fs from 'fs';
 import ExcelJS from 'exceljs'
 import https from "https"
 import pg from "pg";
-const {Pool, Client} = pg;
 import dotenv from "dotenv";
+import {exec} from "child_process";
+
 dotenv.config();
+
+const {Pool, Client} = pg;
+
+var poolConfig = {
+	database: "ponymusiccopy",
+}
+
+function makeCopy()
+{
+	return new Promise((accept, reject)=> {
+		exec('sudo -u postgres /home/postgres/backup.sh',
+			function (error, stdout, stderr) {
+
+				console.log("we finished running the script :> ")
+				if (error !== null) {
+					console.log('exec error: ' + error);
+				}
+				accept();
+			});
+	});
+}
+
 
 async function doLoad(filename)
 {
 	let tableQueries = fs.readFileSync(filename, {encoding:'utf8'}).split(";\n").map(x => x.replace(/\n/g, " "));
 
-	let db = new Pool();
+	let db = new Pool(poolConfig);
 	
 	for(let query of tableQueries)
 	{
@@ -88,27 +111,30 @@ async function doExport()
 {
 	let now = new Date();
 	let textArr = [];
-	
-	textArr.push(await exportTable("users", {id: "string", name: "string", role: "number", avatar: "string"}));
-	textArr.push(await exportTable("tracks", {id: "number", title: "string", release_date: "date", locked: "bool", ogcache: "json", titlecache:"string", hidden: "bool"}));
-	textArr.push(await exportTable("track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"}));
-	textArr.push(await exportTable("track_history", {track_id: "number", user_id: "string", value:"json", timestamp: "date"}));
-	textArr.push(await exportTable("user_flags", {track_id: "number", user_id: "string", flag:"string", value:"number"}));
-	textArr.push(await exportTable("tag_metadata", {type: "string", id:"string", property:"string", value:"string"}));
-	textArr.push(await exportTable("tag_metadata_history", {user_id: "string", timestamp: "date", type:"string", id:"string", value:"json"}));
 
-	textArr.push("SELECT SETVAL(pg_get_serial_sequence('tracks', 'id'), (SELECT (MAX(track_id) + 1) FROM track_history));");
+	let stream = fs.createWriteStream("./fullExport.sql");
 	
-	fs.writeFileSync("./fullExport.sql", textArr.join(""));
+	await exportTable(stream, "users", {id: "string", name: "string", role: "number", avatar: "string"});
+	await exportTable(stream, "tracks", {id: "number", title: "string", release_date: "date", locked: "bool", ogcache: "json", titlecache:"string", hidden: "bool"});
+	await exportTable(stream, "track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"});
+	await exportTable(stream, "track_history", {track_id: "number", user_id: "string", value:"json", timestamp: "date"});
+	await exportTable(stream, "user_flags", {track_id: "number", user_id: "string", flag:"string", value:"number"});
+	await exportTable(stream, "tag_metadata", {type: "string", id:"string", property:"string", value:"string"});
+	await exportTable(stream, "tag_metadata_history", {user_id: "string", timestamp: "date", type:"string", id:"string", value:"json"});
+
+
+	stream.write("SELECT SETVAL(pg_get_serial_sequence('tracks', 'id'), (SELECT (MAX(track_id) + 1) FROM track_history));\n")
+	stream.end();
 
 	// public export
-	let publicCopyArr = ["-- This data was exported on " + new Date().toISOString()];
-	publicCopyArr.push(publicTables());
-	publicCopyArr.push(await exportTable("tracks", {id: "number", title: "string", release_date: "date", ogcache: "json", titlecache:"string", hidden: "bool"}));
-	publicCopyArr.push(await exportTable("track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"}));
-	publicCopyArr.push(await exportTable("tag_metadata", {type: "string", id:"string", property:"string", value:"string"}));
-
-	fs.writeFileSync("./public/export/pmw.sql", publicCopyArr.join(""));
+	stream = fs.createWriteStream("./public/export/pmw.sql");
+	stream.write("-- This data was exported on " + new Date().toISOString());
+	publicTables(stream)
+	await exportTable(stream, "tracks", {id: "number", title: "string", release_date: "date", ogcache: "json", titlecache:"string", hidden: "bool"});
+	await exportTable(stream, "track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"});
+	await exportTable(stream, "tag_metadata", {type: "string", id:"string", property:"string", value:"string"});
+	stream.end();
+	//fs.writeFileSync("./public/export/pmw.sql", publicCopyArr.join(""));
 }
 
 
@@ -124,7 +150,7 @@ async function doExcelExport()
 
 	let workbook = new ExcelJS.stream.xlsx.WorkbookWriter(options);
 
-	let db = new Pool();
+	let db = new Pool(poolConfig);
 	var sheet, data, excelRow
 
 	// Tracks
@@ -269,7 +295,7 @@ function turtleEncode(s)
 
 async function doRdfExport()
 {
-	let db = new Pool();
+	let db = new Pool(poolConfig);
 	let file = fs.openSync("./public/export/pmw.ttl","w");
 
 	let buf = new Buffer.from(`@prefix pmw: <http://ponymusic.wiki/ns#> .
@@ -537,66 +563,72 @@ function plMap(x)
 
 
 
-async function exportTable(table, cols)
+async function exportTable(stream, table, cols)
 {
-	let db = new Pool();
-	let response = await db.query("SELECT * FROM " + table); 
+	let db = new Pool(poolConfig);
+	
+	stream.write(`DELETE FROM ${table};\n`);
+	stream.write("\tINSERT INTO "+table+" (" + Object.keys(cols).join(", ") + ") VALUES\n")
+	
+	let offset = 0;	
 
-	let text = `DELETE FROM ${table};\n`;
-	let header = "\tINSERT INTO "+table+" (" + Object.keys(cols).join(", ") + ") VALUES\n"
-	let values = [];
-
-	for(let row of response.rows)
+	while(true)
 	{
-		//console.log(row);
+		let partialQuery = "SELECT * FROM " + table + " LIMIT 10000 OFFSET " + offset;
+		let response = await db.query(partialQuery); 
 
-		let rowVals = [];
+		offset += 10000;
+		if(response.rows.length == 0)
+			break;
 
-		for (let col in cols)
+		for(let row of response.rows)
 		{
-			try
+			let rowVals = [];
+
+			for (let col in cols)
 			{
-				switch(cols[col])
+				try
 				{
-					case "string": 
-						rowVals.push(sqlEscapeString(row[col]));
-						break;
-					case "json":
-						rowVals.push(escapeJSON(JSON.stringify(row[col])));
-						break;
-					case "bool":
-						rowVals.push(row[col] ? "TRUE" : "FALSE");
-						break;
-					case "date":
-						rowVals.push("'" + row[col].toISOString() + "'");
-						break;
-					case "number|null": 
-					case "number": 
-						rowVals.push("" + row[col]);
-						break;
+					switch(cols[col])
+					{
+						case "string": 
+							rowVals.push(sqlEscapeString(row[col]));
+							break;
+						case "json":
+							rowVals.push(escapeJSON(JSON.stringify(row[col])));
+							break;
+						case "bool":
+							rowVals.push(row[col] ? "TRUE" : "FALSE");
+							break;
+						case "date":
+							rowVals.push("'" + row[col].toISOString() + "'");
+							break;
+						case "number|null": 
+						case "number": 
+							rowVals.push("" + row[col]);
+							break;
+					}
+				}
+				catch(e)
+				{
+					console.log("TABLE " + table);
+					console.log("ROW")
+					console.log(row);
+					console.log("COLUMN " + col);
+					throw e;
 				}
 			}
-			catch(e)
-			{
-				console.log("TABLE " + table);
-				console.log("ROW")
-				console.log(row);
-				console.log("COLUMN " + col);
-				throw e;
-			}
-		}
 
-		values.push("\t("+ rowVals.join(",")+")");
+			stream.write("\t("+ rowVals.join(",")+")\n");
+		}
 	}
 
-	text += header +  values.join(",\n") + ";\n";
-	return text;
 }
 
 
-function publicTables()
+function publicTables(stream)
 {
-	return `
+	stream.write(`
 	CREATE TABLE IF NOT EXISTS tracks (
 		id SERIAL PRIMARY KEY,
 		title VARCHAR(255) NOT NULL,
@@ -624,5 +656,5 @@ function publicTables()
 	CREATE INDEX IF NOT EXISTS track_id_index ON track_tags(track_id);
 	CREATE INDEX IF NOT EXISTS object_index ON tag_metadata(type, id);
 	CREATE INDEX IF NOT EXISTS property_index ON tag_metadata(property, value);
-	`;
+	`);
 }

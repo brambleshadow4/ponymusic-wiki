@@ -21,6 +21,8 @@ async function main()
 
 	let x = await read(">");
 
+	await loader.makeCopy();
+
 	if(x == "1"){
 		console.log("DUMPING to fullExport.sql");
 		await loader.doExport();

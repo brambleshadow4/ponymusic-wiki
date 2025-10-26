@@ -16,9 +16,10 @@ if(!isMainThread)
 		let returnDate = new Date().toISOString().substring(0,10);
 		console.log("EXPORTING DATA");
 
+		await loader.makeCopy();
 		await loader.doExport();
-		await loader.doExcelExport();
-		await loader.doRdfExport();
+		//await loader.doExcelExport();
+		//await loader.doRdfExport();
 
 		parentPort.postMessage(returnDate);
 		return;
@@ -36,7 +37,6 @@ function prepareExport()
 
 	if(lastGeneratedDBFile < date)
 	{
-
 		locked = true;
 
 		let worker = new Worker("./server/exportWorker.js");
