@@ -563,7 +563,7 @@
 
 				<p>For nerds who would like to access the database in real time and perform SQL queries, we also have a public, readonly login to the postgres database. Reach out to brambleshadow4 if you'd like to know the username and password</p>
 			{:else}
-				<p>Generating files... this usually takes around 10 seconds</p>
+				<p>Generating files... this usually takes around 2 minutes</p>
 				<div>
 					{#each {length: Number(exportProgress.split("/")[1])} as _, i}
 						{#if i < Number(exportProgress.split("/")[0])}█{:else}░{/if}
