@@ -7,7 +7,7 @@ import {
 
 
 var locked = false;
-var progress = "0/11";
+var progress = "0/16";
 var lastGeneratedDBFile = "";
 
 if(!isMainThread)
@@ -20,7 +20,7 @@ if(!isMainThread)
 		let statusObj = {
 			parent: parentPort, 
 			progressCount: 0, 
-			total: 11,
+			total: 16,
 			progress: function(){
 				this.progressCount++;
 				this.parent.postMessage("PROGRESS " + this.progressCount + "/" + this.total)
@@ -29,8 +29,8 @@ if(!isMainThread)
 
 		await loader.makeCopy(statusObj);
 		await loader.doExport(statusObj);
-		//await loader.doExcelExport();
-		//await loader.doRdfExport();
+		await loader.doExcelExport(statusObj);
+		await loader.doRdfExport(statusObj);
 
 		parentPort.postMessage("DATE " + returnDate);
 		return;

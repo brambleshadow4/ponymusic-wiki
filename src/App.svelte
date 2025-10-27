@@ -566,7 +566,7 @@
 				<p>Generating files... this usually takes around 10 seconds</p>
 				<div>
 					{#each {length: Number(exportProgress.split("/")[1])} as _, i}
-						{#if i <= Number(exportProgress.split("/")[0])}█{:else}░{/if}
+						{#if i < Number(exportProgress.split("/")[0])}█{:else}░{/if}
 					{/each}
 				</div>
 				<Spinner />
