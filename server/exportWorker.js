@@ -2,11 +2,12 @@ import loader from "./loaderLib.js";
 import {
 	Worker,
 	isMainThread,
-	parentPort
+	parentPort,
 } from "node:worker_threads";
 
 
 var locked = false;
+var progress = "0/11";
 var lastGeneratedDBFile = "";
 
 if(!isMainThread)
@@ -16,14 +17,29 @@ if(!isMainThread)
 		let returnDate = new Date().toISOString().substring(0,10);
 		console.log("EXPORTING DATA");
 
-		await loader.makeCopy();
-		await loader.doExport();
+		let statusObj = {
+			parent: parentPort, 
+			progressCount: 0, 
+			total: 11,
+			progress: function(){
+				this.progressCount++;
+				this.parent.postMessage("PROGRESS " + this.progressCount + "/" + this.total)
+			}
+		}
+
+		await loader.makeCopy(statusObj);
+		await loader.doExport(statusObj);
 		//await loader.doExcelExport();
 		//await loader.doRdfExport();
 
-		parentPort.postMessage(returnDate);
+		parentPort.postMessage("DATE " + returnDate);
 		return;
 	});
+}
+
+function getProgress()
+{
+	return progress;
 }
 
 function prepareExport()
@@ -42,8 +58,16 @@ function prepareExport()
 		let worker = new Worker("./server/exportWorker.js");
 
 		worker.on("message", function(data){
-			locked = false;
-			lastGeneratedDBFile = data;
+
+			if(data.startsWith("DATE "))
+			{
+				locked = false;
+				lastGeneratedDBFile = data;
+			}
+			if(data.startsWith("PROGRESS "))
+			{
+				progress = data.substring("PROGRESS ".length);
+			}
 		});
 		worker.on("error",function(e){
 			console.log(e)
@@ -58,4 +82,4 @@ function prepareExport()
 	return true;
 }
 
-export {prepareExport}
+export {prepareExport, getProgress}

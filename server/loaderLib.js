@@ -15,7 +15,7 @@ var poolConfig = {
 	database: "ponymusiccopy",
 }
 
-function makeCopy()
+function makeCopy(statusObj)
 {
 	return new Promise((accept, reject)=> {
 		exec('sudo -u postgres /home/postgres/backup.sh',
@@ -25,6 +25,10 @@ function makeCopy()
 				if (error !== null) {
 					console.log('exec error: ' + error);
 				}
+
+				if(statusObj)
+					statusObj.progress();
+
 				accept();
 			});
 	});
@@ -35,7 +39,7 @@ async function doLoad(filename)
 {
 	let tableQueries = fs.readFileSync(filename, {encoding:'utf8'}).split(";\n").map(x => x.replace(/\n/g, " "));
 
-	let db = new Pool(poolConfig);
+	let db = new Pool();
 	
 	for(let query of tableQueries)
 	{
@@ -107,7 +111,7 @@ function escapeJSON(s)
 	return "'" + s + "'";
 }
 
-async function doExport()
+async function doExport(statusObj)
 {
 	let now = new Date();
 	let textArr = [];
@@ -115,13 +119,19 @@ async function doExport()
 	let stream = fs.createWriteStream("./fullExport.sql");
 	
 	await exportTable(stream, "users", {id: "string", name: "string", role: "number", avatar: "string"});
+	if(statusObj) statusObj.progress();
 	await exportTable(stream, "tracks", {id: "number", title: "string", release_date: "date", locked: "bool", ogcache: "json", titlecache:"string", hidden: "bool"});
+	if(statusObj) statusObj.progress();
 	await exportTable(stream, "track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"});
+	if(statusObj) statusObj.progress();
 	await exportTable(stream, "track_history", {track_id: "number", user_id: "string", value:"json", timestamp: "date"});
+	if(statusObj) statusObj.progress();
 	await exportTable(stream, "user_flags", {track_id: "number", user_id: "string", flag:"string", value:"number"});
+	if(statusObj) statusObj.progress();
 	await exportTable(stream, "tag_metadata", {type: "string", id:"string", property:"string", value:"string"});
+	if(statusObj) statusObj.progress();
 	await exportTable(stream, "tag_metadata_history", {user_id: "string", timestamp: "date", type:"string", id:"string", value:"json"});
-
+	if(statusObj) statusObj.progress();
 
 	stream.write("SELECT SETVAL(pg_get_serial_sequence('tracks', 'id'), (SELECT (MAX(track_id) + 1) FROM track_history));\n")
 	stream.end();
@@ -131,9 +141,14 @@ async function doExport()
 	stream.write("-- This data was exported on " + new Date().toISOString());
 	publicTables(stream)
 	await exportTable(stream, "tracks", {id: "number", title: "string", release_date: "date", ogcache: "json", titlecache:"string", hidden: "bool"});
+	if(statusObj) statusObj.progress();
 	await exportTable(stream, "track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"});
+	if(statusObj) statusObj.progress();
 	await exportTable(stream, "tag_metadata", {type: "string", id:"string", property:"string", value:"string"});
+	if(statusObj) statusObj.progress();
 	stream.end();
+
+	
 	//fs.writeFileSync("./public/export/pmw.sql", publicCopyArr.join(""));
 }
 

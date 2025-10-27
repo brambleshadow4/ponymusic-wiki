@@ -12,7 +12,7 @@ import https from "https";
 import http from "http";
 import {AuthorizationCode} from 'simple-oauth2';
 import { v4 as uuidv4 } from 'uuid';
-import {prepareExport} from "./server/exportWorker.js";
+import {prepareExport, getProgress} from "./server/exportWorker.js";
 
 import {PERM, ROLE, auth, reqHasPerm, getSession} from "./server/auth.js";
 import {getOgCache, getOgPropertiesFromURL, areTitlesIdentical, canonicalURL} from './server/helpers.js';
@@ -2135,7 +2135,11 @@ app.get("/export/precheck", queryProcessing, async (req,res) => {
 
 	if(!prepareExport())
 	{
-		res.json({status: 503, err:"Generating exports"});
+		res.json({
+			status: 503, 
+			err:"Generating exports", 
+			progress: getProgress()
+		});
 		return;
 	}
 
