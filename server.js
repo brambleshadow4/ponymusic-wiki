@@ -144,26 +144,38 @@ app.get("/login", async (req,res) =>
 
 			let role = ROLE.USER;
 
-			let userID = "d:" + data.id;
-			let avatar = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`
-			let {rows} = await db.query("SELECT * FROM users WHERE id = $1", [userID]);
-		
-			if(!rows.length)
+			var client;
+			try
 			{
-				await db.query("INSERT INTO users (id, name, avatar, role) VALUES ($1, $2, $3, $4)", [userID, data.username, avatar, role]);
+				client = await db.connect()
+				await client.query("BEGIN")
+
+				let userID = "d:" + data.id;
+				let avatar = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png`
+				let {rows} = await client.query("SELECT * FROM users WHERE id = $1", [userID]);
+			
+				if(!rows.length)
+				{
+					await client.query("INSERT INTO users (id, name, avatar, role) VALUES ($1, $2, $3, $4)", [userID, data.username, avatar, role]);
+				}
+				else
+				{
+					role = rows[0].role;
+					await client.query("UPDATE users SET name=$2, avatar=$3 WHERE id=$1", [userID, data.username, avatar]);
+				}
+
+				//await db.query("DELETE FROM sessions WHERE user_id=$1", [userID]);
+				let session = uuidv4();
+
+				await client.query("INSERT INTO sessions (session, user_id, expire_time) VALUES ($1, $2, NOW() + interval '1 month')", [session, userID]);
+				await client.query("COMMIT")
+				res.redirect("/?session=" + session + "," + role + "," + avatar);
 			}
-			else
-			{
-				role = rows[0].role;
-				await db.query("UPDATE users SET name=$2, avatar=$3 WHERE id=$1", [userID, data.username, avatar]);
+			finally{
+				if(client)
+					client.release();
 			}
 
-			//await db.query("DELETE FROM sessions WHERE user_id=$1", [userID]);
-			let session = uuidv4();
-
-			await db.query("INSERT INTO sessions (session, user_id, expire_time) VALUES ($1, $2, NOW() + interval '1 month')", [session, userID]);
-
-			res.redirect("/?session=" + session + "," + role + "," + avatar);
 		})
 	});
 });
@@ -977,103 +989,115 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 	// insert the track
 
-	if(id == "new")
+	var client;
+	try
 	{
-		let x = await db.query(`INSERT INTO tracks (title, release_date, locked, ogcache, titlecache, hidden) 
-			VALUES ($1, $2, false, $3, $4, $5) RETURNING id`,
-			[title, release_date, ogcache, titleCache, shouldHideTrack]);
-
-		if(x.err)
+		client = await db.connect()
+		await client.query("BEGIN")
+		if(id == "new")
 		{
-			res.json({status:400, error: "Error code 1"});
-			return;
-		}
-		else
-		{
-			id = x.rows[0].id;
-		}
-	}
-	else 
-	{
-		id = Number(data.id)
+			let x = await client.query(`INSERT INTO tracks (title, release_date, locked, ogcache, titlecache, hidden) 
+				VALUES ($1, $2, false, $3, $4, $5) RETURNING id`,
+				[title, release_date, ogcache, titleCache, shouldHideTrack]);
 
-		if(isNaN(id)){
-			res.json({status: 400});
-		}
-
-		let {rows} = await db.query("SELECT * FROM tracks WHERE id=$1", [id]);
-		if(rows.length)
-		{
-			info = await db.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3, titlecache=$5, hidden=$6 WHERE id=$4", 
-				[title, release_date, ogcache, id, titleCache,shouldHideTrack]);	
-			if(info.err)
-			{ 
-				res.json({status:400, error: "Error code 2"});
-				return;
-			}	
-		}
-		else
-		{
-			// restoring a deleted track
-			await db.query("INSERT INTO tracks (id, title, release_date, locked, ogcache, titlecache, hidden) VALUES ($1, $2, $3, false, $4, $5, $6)", 
-				[id, title, release_date, ogcache, titleCache,shouldHideTrack]);
-		}
-	}	
-
-	// update tags
-	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
-
-	let originalArtists = new Set();
-
-	for(let tag of data.tags)
-	{
-		if(typeof tag.number == "number")
-		{
-
-			info = await db.query("INSERT INTO track_tags (track_id, property, value, number) VALUES ($1, $2, $3, $4)", [id, tag.property, tag.value, tag.number]);
-			if(info.err){ 
-				res.json({status:400, error: "Error code 3"});
-				return;
-			}	
-		}
-		else
-		{
-			info = await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, $2, $3)", [id, tag.property, tag.value]);
-
-
-			if(info.err){ 
-				res.json({status:400, error: "Error code 4"});
-				return;
-			}	
-
-			if(tag.property == "cover" || tag.property == "remix")
+			if(x.err)
 			{
-				let originalArtistRows = (await db.query("SELECT value FROM track_tags WHERE track_id=$1 AND property='artist'", [tag.value])).rows
+				res.json({status:400, error: "Error code 1"});
+				return;
+			}
+			else
+			{
+				id = x.rows[0].id;
+			}
+		}
+		else 
+		{
+			id = Number(data.id)
 
-				if(originalArtistRows && originalArtistRows.length)
+			if(isNaN(id)){
+				res.json({status: 400});
+			}
+
+			let {rows} = await client.query("SELECT * FROM tracks WHERE id=$1", [id]);
+			if(rows.length)
+			{
+				info = await client.query("UPDATE tracks SET title=$1, release_date=$2, ogcache=$3, titlecache=$5, hidden=$6 WHERE id=$4", 
+					[title, release_date, ogcache, id, titleCache,shouldHideTrack]);	
+				if(info.err)
+				{ 
+					res.json({status:400, error: "Error code 2"});
+					return;
+				}	
+			}
+			else
+			{
+				// restoring a deleted track
+				await client.query("INSERT INTO tracks (id, title, release_date, locked, ogcache, titlecache, hidden) VALUES ($1, $2, $3, false, $4, $5, $6)", 
+					[id, title, release_date, ogcache, titleCache,shouldHideTrack]);
+			}
+		}	
+
+		// update tags
+		await client.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
+
+		let originalArtists = new Set();
+
+		for(let tag of data.tags)
+		{
+			if(typeof tag.number == "number")
+			{
+
+				info = await client.query("INSERT INTO track_tags (track_id, property, value, number) VALUES ($1, $2, $3, $4)", [id, tag.property, tag.value, tag.number]);
+				if(info.err){ 
+					res.json({status:400, error: "Error code 3"});
+					return;
+				}	
+			}
+			else
+			{
+				info = await client.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, $2, $3)", [id, tag.property, tag.value]);
+
+
+				if(info.err){ 
+					res.json({status:400, error: "Error code 4"});
+					return;
+				}	
+
+				if(tag.property == "cover" || tag.property == "remix")
 				{
-					for(let row of originalArtistRows)
+					let originalArtistRows = (await client.query("SELECT value FROM track_tags WHERE track_id=$1 AND property='artist'", [tag.value])).rows
+
+					if(originalArtistRows && originalArtistRows.length)
 					{
-						if(!originalArtists.has(row.value))
+						for(let row of originalArtistRows)
 						{
-							originalArtists.add(row.value);
+							if(!originalArtists.has(row.value))
+							{
+								originalArtists.add(row.value);
 
-							info = await db.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, 'original artist', $2)", [id, row.value]);
+								info = await client.query("INSERT INTO track_tags (track_id, property, value) VALUES ($1, 'original artist', $2)", [id, row.value]);
 
-							if(info.err){ 
-								res.json({status:400, error: "Error 6"});
-								return;
-							}	
+								if(info.err){ 
+									res.json({status:400, error: "Error 6"});
+									return;
+								}	
+							}
 						}
 					}
 				}
 			}
 		}
-	}
 
-	
-	if(hasChanges)
-		info = await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, "hidden": shouldHideTrack, release_date, tags: data.tags}]);
+		
+		if(hasChanges)
+			info = await client.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {title, "hidden": shouldHideTrack, release_date, tags: data.tags}]);
+
+		await client.query("COMMIT")
+	}
+	finally
+	{
+		if(client) client.release();
+	}
 
 	if (info.err) {
 		res.json({status:400, error: "error 5"});
@@ -1105,11 +1129,25 @@ app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =
 		res.json({status: 400});
 	}
 
-	await db.query("DELETE FROM tracks WHERE id=$1", [id]);	
-	await db.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
-	await db.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {deleted:true}]);
+	var client;
+	try
+	{
+		client = await db.connect()
+		await client.query("BEGIN")
+		await client.query("DELETE FROM tracks WHERE id=$1", [id]);	
+		await client.query("DELETE FROM track_tags WHERE track_id=$1", [id]);
+		await client.query("INSERT INTO track_history (track_id, user_id, timestamp, value) VALUES ($1, $2, NOW(), $3)", [id, userID, {deleted:true}]);
+		await client.query("COMMIT")
+		res.json({status: 200, id});
+	}
+	catch(e)
+	{
+		res.json({status: 500});
+	}
+	if(client)
+		client.release();
 
-	res.json({status: 200, id});
+	
 });
 
 
@@ -1380,25 +1418,41 @@ app.put("/api/updateObject", processJSON, auth(PERM.EDIT_TAG_METADATA), async (r
 		}
 	}
 
-
-	await db.query("DELETE FROM tag_metadata WHERE type=$1 AND id=$2", [rec.type, rec.id]);
-
-	for(let [prop, value] of rec.properties)
+	var client;
+	try
 	{
-		await db.query("INSERT INTO tag_metadata (type, id, property, value) VALUES ($1, $2, $3, $4) ", 
-			[rec.type, rec.id, prop, value]);
+		client = await db.connect()
+		await client.query("BEGIN")
+		await client.query("DELETE FROM tag_metadata WHERE type=$1 AND id=$2", [rec.type, rec.id]);
+
+		for(let [prop, value] of rec.properties)
+		{
+			await client.query("INSERT INTO tag_metadata (type, id, property, value) VALUES ($1, $2, $3, $4) ", 
+				[rec.type, rec.id, prop, value]);
+		}
+
+		let id = rec.id;
+		let type = rec.type;
+
+		delete rec.id;
+		delete rec.type;
+
+		await client.query("INSERT INTO tag_metadata_history (type, id, value, user_id, timestamp) VALUES ($1, $2, $3, $4, NOW()) ", 
+			[type, id, rec, userID]);
+
+		await client.query("COMMIT")
+
+		res.json({status: 200})
 	}
-
-	let id = rec.id;
-	let type = rec.type;
-
-	delete rec.id;
-	delete rec.type;
-
-	await db.query("INSERT INTO tag_metadata_history (type, id, value, user_id, timestamp) VALUES ($1, $2, $3, $4, NOW()) ", 
-		[type, id, rec, userID]);
-
-	res.json({status: 200})
+	catch(e)
+	{
+		res.json({status: 500})
+	}
+	finally
+	{
+		if(client)
+			client.release();
+	}
 
 });
 
@@ -1464,14 +1518,19 @@ app.put("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) =
 	if(body.name.length > 100)
 	{
 		res.json({status: 400, error: "Name is too long"})
+		console.log("Name is too long")
 		return;
 	}
 
 	if(body.description.length > 500)
 	{
 		res.json({status: 400, error: "Description is too long"})
+		console.log("Description is too long")
 		return;
 	}
+
+	
+	
 
 	if(body.id == "")
 	{
@@ -1483,6 +1542,8 @@ app.put("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) =
 		body.id = rows.rows[0].coalesce;
 	}
 
+	
+
 	let listData = await getPropertyObject("list", body.id);
 
 	let owners = listData.properties.filter(x => x[0] == "owner");
@@ -1492,20 +1553,42 @@ app.put("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) =
 		return;
 	} 
 
-	let rows = await db.query(`
-		DELETE FROM tag_metadata
-		WHERE type='list' AND id=$1 AND property NOT IN ('owner')
-	`, [body.id]);
 
-	rows = await db.query(`
-		INSERT INTO tag_metadata (type, id, property, value)
-		VALUES ('list', $1, 'name', $2),
-		('list', $1, 'description', $3),
-		('list', $1, 'slug', $4)
-		${body.star ? ", ('list', $1, 'star', 1)" :""} 
-	`, [body.id, body.name, body.description, slug]);
+	var client
+	try
+	{
+		client = await db.connect()
 
-	res.json({status: 200, id: body.id});
+		await client.query("BEGIN")
+
+		let rows = await client.query(`
+			DELETE FROM tag_metadata
+			WHERE type='list' AND id=$1 AND property NOT IN ('owner')
+		`, [body.id]);
+
+		rows = await client.query(`
+			INSERT INTO tag_metadata (type, id, property, value)
+			VALUES ('list', $1, 'name', $2),
+			('list', $1, 'description', $3),
+			('list', $1, 'slug', $4)
+			${body.star ? ", ('list', $1, 'star', 1)" :""} 
+		`, [body.id, body.name, body.description, slug]);
+
+		await client.query("COMMIT")
+		res.json({status: 200, id: body.id});
+	}
+	catch(e)
+	{
+		res.json({status: 500});
+	}
+	finally
+	{
+		if(client)
+			client.release();
+	}
+	
+	
+	
 })
 
 
@@ -1580,38 +1663,54 @@ app.put("/api/updateProperty", processJSON, auth(PERM.EDIT_TAG_METADATA), async 
 		return;
 	}
 
+
 	let props = await getPropertyObject(recType, id);
 	
-	if(req.body.is_delete)
+	var client;
+	try
 	{
-		for(let i=0; i < props.properties.length; i++)
+		client = await db.connect()
+		await client.query("BEGIN")
+
+		if(req.body.is_delete)
 		{
-			let [p, val] = props.properties[i];
-			if(p == property && val == value)
+			for(let i=0; i < props.properties.length; i++)
 			{
-				props.properties.splice(i, 1);
-				i--;
+				let [p, val] = props.properties[i];
+				if(p == property && val == value)
+				{
+					props.properties.splice(i, 1);
+					i--;
+				}
 			}
+
+			await client.query("DELETE FROM tag_metadata WHERE type=$1 AND id=$2 AND property=$3 AND value=$4", 
+				[recType, id, property, value]);
+		}
+		else
+		{
+			props.properties.push([property, value]);
+			await client.query("INSERT INTO tag_metadata (type, id, property, value) VALUES ($1, $2, $3, $4) ", 
+				[recType, id, property, value]);
+
 		}
 
-		await db.query("DELETE FROM tag_metadata WHERE type=$1 AND id=$2 AND property=$3 AND value=$4", 
-			[recType, id, property, value]);
+		delete props.id;
+		delete props.type;
+
+		await client.query("INSERT INTO tag_metadata_history (type, id, value, user_id, timestamp) VALUES ($1, $2, $3, $4, NOW()) ", 
+			[recType, id, props, userID]);
+
+		await client.query("COMMIT")
+
+		res.json({status: 200})
 	}
-	else
+	catch(e)
 	{
-		props.properties.push([property, value]);
-		await db.query("INSERT INTO tag_metadata (type, id, property, value) VALUES ($1, $2, $3, $4) ", 
-			[recType, id, property, value]);
-
+		res.json({status: 500})
 	}
-
-	delete props.id;
-	delete props.type;
-
-	await db.query("INSERT INTO tag_metadata_history (type, id, value, user_id, timestamp) VALUES ($1, $2, $3, $4, NOW()) ", 
-		[recType, id, props, userID]);
-
-	res.json({status: 200})
+	if(client)
+		client.release();
 });
 
 async function getPropertyObject(recType, id)
@@ -1747,13 +1846,26 @@ app.put("/api/setUserFlag", processJSON, auth(PERM.USER_FLAGS), async (req, res)
 		return;
 	}
 
-	await db.query("DELETE FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag=$3", [data.track_id, userID, data.flag]);
 
-	if(data.value){
-		await db.query("INSERT INTO user_flags (track_id, user_id, flag, value) VALUES ($1, $2, $3, $4) ", [data.track_id, userID, data.flag, data.value]);
+	var client;
+	try
+	{
+		client = await db.connect()
+		await client.query("BEGIN")
+		await client.query("DELETE FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag=$3", [data.track_id, userID, data.flag]);
+
+		if(data.value){
+			await client.query("INSERT INTO user_flags (track_id, user_id, flag, value) VALUES ($1, $2, $3, $4) ", [data.track_id, userID, data.flag, data.value]);
+		}
+		await client.query("COMMIT")
+
+		res.json({status: 200});
 	}
-
-	res.json({status: 200});
+	catch{
+		res.json({status: 500});
+	}
+	if(client)
+		client.release();
 
 })
 
@@ -1793,11 +1905,25 @@ app.put("/api/setUserLists", processJSON, auth(PERM.USER_FLAGS), async (req, res
 		subQueries.push(`(${data.track_id}, '${userID}', 'list', ${list})`)
 	}
 
-	await db.query("DELETE FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag='list'", [data.track_id, userID]);
-	if(subQueries.length)
-		await db.query(`INSERT INTO user_flags (track_id, user_id, flag, value) VALUES ${subQueries.join(", ")}`);
-	
-	res.json({status: 200});
+	var client;
+	try
+	{
+		client = await db.connect()
+		await client.query("BEGIN")
+		await client.query("DELETE FROM user_flags WHERE track_id=$1 AND user_id=$2 AND flag='list'", [data.track_id, userID]);
+		if(subQueries.length)
+			await client.query(`INSERT INTO user_flags (track_id, user_id, flag, value) VALUES ${subQueries.join(", ")}`);
+		
+		await client.query("COMMIT")
+
+		res.json({status: 200});
+	}
+	catch(e)
+	{
+		res.json({status: 500});
+	}
+	if(client)
+		client.release();
 } )
 
 
