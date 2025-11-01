@@ -27,8 +27,16 @@ async function doConversion()
 		database: "ponymusic"
 	});
 
+	/* Example Queries
+
+	SELECT id FROM tracks WHERE id in (
+		SELECT track_id FROM track_tags
+		WHERE property='album' and value='In The Absence of Love &amp; Lust'
+	)
+	*/
+
 	let response = await db.query(`
-SELECT id FROM tracks WHERE hidden=true
+
 	`)
 
 	let affectedIDs = response.rows.map(x => x.id);
@@ -83,9 +91,9 @@ SELECT id FROM tracks WHERE hidden=true
 
 		// replace one tag  with another
 
-		/*let TAG = "featured artist"
-		let OLD_VALUE = `namii`
-		let NEW_VALUE = "Namii"
+		/*let TAG = "album"
+		let OLD_VALUE = `In The Absence of Love &amp; Lust`
+		let NEW_VALUE = "In The Absence of Love & Lust"
 
 		for(let i=0; i<track.tags.length; i++)
 		{
@@ -99,12 +107,18 @@ SELECT id FROM tracks WHERE hidden=true
 		}*/
 		
 
-		// Add a tag
-		//if(track.tags.filter(x => x.property == "hidden" && x.value == "Pinkamena Party").length == 0)
+		// Add a tag Conditionally 
+		
+		/* if(track.tags.filter(x => x.property == "hidden" && x.value == "Pinkamena Party").length == 0)
 		{
 			track.tags.push({property: "hidden", "value":"3"});
 			affected = true;
-		}
+		} */
+
+		// add a tag unconditinoally
+		//track.tags.push({property: "hidden", "value":"3"});
+		//affected = true; 
+
 
 		// replace bad dates
 		//if(track.release_date == "2022-12-10T00:00:00.000Z")
