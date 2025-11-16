@@ -62,7 +62,7 @@ function prepareExport()
 			if(data.startsWith("DATE "))
 			{
 				locked = false;
-				lastGeneratedDBFile = data;
+				lastGeneratedDBFile = data.substring("DATE ".length);
 			}
 			if(data.startsWith("PROGRESS "))
 			{
