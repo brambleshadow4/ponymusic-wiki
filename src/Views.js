@@ -100,6 +100,7 @@ let ArtistView = {
 let AlbumView = {
 	api: "/api/view/tracks",
 	hasButtonRandomTrack: true,
+	propertiesObjectType: "album",
 	title: "Album: {1}",
 	tabs: [
 		{

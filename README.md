@@ -11,8 +11,8 @@ Setup
 Postgresql
 -------------------
 
-The project uses [postgresql](https://www.postgresql.org/) as its server.
-Make sure to install it prior to setup.
+The project uses [postgresql](https://www.postgresql.org/) as its server
+Make sure to install it prior to setup as well as create a 'ponymusic' database.
 
 You will need to put the following information
 in an .env file in the same directory as server.js

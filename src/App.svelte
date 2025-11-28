@@ -1,6 +1,7 @@
 <script>
 	import TrackEditor from "./TrackEditor.svelte";
 	import ArtistEditor from "./pages/ArtistEditor.svelte";
+	import AlbumEditor from "./pages/AlbumEditor.svelte";
 	import ListView from "./ListView.svelte";
 	import FilterPopup from "./FilterPopup.svelte";
 	import EditList from "./EditList.svelte";
@@ -144,8 +145,10 @@
 		{
 			openTrack({detail: event.detail.id});
 		}
-		if(event.detail.type == "artist")
+		if(event.detail.type == "artist" || event.detail.type == "album")
 		{
+			console.log("trying to open a thing")
+
 			let props = event.detail.editProperties;
 
 			if(!props)
@@ -168,6 +171,7 @@
 
 	function openObjectEditor(event)
 	{
+		console.log(event)
 		editProperties = event.detail;
 	}
 
@@ -457,7 +461,7 @@
 		<ListView view={AlbumList} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} on:openObjectEditor={openObjectEditor} />
 
 	{:else if pathSlug[0] == "album"}
-		<ListView view={AlbumView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} />
+		<ListView view={AlbumView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} on:openObjectEditor={openObjectEditor} />
 
 	{:else if pathSlug[0] == "artist"}
 		<ListView view={ArtistView} on:openTrack={openTrack} filters={filters} selectedId={loadedTrackID} on:openFilter={openFilter} on:openObjectEditor={openObjectEditor} bind:viewProperties={viewProperties} />
@@ -595,7 +599,12 @@
 
 		<div class='sidebar'>
 
-			<ArtistEditor data={editProperties} on:close={() => {editProperties = null;}} />
+			{#if editProperties.type == "artist"}
+
+				<ArtistEditor data={editProperties} on:close={() => {editProperties = null;}} />
+			{:else if editProperties.type == "album"}
+				<AlbumEditor data={editProperties} on:close={() => {editProperties = null;}} />
+			{/if}
 		</div>
 	{/if}
 
