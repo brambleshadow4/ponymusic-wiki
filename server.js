@@ -642,6 +642,20 @@ app.get('/api/history', async(req,res) =>
 		return;
 	}
 
+	if(type == "album")
+	{
+		let {rows} = await db.query(`
+			SELECT type,id, '' as title, (SELECT name FROM users WHERE id=user_id) as user,timestamp, value,
+			(SELECT value FROM tag_metadata_history WHERE type=revisions.type AND id=revisions.id AND timestamp < revisions.timestamp ORDER BY timestamp DESC LIMIT 1) as previous_value
+			FROM tag_metadata_history as revisions
+			WHERE type='album' AND id=$1
+			ORDER BY timestamp DESC
+		 	`, [id]);
+
+		res.json({rows, status:200});
+		return;
+	}
+
 	let {rows} = await db.query(`
 		SELECT * FROM (
 			SELECT 'track' as type, CAST(track_id as VARCHAR) as id, 
