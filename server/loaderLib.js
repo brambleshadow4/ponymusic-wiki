@@ -316,17 +316,46 @@ function dateToString(date)
 
 function turtleEncode(s)
 {
-	if(/[^a-zA-Z]/.exec(s))
+	// first percent escape it like it would be for its URL
+
+	let percentEscaped = encodeURIComponent(s);
+	let escapedChars = new Set("~.-!$&'()*+,;=/?#@%_".split(""));
+	function escape(c)
 	{
-		return s.split("").map(x => {
-			let cp = x.codePointAt(0);
-			if((97 <= cp && cp <=122) || (65 <= cp && cp <= 90)) 
-				return x;
-			let k = cp.toString(16)
-			return k.length == 1 ? "%0" + k : "%" + k;
-		}).join("");
+		if(escapedChars.has(c))
+			return "\\" + c;
+		return c;
 	}
-	return s;
+
+	return percentEscaped.split("").map(escape).join("");
+}
+
+
+function encodeIRI(iri)
+{
+	const disallowed = new Set(['<','>','"','{','}','|','^','`','\\']);
+
+	// spec 
+	function encodeChar(ch)
+	{
+		const cp = ch.codePointAt(0);
+		if (cp <= 0xFFFF)
+		{
+			return "\\u" + cp.toString(16).toUpperCase().padStart(4, '0');
+		}
+		// use \UXXXXXXXX for codepoints beyond BMP
+		return "\\U" + cp.toString(16).toUpperCase().padStart(8, '0');
+	}
+
+	function escapeChar(c)
+	{
+		const cp = c.codePointAt(0);
+		if (cp <= 0x20 || disallowed.has(c))
+			return encodeChar(c);
+		return c;
+	}
+
+	return "<" + iri.split("").map(escapeChar).join("") + ">";
 }
 
 async function doRdfExport(status)
@@ -400,16 +429,16 @@ async function doRdfExport(status)
 			switch(row.property)
 			{
 				case "hyperlink":
-					currentProps.push(`\tpmw:hyperlink <${row.value.replace(/ /g,"%20")}>`);
+					currentProps.push(`\tpmw:hyperlink ${encodeIRI(row.value)}`);
 					break;
 				case "reupload hyperlink":
-					currentProps.push(`\tpmw:reupload_hyperlink <${row.value.replace(/ /g,"%20")}>`);
+					currentProps.push(`\tpmw:reupload_hyperlink ${encodeIRI(row.value)}`);
 					break;
 				case "alt mix hyperlink":
-					currentProps.push(`\tpmw:alt_mix_hyperlink <${row.value.replace(/ /g,"%20")}>`);
+					currentProps.push(`\tpmw:alt_mix_hyperlink ${encodeIRI(row.value)}`);
 					break;
 				case "youtube offset":
-					currentProps.push(`\tpmw:youtube_offset <${row.value.replace(/ /g,"%20")}>`);
+					currentProps.push(`\tpmw:youtube_offset ${encodeIRI(row.value)}`);
 					break;
 				case "artist":
 					currentProps.push(`\tpmw:artist artist:${turtleEncode(row.value)}`);
@@ -561,7 +590,7 @@ async function doRdfExport(status)
 				currentAlbum = row.album;
 				currentProps.push("\ta pmw:Album");
 				currentProps.push(`\tdc:title ${JSON.stringify(currentAlbum)}`);
-				currentProps.push(`\tpmw:tracklist <http://ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>`);
+				currentProps.push(`\tpmw:tracklist ` + encodeIRI(`http://ponymusic.wiki/album/${currentAlbum}#tracklist`));
 			}
 
 			switch(row.property)
@@ -606,7 +635,8 @@ async function doRdfExport(status)
 			{
 				if(currentAlbum != "" && currentProps.length)
 				{
-					stream.write(`<http://ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>\n` + currentProps.join(" ;\n") + " .\n")
+
+					stream.write(encodeIRI(`http://ponymusic.wiki/album/${currentAlbum}#tracklist`) + "\n" + currentProps.join(" ;\n") + " .\n")
 				}
 				
 				currentProps = [];
@@ -620,7 +650,7 @@ async function doRdfExport(status)
 
 		if(currentAlbum != "" && currentProps.length)
 		{
-			stream.write(`<http://ponymusic.wiki/album/${turtleEncode(currentAlbum)}#tracklist>\n` + currentProps.join(" ;\n") + " .\n")
+			stream.write(encodeIRI(`http://ponymusic.wiki/album/${currentAlbum}#tracklist`) + "\n" + currentProps.join(" ;\n") + " .\n")
 		}
 
 		offset += 10000
