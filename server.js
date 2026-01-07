@@ -29,6 +29,22 @@ const PAGE_COUNT = 100;
 const MAX_STRING_LENGTH = 256;
 const DAILY_RATE_LIMIT = 10;
 
+
+
+function logRequest(req, res, next)
+{
+	console.log("[" + new Date().toISOString() + "][" + req.method + "] " + req.url)
+	next();
+}
+
+
+function logInfo(data)
+{
+	console.log("[" + new Date().toISOString() + "][INFO] " + data);
+}
+
+
+
 var httpsConfig = {};
 
 
@@ -77,7 +93,7 @@ runQueries();
 
 app.use(express.static('public'));
 
-app.get("/login", async (req,res) =>
+app.get("/login", logRequest, async (req,res) =>
 {
 	const client = new AuthorizationCode({
 
@@ -160,7 +176,7 @@ app.get("/login", async (req,res) =>
 				}
 				else
 				{
-					role = rows[0].role;
+ 					role = rows[0].role;
 					await client.query("UPDATE users SET name=$2, avatar=$3 WHERE id=$1", [userID, data.username, avatar]);
 				}
 
@@ -180,7 +196,7 @@ app.get("/login", async (req,res) =>
 	});
 });
 
-app.post("/restoreSession", processJSON, async (req,res) =>
+app.post("/restoreSession", processJSON, logRequest, async (req,res) =>
 {
 	let session = await getSession(req);
 
@@ -195,14 +211,14 @@ app.post("/restoreSession", processJSON, async (req,res) =>
 	res.json({status: 400})
 })
 
-app.get("/interviews", function(req,res){
+app.get("/interviews", logRequest, function(req,res){
 
 	res.redirect("https://drive.google.com/drive/u/0/folders/1iNpIDNLvLezQDQ_brqmX00QpeRRCMKk1");
 	return;
 })
 
 
-app.post("/api/tagAutofill", processJSON, async (req,res) =>
+app.post("/api/tagAutofill", processJSON, logRequest,  async (req,res) =>
 {
 	let property = req.body.property;
 
@@ -245,8 +261,9 @@ app.post("/api/tagAutofill", processJSON, async (req,res) =>
 	res.json(strippedRows);
 });
 
-app.get("/api/search", queryProcessing, async (req,res) =>
+app.get("/api/search", queryProcessing, logRequest,  async (req,res) =>
 {
+
 	let search = req.query.search[0];
 
 	if(!search || !search.trim())
@@ -306,9 +323,8 @@ app.get("/api/search", queryProcessing, async (req,res) =>
 	res.json(returns);
 });
 
-app.get("/api/view/artists", queryProcessing, async(req,res) =>
+app.get("/api/view/artists", queryProcessing, logRequest, async(req,res) =>
 {
-
 	let recentCriteria = "";
 	let nameCriteria = "" // AND lower(value) LIKE 'b%'
 	let countCriteria = ""//"WHERE count >= 5"
@@ -345,7 +361,7 @@ app.get("/api/view/artists", queryProcessing, async(req,res) =>
 
 });
 
-app.get("/api/view/albums", queryProcessing, async(req,res) =>
+app.get("/api/view/albums", queryProcessing, logRequest, async(req,res) =>
 {
 	let ses = await getSession(req);
 	let userID = ses && ses.user_id;
@@ -405,7 +421,7 @@ app.get("/api/view/albums", queryProcessing, async(req,res) =>
 	res.json({rows, pages: Math.ceil(total/PAGE_COUNT), total});
 })
 
-app.get("/api/view/tracks", queryProcessing, async(req,res) =>
+app.get("/api/view/tracks", queryProcessing, logRequest, async(req,res) =>
 {
 	let ses = await getSession(req);
 	let userID = ses && ses.user_id;
@@ -531,7 +547,7 @@ app.get("/api/view/tracks", queryProcessing, async(req,res) =>
 	res.json(response);
 });
 
-app.get("/api/view/tags", async(req, res) => {
+app.get("/api/view/tags", logRequest, async(req, res) => {
 
 	let {rows} = await db.query(
 		`SELECT property, value, value as text, count(*) as count FROM track_tags LEFT JOIN tracks ON track_tags.track_id = tracks.id
@@ -555,7 +571,7 @@ LIMIT 1000`
 
 
 // deprecated, I don't think anything uses this anymore
-app.get("/api/history/track/*", async(req,res) =>
+app.get("/api/history/track/*", logRequest, async(req,res) =>
 {
 	let id = req.params[0];
 
@@ -589,7 +605,7 @@ app.get("/api/history/track/*", async(req,res) =>
 });
 
 
-app.get('/api/history', async(req,res) =>
+app.get('/api/history', logRequest, async(req,res) =>
 {
 	let timestamp = req.query.timestamp;
 
@@ -680,7 +696,7 @@ app.get('/api/history', async(req,res) =>
 })
 
 
-app.get("/api/track/*", async(req,res) =>
+app.get("/api/track/*", logRequest, async(req,res) =>
 {
 	let id = req.params[0];
 
@@ -782,10 +798,7 @@ async function getTrackObject(id, userID)
 
 }
 
-
-
-
-app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
+app.post("/api/track", processJSON, logRequest, auth(PERM.UPDATE_TRACK), async (req,res) =>
 {
 	var data = req.body;
 	let ses = await getSession(req);
@@ -1110,7 +1123,7 @@ app.post("/api/track", processJSON, auth(PERM.UPDATE_TRACK), async (req,res) =>
 
 
 
-app.delete("/api/track", processJSON, auth(PERM.DELETE_TRACK), async (req,res) =>
+app.delete("/api/track", processJSON, logRequest, auth(PERM.DELETE_TRACK), async (req,res) =>
 {
 	var data = req.body;
 
@@ -1237,7 +1250,6 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 			if(attachedAlbums.has(row.id))
 			{
 				foundAlbum = true;
-				console.log("found album " + row.id)
 			}
 		}
 
@@ -1348,7 +1360,8 @@ var ALLOWED_PROPERTIES = new Set([
 	"artist/bluesky"
 ])
 
-app.get("/api/getObject", async (req,res) => {
+app.get("/api/getObject", logRequest, async (req,res) => {
+
 
 	let typ = req.query.type;
 	let id =  req.query.id;
@@ -1359,7 +1372,7 @@ app.get("/api/getObject", async (req,res) => {
 });
 
 
-app.put("/api/updateObject", processJSON, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
+app.put("/api/updateObject", processJSON, logRequest, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
 
 	let userID = (await getSession(req)).user_id;
 
@@ -1456,7 +1469,7 @@ app.put("/api/updateObject", processJSON, auth(PERM.EDIT_TAG_METADATA), async (r
 
 });
 
-app.get("/api/myLists", queryProcessing, auth(PERM.EDIT_LISTS), async (req,res) => {
+app.get("/api/myLists", queryProcessing, logRequest, auth(PERM.EDIT_LISTS), async (req,res) => {
 
 	let userID = (await getSession(req)).user_id;
 
@@ -1467,7 +1480,7 @@ app.get("/api/myLists", queryProcessing, auth(PERM.EDIT_LISTS), async (req,res) 
 	return res.json({status: 200, lists: listData});
 })
 
-app.get("/api/allLists", queryProcessing, async (req,res) => {
+app.get("/api/allLists", queryProcessing, logRequest, async (req,res) => {
 
 	let lists = await db.query(`SELECT list_id as id, slug, users.name as owner_name, avatar as owner_avatar, description, list_name as name
 FROM (
@@ -1483,8 +1496,7 @@ WHERE slug != ''`);
 	return res.json({status: 200, lists: lists.rows});
 })
 
-app.put("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) => {
-
+app.put("/api/updateList", processJSON, logRequest, auth(PERM.EDIT_LISTS), async (req,res) => {
 	let userID = (await getSession(req)).user_id;
 	let body = req.body || {};
 
@@ -1518,14 +1530,12 @@ app.put("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) =
 	if(body.name.length > 100)
 	{
 		res.json({status: 400, error: "Name is too long"})
-		console.log("Name is too long")
 		return;
 	}
 
 	if(body.description.length > 500)
 	{
 		res.json({status: 400, error: "Description is too long"})
-		console.log("Description is too long")
 		return;
 	}
 
@@ -1592,7 +1602,7 @@ app.put("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) =
 })
 
 
-app.delete("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res) => {
+app.delete("/api/updateList", processJSON, logRequest, auth(PERM.EDIT_LISTS), async (req,res) => {
 
 	let userID = (await getSession(req)).user_id;
 	let body = req.body || {};
@@ -1629,7 +1639,7 @@ app.delete("/api/updateList", processJSON, auth(PERM.EDIT_LISTS), async (req,res
 })
 
 
-app.put("/api/updateProperty", processJSON, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
+app.put("/api/updateProperty", processJSON, logRequest, auth(PERM.EDIT_TAG_METADATA), async (req,res) =>{
 
 	let userID = (await getSession(req)).user_id;
 	let validPair = false;
@@ -1791,7 +1801,7 @@ async function getListFromID(listID)
 	return props;
 }
 
-app.post("/api/checkURLs", processJSON, async (req,res) => {
+app.post("/api/checkURLs", processJSON, logRequest, async (req,res) => {
 
 	if (typeof req.body != "object" || !req.body.length)
 	{
@@ -1834,7 +1844,7 @@ async function checkURL(url)
 	return null;
 }
 
-app.put("/api/setUserFlag", processJSON, auth(PERM.USER_FLAGS), async (req, res) =>
+app.put("/api/setUserFlag", processJSON, logRequest, auth(PERM.USER_FLAGS), async (req, res) =>
 {
 	let userID = (await getSession(req)).user_id;
 	let ALLOWED_FLAGS = new Set(["status","fav","rating"]);
@@ -1869,7 +1879,7 @@ app.put("/api/setUserFlag", processJSON, auth(PERM.USER_FLAGS), async (req, res)
 
 })
 
-app.put("/api/setUserLists", processJSON, auth(PERM.USER_FLAGS), async (req, res) =>
+app.put("/api/setUserLists", processJSON, logRequest, auth(PERM.USER_FLAGS), async (req, res) =>
 {
 	let userID = (await getSession(req)).user_id;
 
@@ -2257,7 +2267,7 @@ function queryProcessing(req, res, next)
 	next();
 }
 
-app.get("/export/precheck", queryProcessing, async (req,res) => {
+app.get("/export/precheck", queryProcessing, logRequest, async (req,res) => {
 
 	if(!prepareExport())
 	{
@@ -2288,7 +2298,7 @@ async function exportMiddleware(req, res, next)
 
 
 
-app.get("/export/db", queryProcessing, exportMiddleware, async (req,res) => {
+app.get("/export/db", queryProcessing, logRequest, exportMiddleware, async (req,res) => {
 
 	let pullKey = "";
 
@@ -2308,19 +2318,22 @@ app.get("/export/db", queryProcessing, exportMiddleware, async (req,res) => {
 
 });
 
-app.get("/export/xlsx", queryProcessing, exportMiddleware, async (req,res) => {
+app.get("/export/xlsx", queryProcessing,logRequest,  exportMiddleware, async (req,res) => {
+
 
 	res.redirect("/export/pmw.xlsx");
 
 });
 
-app.get("/export/ttl", queryProcessing, exportMiddleware, async (req,res) => {
+app.get("/export/ttl", queryProcessing,logRequest,  exportMiddleware, async (req,res) => {
+
 
 	res.redirect("/export/pmw.ttl");
 
 });
 
-app.get("/ns", async (req,res) => {
+app.get("/ns", logRequest,  async (req,res) => {
+
 	res.sendFile(path.resolve(process.cwd(), "public", 'ns.ttl'));
 });
 
@@ -2347,13 +2360,13 @@ if(process.env.SSL_CERT)
 {
 	var httpsServer = https.createServer(httpsConfig, app);
 	httpsServer.listen(PORT);
-	console.log("Running Ponymusic.wiki on SECURE port " + PORT)
+	logInfo("Running Ponymusic.wiki on SECURE port " + PORT)
 }
 else
 {
 	var httpServer = http.createServer(app);
 	httpServer.listen(PORT);
-	console.log("Running Ponymusic.wiki on port " + PORT)
+	logInfo("Running Ponymusic.wiki on port " + PORT)
 }
 
 
