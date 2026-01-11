@@ -32,6 +32,8 @@
 	let loadedFilter = "";
 
 	let exportProgress = "0/0";
+	$: exportProgressPercent = Number(exportProgress.split("/")[0]) / Number(exportProgress.split("/")[1]);
+	$: exportProgressPercentText = 100 * exportProgressPercent.toFixed(2) + "%";
 
 	let showAllTracks =  Number(localStorage.SHOW_ALL_TRACKS || 0);
 
@@ -379,6 +381,27 @@
 			flex-grow: 1;
 		}
 	}
+	.percent-bar {
+		width: 500px;
+		height: 30px;
+		border: solid 1px black;
+		position: relative;
+	}
+	.percent-bar .block {
+		position: relative;
+		display: block;
+		height: 30px;
+		background-color: #0078d7;
+		top: 0;
+		left:0;
+	}
+	.percent-bar .text {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		top: 5px;
+	}
+
 </style>
 
 
@@ -568,10 +591,9 @@
 				<p>For nerds who would like to access the database in real time and perform SQL queries, we also have a public, readonly login to the postgres database. Reach out to brambleshadow4 if you'd like to know the username and password</p>
 			{:else}
 				<p>Generating files... this usually takes around 2 minutes</p>
-				<div>
-					{#each {length: Number(exportProgress.split("/")[1])} as _, i}
-						{#if i < Number(exportProgress.split("/")[0])}█{:else}░{/if}
-					{/each}
+				<div class='percent-bar'>
+					<span class='block' style={"width: " + (100 * exportProgressPercent) + "%"}></span>
+					<span class='text'>{exportProgressPercentText}</span>
 				</div>
 				<Spinner />
 			{/if}
