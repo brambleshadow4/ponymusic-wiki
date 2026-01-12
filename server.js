@@ -423,6 +423,7 @@ app.get("/api/view/albums", queryProcessing, logRequest, async(req,res) =>
 
 app.get("/api/view/tracks", queryProcessing, logRequest, async(req,res) =>
 {
+	let startTime = new Date().getTime();
 	let ses = await getSession(req);
 	let userID = ses && ses.user_id;
 	let page = Number(req.query.page) || 0; 
@@ -518,7 +519,7 @@ app.get("/api/view/tracks", queryProcessing, logRequest, async(req,res) =>
 		${whereClause}
 		${orderBy}
 		LIMIT ${limitCount} OFFSET ${offset}`;
-
+	
 	let {rows} = await db.query(query,[userID]);
 	let countRequest = await db.query(`SELECT COUNT(*) AS count FROM tracks ${whereClause}`,[]);
 	let total = countRequest.rows[0].count;
@@ -545,6 +546,8 @@ app.get("/api/view/tracks", queryProcessing, logRequest, async(req,res) =>
 	
 
 	res.json(response);
+	
+	console.log("[" + new Date().toISOString() + "][PERF] " + "/api/view/tracks " + (new Date().getTime() - startTime) + "ms" );
 });
 
 app.get("/api/view/tags", logRequest, async(req, res) => {
