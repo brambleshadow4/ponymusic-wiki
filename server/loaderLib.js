@@ -118,19 +118,19 @@ async function doExport(statusObj)
 
 	let stream = fs.createWriteStream("./fullExport.sql");
 	
-	await exportTable(stream, "users", {id: "string", name: "string", role: "number", avatar: "string"});
+	await exportTable(stream, "users", {id: "string", name: "string", role: "number", avatar: "string", order: "id"});
 	if(statusObj) statusObj.progress();
-	await exportTable(stream, "tracks", {id: "number", title: "string", release_date: "date", locked: "bool", ogcache: "json", titlecache:"string", hidden: "bool"});
+	await exportTable(stream, "tracks", {id: "number", title: "string", release_date: "date", locked: "bool", ogcache: "json", titlecache:"string", hidden: "bool", order: "id"});
 	if(statusObj) statusObj.progress();
-	await exportTable(stream, "track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"});
+	await exportTable(stream, "track_tags", {track_id: "number", property: "string", value:"string", number: "number|null", order: "track_id, property, value"});
 	if(statusObj) statusObj.progress();
-	await exportTable(stream, "track_history", {track_id: "number", user_id: "string", value:"json", timestamp: "date"});
+	await exportTable(stream, "track_history", {track_id: "number", user_id: "string", value:"json", timestamp: "date", order: "timestamp"});
 	if(statusObj) statusObj.progress();
-	await exportTable(stream, "user_flags", {track_id: "number", user_id: "string", flag:"string", value:"number"});
+	await exportTable(stream, "user_flags", {track_id: "number", user_id: "string", flag:"string", value:"number", order: "track_id, user_id, flag"});
 	if(statusObj) statusObj.progress();
-	await exportTable(stream, "tag_metadata", {type: "string", id:"string", property:"string", value:"string"});
+	await exportTable(stream, "tag_metadata", {type: "string", id:"string", property:"string", value:"string", order: "type, id, property, value"});
 	if(statusObj) statusObj.progress();
-	await exportTable(stream, "tag_metadata_history", {user_id: "string", timestamp: "date", type:"string", id:"string", value:"json"});
+	await exportTable(stream, "tag_metadata_history", {user_id: "string", timestamp: "date", type:"string", id:"string", value:"json", order: "timestamp"});
 	if(statusObj) statusObj.progress();
 
 	stream.write("SELECT SETVAL(pg_get_serial_sequence('tracks', 'id'), (SELECT (MAX(track_id) + 1) FROM track_history));\n")
@@ -140,11 +140,11 @@ async function doExport(statusObj)
 	stream = fs.createWriteStream("./public/export/pmw.sql");
 	stream.write("-- This data was exported on " + new Date().toISOString());
 	publicTables(stream)
-	await exportTable(stream, "tracks", {id: "number", title: "string", release_date: "date", ogcache: "json", titlecache:"string", hidden: "bool"});
+	await exportTable(stream, "tracks", {id: "number", title: "string", release_date: "date", ogcache: "json", titlecache:"string", hidden: "bool", order: "id" });
 	if(statusObj) statusObj.progress();
-	await exportTable(stream, "track_tags", {track_id: "number", property: "string", value:"string", number: "number|null"});
+	await exportTable(stream, "track_tags", {track_id: "number", property: "string", value:"string", number: "number|null", order: "track_id, property, value"});
 	if(statusObj) statusObj.progress();
-	await exportTable(stream, "tag_metadata", {type: "string", id:"string", property:"string", value:"string"});
+	await exportTable(stream, "tag_metadata", {type: "string", id:"string", property:"string", value:"string", order: "type, id, property, value"});
 	if(statusObj) statusObj.progress();
 	stream.end();
 
@@ -686,7 +686,7 @@ async function exportTable(stream, table, cols)
 
 	while(true)
 	{
-		let partialQuery = "SELECT * FROM " + table + " LIMIT 10000 OFFSET " + offset;
+		let partialQuery = "SELECT * FROM " + table + " ORDER BY " + cols.order + " LIMIT 10000 OFFSET " + offset;
 		let response = await db.query(partialQuery); 
 
 		offset += 10000;
