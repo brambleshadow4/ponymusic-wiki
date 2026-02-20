@@ -12,9 +12,6 @@
 	export let view = {};
 	export let viewProperties = {type: "none", id: "", properties: [], derived_properties: []};
 
-	$: pathSlug = window.location.pathname.split("/").slice(1);
-
-
 	const dispatch = createEventDispatcher();
 
 	let filterHash = "";
@@ -355,7 +352,9 @@
 					<label for='phyiscal-release-checkbox'>Physical release only</label>
 				</div>
 			{:else}
-				<span>Physical release only</span>
+				{#if albumPhysicalReleaseOnly}
+					<span>Physical release only</span>
+				{/if}
 			{/if}
 
 		{/if}
