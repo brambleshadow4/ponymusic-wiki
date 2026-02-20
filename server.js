@@ -1228,7 +1228,7 @@ app.post("/api/getTrackWarnings", processJSON, async (req,res) =>
 		for(let row of albumHyperlinkResults.rows)
 		{
 			hasWarnings = true;
-			albumHyperlink.push({value: tag.value, albumName: row.value});
+			albumHyperlink.push({value: tag.value, albumName: row.id});
 		}
 	}
 	// youtube offsets
