@@ -348,7 +348,8 @@
 			checked: 3
 		};
 		let rows = await getAutofill(property, -1, "");
-		rows = rows.map(x => x.value);
+		rows = [... new Set(rows.map(x => x.value))];
+		
 
 		groups.children.push({
 			name: "(blank)",
