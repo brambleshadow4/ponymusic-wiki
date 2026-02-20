@@ -88,14 +88,25 @@
 
 	}
 
+	let previousSearch = null;
+
 	async function oninput(e)
 	{
 		canOpenOptionList();
 
-		let data = await fetch("/api/search?search=" + encodeURIComponent(e.target.value), {
+		previousSearch = fetch("/api/search?search=" + encodeURIComponent(e.target.value), {
 			method: "GET",
 			headers: {"Content-Type": "text/json"},	
 		});
+
+		let currentSearch = previousSearch;
+
+		let data = await currentSearch;
+
+		if(currentSearch != previousSearch)
+		{
+			return; // throw it out, it's not the most recent.
+		}
 
 		let matches = await data.json();
 		options = matches;
