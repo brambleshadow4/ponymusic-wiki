@@ -71,12 +71,15 @@ if(title){
 
 	function isGoodURL(url)
 	{
-		if(/https:\\/\\/www.youtube\\.com\\/watch\\?v=.*/.exec(url))
+		if(url.startsWith("/"))
+			url = window.location.origin + url;
+
+		if(/https:\\/\\/www\\.youtube\\.com\\/watch\\?v=.*/.exec(url))
 			return true;
 
 		if(/https:\\/\\/soundcloud\\.com.*/.exec(url))
 		{
-			let match = /soundcloud.com\\/([^\\/]*)\\/([^\\/]*)$/.exec(url);
+			let match = /soundcloud\\.com\\/([^\\/]*)\\/([^\\/]*)$/.exec(url);
 
 			if(!match)
 				return false;
@@ -150,7 +153,7 @@ if(title){
 			if(notInPMW.has(linkEls[i].href))
 			{
 				let floater = document.createElement('span');
-				floater.innerHTML = "PMW ✗";
+				floater.innerText = "PMW ✗";
 				floater.className = "pmwStatus";
 				floater.style.backgroundColor = "red";
 				floater.style.padding = "3px";
@@ -161,7 +164,7 @@ if(title){
 			if(inPMW.has(linkEls[i].href))
 			{
 				let floater = document.createElement('span');
-				floater.innerHTML = "PMW ✓";
+				floater.innerText = "PMW ✓";
 				floater.className = "pmwStatus";
 				floater.style.backgroundColor = "green";
 				floater.style.padding = "3px";
@@ -172,7 +175,6 @@ if(title){
 		}
 	}
 	setInterval(loop, 1000);
-	
 })()`
 }</textarea></div>
 
