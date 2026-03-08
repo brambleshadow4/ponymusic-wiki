@@ -23,49 +23,61 @@
 	//let LOOKUP_URL = location.protocol + "//" + location.host + ""
 	let options = [];
 
+	/**
+	 * Reads the current input value (or the keyboard-selected autocomplete option),
+	 * builds a tag object, and dispatches the "valueSet" event. Resets the input
+	 * afterward. For hyperlinks, canonicalizes the URL and may reclassify the tag
+	 * as "youtube offset". For numbered tags (e.g. album track number), focuses
+	 * the number input instead if the number is missing or invalid.
+	 */
+	function submitValue()
+	{
+		let text = ref.value.trim();
+
+		if(options[optionListKeyboardSel])
+		{
+			text = options[optionListKeyboardSel].text;
+			value = options[optionListKeyboardSel].value;
+		}
+
+		if(!enumMode)
+		{
+			value = text
+		}
+
+		let tag = {property, value, text};
+
+		if(property == 'hyperlink')
+		{
+			tag.value = canonicalURL(value, true);
+			if(isYouTubeOffset(value))
+			{
+				tag.property = "youtube offset";
+			}
+		}
+
+		if(!isNaN(number))
+		{
+			tag.number = number;
+
+			if(number <= 0)
+			{
+				numberInput.focus();
+				return;
+			}
+		}
+
+		dispatch("valueSet", tag);
+		property = "";
+		value = "";
+	}
+
 	function onKeyDown(e)
 	{
 		if(e.key == "Enter")
 		{
-			let text = ref.value.trim();
-
-			if(options[optionListKeyboardSel])
-			{
-				text = options[optionListKeyboardSel].text;
-				value = options[optionListKeyboardSel].value;
-			}
-
-
-			if(!enumMode)
-			{
-				value = text
-			}
-
-			let tag = {property, value, text};
-
-			if(property == 'hyperlink')
-			{
-				tag.value = canonicalURL(value, true);
-				if(isYouTubeOffset(value))
-				{
-					tag.property = "youtube offset";
-				}
-			}
-
-			if(!isNaN(number))
-			{
-				tag.number = number;
-
-				if(number <= 0)
-				{
-					numberInput.focus();
-					return;
-				}
-			}
-	
-			dispatch("valueSet", tag);
-			property = "";
-			value = "";
+			submitValue();
+			return;
 		}
 
 
@@ -185,7 +197,7 @@
 		<span class='property-box'>{property}</span>
 	{/if}
 	
-	<input 
+	<input
 		id="tag-entry-input"
 		class={isNaN(number) ? "" : "mid"}
 		type="text" maxlength="255"
@@ -203,6 +215,8 @@
 			on:keydown={onKeyDown}
 		/>
 	{/if}
+
+	<button on:focus={() => {optionListKeyboardSel = -1;}} title="Add tag to track" class='submit-button' on:click={submitValue}>✓</button>
 
 	{#if options.length && cool}
 		<div class='auto-complete'>
@@ -246,7 +260,20 @@
 		line-height: 30px;
 	}
 
-	
+	.submit-button {
+		position: relative;
+		right: 30px;
+		z-index: 3;
+		font-size: initial;
+		background-color: transparent;
+		border: 2px solid transparent;
+		border-radius: 5px;
+		margin: 0px;
+	}
+
+	.submit-button:hover, .submit-button:focus {
+		border: 2px solid blue;
+	}
 
 	.property-box {
 		font-size: initial;
@@ -279,7 +306,7 @@
 	}
 
 	input.number{
-		width: .5in;
+		width: .7in;
 	}
 
 	input:focus
