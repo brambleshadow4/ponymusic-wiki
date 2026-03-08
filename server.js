@@ -1019,6 +1019,7 @@ app.post("/api/track", processJSON, logRequest, auth(PERM.UPDATE_TRACK), async (
 			if(x.err)
 			{
 				res.json({status:400, error: "Error code 1"});
+				if(client) client.release();
 				return;
 			}
 			else
@@ -1042,6 +1043,7 @@ app.post("/api/track", processJSON, logRequest, auth(PERM.UPDATE_TRACK), async (
 				if(info.err)
 				{ 
 					res.json({status:400, error: "Error code 2"});
+					if(client) client.release();
 					return;
 				}	
 			}
@@ -1066,6 +1068,7 @@ app.post("/api/track", processJSON, logRequest, auth(PERM.UPDATE_TRACK), async (
 				info = await client.query("INSERT INTO track_tags (track_id, property, value, number) VALUES ($1, $2, $3, $4)", [id, tag.property, tag.value, tag.number]);
 				if(info.err){ 
 					res.json({status:400, error: "Error code 3"});
+					if(client) client.release();
 					return;
 				}	
 			}
@@ -1076,6 +1079,7 @@ app.post("/api/track", processJSON, logRequest, auth(PERM.UPDATE_TRACK), async (
 
 				if(info.err){ 
 					res.json({status:400, error: "Error code 4"});
+					if(client) client.release();
 					return;
 				}	
 
@@ -1095,6 +1099,7 @@ app.post("/api/track", processJSON, logRequest, auth(PERM.UPDATE_TRACK), async (
 
 								if(info.err){ 
 									res.json({status:400, error: "Error 6"});
+									if(client) client.release();
 									return;
 								}	
 							}
