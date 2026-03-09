@@ -9,7 +9,7 @@
 	import DropDownButton from "./components/DropdownButton.svelte"
 	import {tagComp, setUserFlag} from "./helpers.js";
 	import {PERM, hasPerm} from "./authClient.js";
-	import {parseTitle} from "./titleParsing.js";
+	import {parseTitle, parseImportParams as parseImportParamsInner} from "./titleParsing.js";
 	import { onMount } from 'svelte';
 	import PlaylistMenu from "./components/PlaylistMenu.svelte";
 
@@ -451,116 +451,14 @@
 		}
 	}
 
-	async function parseImportParams()
-	{	
-		let paramsRaw = window.location.search.substring(1);
-		let params = {};
-		paramsRaw = paramsRaw.split("&");
-		
-		for(let param of paramsRaw)
-		{
-			let [key, value] = param.split("=");
-			params[key] = decodeURIComponent(value).replace(/&amp;/g, "&");
-		}
+	function parseImportParams()
+	{
+		let result = parseImportParamsInner(window.location.search.substring(1));
 
-		if(params['trackPost'])
-		{
-			let newTrack = JSON.parse(decodeURIComponent(params['trackPost']));
-			track.title = newTrack.title;
-			track.release_date = newTrack.release_date
-			newTrack.tags.forEach(x => addTag(x));
-			console.log(track)
-		}
-
-		if(params['artist'])
-		{
-			params['artist']
-				.split("\x1E")
-				.map(x => x.replace(/<\/?(span|a|div)[^>]*>/g,""))
-				.map(x => x.trim())
-				.filter(x => x.length > 0)
-				.forEach(x => {
-					addTag({property:"artist", value: x, text: x});
-				});
-		}
-
-		if(params['genre'])
-		{
-			let genreList = params['genre'].split("\x1E").map(x => x.trim());
-			genreList.forEach(x => addTag({property: "genre", value: x, text: x}));
-		}
-
-		if(params['url'])
-		{
-			let qmark = params.url.indexOf("?");
-
-
-			if(params.url.indexOf("youtube.com") > -1)
-			{
-				let urlParams = params.url.substring(qmark+1).split("&");
-				let urlParamsDic = {};
-				for(let pair of urlParams)
-				{
-					let [key, value] = pair.split("=");
-					urlParamsDic[key] = value;
-				}
-
-				if(urlParamsDic.v)
-				{
-					params.url = params.url.substring(0,qmark+1) + "v=" + urlParamsDic.v;
-				}
-			}
-			else
-			{
-				if(qmark > -1)
-				{
-					params.url = params.url.substring(0,qmark);
-				}
-			}
-
-			addTag({property: "hyperlink", value: params['url'], text: params['url']});
-		}
-
-		if(params['title'])
-		{
-			scrapedTitle = params['title'].replace(/<\/?(span|a)[^>]*>/g,"");
-			let result = parseTitle(scrapedTitle);
-
-			track.title = result.title;
-			for(let tag of result.tags)
-			{
-				addTag(tag);
-			}
-			
-		}
-
-		if(params['date'])
-		{
-			let rawDate = params['date'].toLowerCase();
-			rawDate = rawDate.replace("premiered ", "");
-
-			let match = /.*((january|february|march|april|may|june|july|august|september|october|november|december) \d\d?, \d\d\d\d).*/.exec(rawDate)
-
-			if(match)
-			{
-				rawDate = match[1];
-			}
-
-			if(rawDate.indexOf("hours ago") > -1)
-			{
-				let d = new Date();
-				track.release_date = new Date(d.getTime() - 1000*60*d.getTimezoneOffset()).toISOString().substring(0,10);
-			}
-			else
-			{
-				let d = new Date(rawDate);
-				if (d.toISOString().substring(10) != "T00:00:00.000Z")
-				{
-					d = new Date(d.getTime() - d.getTimezoneOffset()*1000*60)
-				}
-				track.release_date = d.toISOString().substring(0,10)
-			}
-		}
+		if(result.title) track.title = result.title;
+		if(result.release_date) track.release_date = result.release_date;
+		if(result.scrapedTitle) scrapedTitle = result.scrapedTitle;
+		result.tags.forEach(x => addTag(x));
 
 		if(localStorage.autoImportTags)
 		{

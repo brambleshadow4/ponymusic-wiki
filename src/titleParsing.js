@@ -113,6 +113,121 @@ function parseTitle(title)
 
 
 
-export {parseTitle};
+function parseImportParams(queryString, now = new Date())
+{
+	let params = {};
+	for(let param of queryString.split("&"))
+	{
+		let [key, value] = param.split("=");
+		if(key)
+			params[key] = decodeURIComponent(value ?? "").replace(/&amp;/g, "&");
+	}
+
+	let title = "";
+	let release_date = "";
+	let scrapedTitle = "";
+	let tags = [];
+
+	if(params['trackPost'])
+	{
+		let newTrack = JSON.parse(decodeURIComponent(params['trackPost']));
+		title = newTrack.title;
+		release_date = newTrack.release_date;
+		newTrack.tags.forEach(x => tags.push(x));
+	}
+
+	if(params['artist'])
+	{
+		console.log(params['artist'])
+		params['artist']
+			.split(/\\x1E| and \d more| and /)
+			.map(x => x.replace(/<\/?(span|a|div)[^>]*>/g,""))
+			.map(x => x.trim())
+			.filter(x => x.length > 0)
+			.forEach(x => {
+				tags.push({property:"artist", value: x, text: x});
+			});
+	}
+
+	if(params['genre'])
+	{
+		params['genre'].split("\x1E").map(x => x.trim())
+			.forEach(x => tags.push({property: "genre", value: x, text: x}));
+	}
+
+	if(params['url'])
+	{
+		let url = params['url'];
+		let qmark = url.indexOf("?");
+
+		if(url.indexOf("youtube.com") > -1)
+		{
+			let urlParamsDic = {};
+			for(let pair of url.substring(qmark+1).split("&"))
+			{
+				let [key, value] = pair.split("=");
+				urlParamsDic[key] = value;
+			}
+
+			if(urlParamsDic.v)
+			{
+				url = url.substring(0,qmark+1) + "v=" + urlParamsDic.v;
+			}
+		}
+		else
+		{
+			if(qmark > -1)
+			{
+				url = url.substring(0,qmark);
+			}
+		}
+
+		tags.push({property: "hyperlink", value: url, text: url});
+	}
+
+	if(params['title'])
+	{
+		scrapedTitle = params['title'].replace(/<\/?(span|a)[^>]*>/g,"");
+		let result = parseTitle(scrapedTitle);
+
+		title = result.title;
+		for(let tag of result.tags)
+		{
+			tags.push(tag);
+		}
+	}
+
+	if(params['date'])
+	{
+		let rawDate = params['date'].toLowerCase();
+		rawDate = rawDate.replace("premiered ", "");
+
+		let match = /.*((january|february|march|april|may|june|july|august|september|october|november|december) \d\d?, \d\d\d\d).*/.exec(rawDate)
+
+		if(match)
+		{
+			rawDate = match[1];
+		}
+
+		if(rawDate.indexOf("hours ago") > -1)
+		{
+			let d = now;
+			release_date = new Date(d.getTime() - 1000*60*d.getTimezoneOffset()).toISOString().substring(0,10);
+		}
+		else
+		{
+			let d = new Date(rawDate);
+			if (d.toISOString().substring(10) != "T00:00:00.000Z")
+			{
+				d = new Date(d.getTime() - d.getTimezoneOffset()*1000*60)
+			}
+			release_date = d.toISOString().substring(0,10)
+		}
+	}
+
+	return { title, release_date, scrapedTitle, tags };
+}
+
+export {parseTitle, parseImportParams};
 
 
