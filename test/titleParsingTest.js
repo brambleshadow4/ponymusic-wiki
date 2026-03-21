@@ -28,7 +28,6 @@ describe('titleParsing', function () {
 		let {title, tags} = parseTitle("PSFMer - I've Kind of Grown to Like You")
 		assert.equal(title, "I've Kind of Grown to Like You");
 		assertHasTag(tags, "artist", "PSFMer");
-		console.log(tags);
 		assert.equal(tags.length, 1);
 	});
 

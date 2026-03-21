@@ -138,9 +138,9 @@ function parseImportParams(queryString, now = new Date())
 
 	if(params['artist'])
 	{
-		console.log(params['artist'])
 		params['artist']
 			.split(/\\x1E| and \d more| and /)
+			.map(x => x.replace(/<svg .*<\/svg>/g,""))
 			.map(x => x.replace(/<\/?(span|a|div)[^>]*>/g,""))
 			.map(x => x.trim())
 			.filter(x => x.length > 0)

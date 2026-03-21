@@ -31,6 +31,13 @@ describe('parseImportParams', function ()
 		assertDoesNotHaveTag(tags, "artist", "2 more");
 	});
 
+	// based off of https://soundcloud.com/vyletpony/livelaughlove2-ft-moesnail-15?in=vadiana/sets/vylet
+	it("splits out <svg> tags in the artist field", function () {
+		let {title, tags} = parseImportParams("?title=LiveLaughLove2%20(ft.%20Moesnail)&date=2025-07-12&artist=Vylet%20Pony%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Cdiv%20style%3D%22display%3A%20inline-block%22%3E%3Cspan%20class%3D%22verifiedBadge%20soundTitle__usernameHeroContainer__verifiedBadge%20sc-ml-1x%20theme-light%22%3E%3Csvg%20viewBox%3D%220%200%2016%2016%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20aria-hidden%3D%22false%22%3E%3Ctitle%3EVerified%3C%2Ftitle%3E%3Cpath%20d%3D%22M15%208A7%207%200%20111%208a7%207%200%200114%200z%22%20fill%3D%22currentColor%22%3E%3C%2Fpath%3E%3Cpath%20d%3D%22M11.97%204.7l1.06%201.06-6.53%206.531-3.53-3.53L4.03%207.7l2.47%202.47%205.47-5.47z%22%20fill%3D%22%23fff%22%3E%3C%2Fpath%3E%3C%2Fsvg%3E%3C%2Fspan%3E%3C%2Fdiv%3E&url=https%3A%2F%2Fsoundcloud.com%2Fvyletpony%2Flivelaughlove2-ft-moesnail-15%3Fin%3Dvadiana%2Fsets%2Fvylet");
+
+		assertHasTag(tags, "artist", "Vylet Pony");
+	});
+
 	// based off of https://www.youtube.com/watch?v=1l7uXFGQ_G4
 	it("handles premiered dates okay", function(){
 
