@@ -72,7 +72,11 @@ export function isYouTubeOffset(url)
 export function canonicalURL(url, keepYToffset)
 {
 	// IF YOU EDIT THIS, MAKE SURE YOU EDIT BOTH src/helpers.js AND server/helpers.js
-	if(url.startsWith("https://www.youtube.com") || url.startsWith("https://youtube.com") || url.startsWith("https://youtu.be/"))
+	if(url.startsWith("http://"))
+		url = url.replace("http://", "https://");
+
+	if(url.startsWith("https://www.youtube.com") || url.startsWith("https://youtube.com") 
+		|| url.startsWith("https://youtu.be/") || url.startsWith("https://m.youtube.com"))
 	{
 		let params = url.substring(url.indexOf("?")+1).split("&");
 		let tParam = params.filter(x => x.startsWith("t="))[0] || "";
